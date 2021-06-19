@@ -253,6 +253,8 @@ func DrawSNRGraph(out io.Writer, data models.Bins, params GraphParams) {
 	scaleY := h / spec.LegendYTop
 
 	var path Path
+	path.SetPrecision(1)
+
 	var last float64
 
 	for i := 0; i < bins; i++ {
@@ -321,6 +323,8 @@ func DrawQLNGraph(out io.Writer, data models.Bins, params GraphParams) {
 	offsetY := spec.LegendYBottom
 
 	var path Path
+	path.SetPrecision(1)
+
 	last := offsetY
 
 	for i := 0; i < bins; i++ {
@@ -389,6 +393,8 @@ func DrawHlogGraph(out io.Writer, data models.Bins, params GraphParams) {
 	offsetY := spec.LegendYBottom
 
 	var path, pathPart Path
+	path.SetPrecision(1)
+	pathPart.SetPrecision(1)
 
 	var lastHlog *float64
 	var lastPosX float64
@@ -402,6 +408,7 @@ func DrawHlogGraph(out io.Writer, data models.Bins, params GraphParams) {
 			pathPart.LineTo(lastPosX+0.5, lastPosY/scaleX)
 			path.AddPath(pathPart)
 			pathPart = Path{}
+			pathPart.SetPrecision(1)
 			lastHlog = nil
 		}
 
