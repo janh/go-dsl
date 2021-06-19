@@ -24,11 +24,21 @@ func (p *Path) SetPrecision(digits uint) {
 	p.roundFactor = math.Pow10(int(digits))
 }
 
-func (p *Path) formatCoord(val float64) (valStr string) {
+func (p *Path) roundCoord(val float64) float64 {
 	if p.roundFactor == 0 {
 		p.roundFactor = 100000
 	}
 	val = math.Round(val*p.roundFactor) / p.roundFactor
+	return val
+}
+
+func (p *Path) roundCoords(x, y float64) (float64, float64) {
+	x = p.roundCoord(x)
+	y = p.roundCoord(y)
+	return x, y
+}
+
+func (p *Path) formatCoord(val float64) (valStr string) {
 	valStr = strconv.FormatFloat(val, 'f', -1, 64)
 	if valStr[0] == '0' && len(valStr) > 1 {
 		valStr = valStr[1:]
@@ -52,10 +62,12 @@ func (p *Path) buildCommand(cmd, xStr, yStr string) string {
 }
 
 func (p *Path) MoveTo(x, y float64) {
+	x, y = p.roundCoords(x, y)
 	xStr, yStr := p.formatCoords(x, y)
 	cmd := p.buildCommand("M", xStr, yStr) // move absolute
 
-	dxStr, dyStr := p.formatCoords(x-p.lastX, y-p.lastY)
+	dx, dy := p.roundCoords(x-p.lastX, y-p.lastY)
+	dxStr, dyStr := p.formatCoords(dx, dy)
 	cmdRelative := p.buildCommand("m", dxStr, dyStr) // move relative
 	if len(cmdRelative) < len(cmd) {
 		cmd = cmdRelative
@@ -70,10 +82,12 @@ func (p *Path) MoveTo(x, y float64) {
 }
 
 func (p *Path) LineTo(x, y float64) {
+	x, y = p.roundCoords(x, y)
 	xStr, yStr := p.formatCoords(x, y)
 	cmd := p.buildCommand("L", xStr, yStr) // line absolute
 
-	dxStr, dyStr := p.formatCoords(x-p.lastX, y-p.lastY)
+	dx, dy := p.roundCoords(x-p.lastX, y-p.lastY)
+	dxStr, dyStr := p.formatCoords(dx, dy)
 	if dxStr == "0" && dyStr == "0" {
 		return
 	} else if dyStr == "0" {
