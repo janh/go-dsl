@@ -190,21 +190,21 @@ func DrawBitsGraph(out io.Writer, data models.Bins, params GraphParams) {
 			continue
 		}
 
-		posX := x + float64(i)*scaleX
+		posX := float64(i)
 
 		if lastBits > 0 && (bits == 0 || lastPath != path) {
-			lastPath.LineTo(posX, y+h)
+			lastPath.LineTo(posX, h)
 			lastPath.Close()
 		}
 		if (lastPath != path || lastBits == 0) && bits > 0 {
-			path.MoveTo(posX, y+h)
+			path.MoveTo(posX, h)
 		}
 		if bits > 0 {
-			posY := y + h - math.Ceil(float64(bits)*scaleY)
+			posY := h - math.Ceil(float64(bits)*scaleY)
 			if lastPath != path || lastBits != bits {
 				path.LineTo(posX, posY)
 			}
-			path.LineTo(posX+scaleX, posY)
+			path.LineTo(posX+1, posY)
 		}
 
 		lastBits = bits
@@ -212,13 +212,15 @@ func DrawBitsGraph(out io.Writer, data models.Bins, params GraphParams) {
 	}
 
 	if lastBits > 0 {
-		lastPath.LineTo(x+w, y+h)
+		lastPath.LineTo(spec.LegendXMax, h)
 		lastPath.Close()
 	}
 
+	s.Gtransform(fmt.Sprintf("translate(%f %f) scale(%f 1)", x, y, scaleX))
 	s.Path(pathNone.String(), "fill:"+colorNeutral.String())
 	s.Path(pathUpstream.String(), "fill:"+colorUpstream.String())
 	s.Path(pathDownstream.String(), "fill:"+colorDownstream.String())
+	s.Gend()
 
 	s.End()
 }
@@ -260,30 +262,32 @@ func DrawSNRGraph(out io.Writer, data models.Bins, params GraphParams) {
 			snr = 0
 		}
 
-		posX := x + float64(i)*scaleX
+		posX := float64(i)
 
 		if last > 0 && snr == 0 {
-			path.LineTo(posX, y+h)
+			path.LineTo(posX, h)
 			path.Close()
 		}
 		if last == 0 && snr > 0 {
-			path.MoveTo(posX, y+h)
+			path.MoveTo(posX, h)
 		}
 		if snr > 0 {
-			posY := y + h - math.Min(h, snr*scaleY)
+			posY := h - math.Min(h, snr*scaleY)
 			path.LineTo(posX, posY)
-			path.LineTo(posX+scaleX, posY)
+			path.LineTo(posX+1, posY)
 		}
 
 		last = snr
 	}
 
 	if last > 0 {
-		path.LineTo(x+w, y+h)
+		path.LineTo(spec.LegendXMax, h)
 		path.Close()
 	}
 
+	s.Gtransform(fmt.Sprintf("translate(%f %f) scale(%f 1)", x, y, scaleX))
 	s.Path(path.String(), "fill:"+colorNeutral.String())
+	s.Gend()
 
 	s.End()
 }
@@ -326,30 +330,32 @@ func DrawQLNGraph(out io.Writer, data models.Bins, params GraphParams) {
 			qln = offsetY
 		}
 
-		posX := x + float64(i)*scaleX
+		posX := float64(i)
 
 		if last > offsetY && qln <= offsetY {
-			path.LineTo(posX, y+h)
+			path.LineTo(posX, h)
 			path.Close()
 		}
 		if last <= offsetY && qln > offsetY {
-			path.MoveTo(posX, y+h)
+			path.MoveTo(posX, h)
 		}
 		if qln > offsetY {
-			posY := y + h - math.Max(0, math.Min(h, (qln-offsetY)*scaleY))
+			posY := h - math.Max(0, math.Min(h, (qln-offsetY)*scaleY))
 			path.LineTo(posX, posY)
-			path.LineTo(posX+scaleX, posY)
+			path.LineTo(posX+1, posY)
 		}
 
 		last = qln
 	}
 
 	if last > offsetY {
-		path.LineTo(x+w, y+h)
+		path.LineTo(spec.LegendXMax, h)
 		path.Close()
 	}
 
+	s.Gtransform(fmt.Sprintf("translate(%f %f) scale(%f 1)", x, y, scaleX))
 	s.Path(path.String(), "fill:"+colorNeutral.String())
+	s.Gend()
 
 	s.End()
 }
@@ -387,24 +393,25 @@ func DrawHlogGraph(out io.Writer, data models.Bins, params GraphParams) {
 	var lastHlog *float64
 	var lastPosX float64
 	var lastPosY float64
+
 	for i := 0; i < bins; i++ {
 		bin := data.Bins[i]
 		hlog := bin.Hlog
 
 		if hlog >= 0 || (lastHlog != nil && math.Abs(hlog-*lastHlog) >= 10) {
-			pathPart.LineTo(lastPosX+0.5*scaleX, lastPosY)
+			pathPart.LineTo(lastPosX+0.5, lastPosY/scaleX)
 			path.AddPath(pathPart)
 			pathPart = Path{}
 			lastHlog = nil
 		}
 
 		if hlog < 0 {
-			posX := x + (float64(i)+0.5)*scaleX
-			posY := y + h + 0.5 - math.Max(0, math.Min(h, (hlog-offsetY)*scaleY))
+			posX := float64(i) + 0.5
+			posY := h + 0.5 - math.Max(0, math.Min(h, (hlog-offsetY)*scaleY))
 			if pathPart.IsEmpty() {
-				pathPart.MoveTo(posX-0.5*scaleX, posY)
+				pathPart.MoveTo(posX-0.5, posY/scaleX)
 			}
-			pathPart.LineTo(posX, posY)
+			pathPart.LineTo(posX, posY/scaleX)
 
 			lastHlog = &hlog
 			lastPosX = posX
@@ -413,11 +420,14 @@ func DrawHlogGraph(out io.Writer, data models.Bins, params GraphParams) {
 	}
 
 	if !pathPart.IsEmpty() {
-		pathPart.LineTo(lastPosX+0.5*scaleX, lastPosY)
+		pathPart.LineTo(lastPosX+0.5, lastPosY/scaleX)
 		path.AddPath(pathPart)
 	}
 
-	s.Path(path.String(), "fill:none;stroke-width:1.25;stroke-linecap:butt;stroke:"+colorNeutral.String())
+	// scaling of y by scaleX in order to simulate vector-effect="non-scaling-stroke" for non-supporting renderers
+	s.Gtransform(fmt.Sprintf("translate(%f %f) scale(%f %f)", x, y, scaleX, scaleX))
+	s.Path(path.String(), fmt.Sprintf("fill:none;stroke-width:%f;stroke-linecap:butt;stroke:", 1.25/scaleX)+colorNeutral.String())
+	s.Gend()
 
 	s.End()
 }
