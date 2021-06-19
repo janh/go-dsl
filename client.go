@@ -4,6 +4,10 @@
 
 package dsl // import "3e8.eu/go/dsl"
 
+import (
+	"3e8.eu/go/dsl/models"
+)
+
 type Client interface {
 	RawData() []byte
 	Status() models.Status
