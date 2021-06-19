@@ -169,6 +169,7 @@ func DrawBitsGraph(out io.Writer, data models.Bins, params GraphParams) {
 	var pathNone, pathUpstream, pathDownstream Path
 
 	var lastBits int8
+	var lastPosY float64
 	var lastPath *Path
 
 	for i := 0; i < bins; i++ {
@@ -193,6 +194,7 @@ func DrawBitsGraph(out io.Writer, data models.Bins, params GraphParams) {
 		posX := float64(i)
 
 		if lastBits > 0 && (bits == 0 || lastPath != path) {
+			lastPath.LineTo(posX, lastPosY)
 			lastPath.LineTo(posX, h)
 			lastPath.Close()
 		}
@@ -202,9 +204,10 @@ func DrawBitsGraph(out io.Writer, data models.Bins, params GraphParams) {
 		if bits > 0 {
 			posY := h - math.Ceil(float64(bits)*scaleY)
 			if lastPath != path || lastBits != bits {
+				path.LineTo(posX, lastPosY)
 				path.LineTo(posX, posY)
+				lastPosY = posY
 			}
-			path.LineTo(posX+1, posY)
 		}
 
 		lastBits = bits
@@ -212,6 +215,7 @@ func DrawBitsGraph(out io.Writer, data models.Bins, params GraphParams) {
 	}
 
 	if lastBits > 0 {
+		lastPath.LineTo(spec.LegendXMax, lastPosY)
 		lastPath.LineTo(spec.LegendXMax, h)
 		lastPath.Close()
 	}
@@ -256,6 +260,7 @@ func DrawSNRGraph(out io.Writer, data models.Bins, params GraphParams) {
 	path.SetPrecision(1)
 
 	var last float64
+	var lastPosY float64
 
 	for i := 0; i < bins; i++ {
 		bin := data.Bins[i]
@@ -267,22 +272,25 @@ func DrawSNRGraph(out io.Writer, data models.Bins, params GraphParams) {
 		posX := float64(i)
 
 		if last > 0 && snr == 0 {
+			path.LineTo(posX, lastPosY)
 			path.LineTo(posX, h)
 			path.Close()
 		}
 		if last == 0 && snr > 0 {
 			path.MoveTo(posX, h)
 		}
-		if snr > 0 {
+		if snr > 0 && last != snr {
 			posY := h - math.Min(h, snr*scaleY)
+			path.LineTo(posX, lastPosY)
 			path.LineTo(posX, posY)
-			path.LineTo(posX+1, posY)
+			lastPosY = posY
 		}
 
 		last = snr
 	}
 
 	if last > 0 {
+		path.LineTo(spec.LegendXMax, lastPosY)
 		path.LineTo(spec.LegendXMax, h)
 		path.Close()
 	}
@@ -325,7 +333,8 @@ func DrawQLNGraph(out io.Writer, data models.Bins, params GraphParams) {
 	var path Path
 	path.SetPrecision(1)
 
-	last := offsetY
+	var last float64 = offsetY
+	var lastPosY float64
 
 	for i := 0; i < bins; i++ {
 		bin := data.Bins[i]
@@ -337,22 +346,25 @@ func DrawQLNGraph(out io.Writer, data models.Bins, params GraphParams) {
 		posX := float64(i)
 
 		if last > offsetY && qln <= offsetY {
+			path.LineTo(posX, lastPosY)
 			path.LineTo(posX, h)
 			path.Close()
 		}
 		if last <= offsetY && qln > offsetY {
 			path.MoveTo(posX, h)
 		}
-		if qln > offsetY {
+		if qln > offsetY && last != qln {
 			posY := h - math.Max(0, math.Min(h, (qln-offsetY)*scaleY))
+			path.LineTo(posX, lastPosY)
 			path.LineTo(posX, posY)
-			path.LineTo(posX+1, posY)
+			lastPosY = posY
 		}
 
 		last = qln
 	}
 
 	if last > offsetY {
+		path.LineTo(spec.LegendXMax, lastPosY)
 		path.LineTo(spec.LegendXMax, h)
 		path.Close()
 	}
@@ -397,6 +409,7 @@ func DrawHlogGraph(out io.Writer, data models.Bins, params GraphParams) {
 	pathPart.SetPrecision(1)
 
 	var lastHlog *float64
+	var lastDrawn bool
 	var lastPosX float64
 	var lastPosY float64
 
@@ -404,7 +417,10 @@ func DrawHlogGraph(out io.Writer, data models.Bins, params GraphParams) {
 		bin := data.Bins[i]
 		hlog := bin.Hlog
 
-		if hlog >= 0 || (lastHlog != nil && math.Abs(hlog-*lastHlog) >= 10) {
+		if lastHlog != nil && (hlog >= 0 || math.Abs(hlog-*lastHlog) >= 10) {
+			if !lastDrawn {
+				pathPart.LineTo(lastPosX, lastPosY/scaleX)
+			}
 			pathPart.LineTo(lastPosX+0.5, lastPosY/scaleX)
 			path.AddPath(pathPart)
 			pathPart = Path{}
@@ -417,8 +433,17 @@ func DrawHlogGraph(out io.Writer, data models.Bins, params GraphParams) {
 			posY := h + 0.5 - math.Max(0, math.Min(h, (hlog-offsetY)*scaleY))
 			if pathPart.IsEmpty() {
 				pathPart.MoveTo(posX-0.5, posY/scaleX)
+				pathPart.LineTo(posX, posY/scaleX)
+				lastDrawn = true
+			} else if *lastHlog != hlog {
+				if !lastDrawn {
+					pathPart.LineTo(posX-1, lastPosY/scaleX)
+				}
+				pathPart.LineTo(posX, posY/scaleX)
+				lastDrawn = true
+			} else {
+				lastDrawn = false
 			}
-			pathPart.LineTo(posX, posY/scaleX)
 
 			lastHlog = &hlog
 			lastPosX = posX
@@ -427,6 +452,9 @@ func DrawHlogGraph(out io.Writer, data models.Bins, params GraphParams) {
 	}
 
 	if !pathPart.IsEmpty() {
+		if !lastDrawn {
+			pathPart.LineTo(lastPosX, lastPosY/scaleX)
+		}
 		pathPart.LineTo(lastPosX+0.5, lastPosY/scaleX)
 		path.AddPath(pathPart)
 	}
