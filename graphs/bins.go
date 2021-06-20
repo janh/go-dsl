@@ -460,7 +460,6 @@ func DrawHlogGraph(out io.Writer, data models.Bins, params GraphParams) {
 
 	if last < 0 {
 		path.LineTo(spec.LegendXMax, lastPosY/scaleX)
-		path.Close()
 	}
 
 	// scaling of y by scaleX in order to simulate vector-effect="non-scaling-stroke" for non-supporting renderers
