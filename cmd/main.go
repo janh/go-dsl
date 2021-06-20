@@ -62,9 +62,7 @@ func main() {
 
 	fmt.Println(client.Status().Summary())
 
-	//filenameBase := time.Now().Format("dsl_20060102_150405_")
-	_ = time.Now()
-	filenameBase := ""
+	filenameBase := time.Now().Format("dsl_20060102_150405_")
 
 	writeFile(filenameBase+"summary.txt", []byte(client.Status().Summary()))
 	writeFile(filenameBase+"raw.txt", client.RawData())
