@@ -6,6 +6,8 @@ package graphs
 
 import (
 	"fmt"
+	"math"
+	"strconv"
 )
 
 type Color struct {
@@ -16,5 +18,7 @@ type Color struct {
 }
 
 func (c Color) String() string {
-	return fmt.Sprintf("rgba(%d,%d,%d,%f)", c.R, c.G, c.B, c.A)
+	a := math.Round(c.A*1000) / 1000
+	aStr := strconv.FormatFloat(a, 'f', -1, 64)
+	return fmt.Sprintf("rgba(%d,%d,%d,%s)", c.R, c.G, c.B, aStr)
 }
