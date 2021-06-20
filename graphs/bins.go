@@ -204,7 +204,9 @@ func DrawBitsGraph(out io.Writer, data models.Bins, params GraphParams) {
 		if bits > 0 {
 			posY := h - math.Ceil(float64(bits)*scaleY)
 			if lastPath != path || lastBits != bits {
-				path.LineTo(posX, lastPosY)
+				if lastPath == path && lastBits != 0 {
+					path.LineTo(posX, lastPosY)
+				}
 				path.LineTo(posX, posY)
 				lastPosY = posY
 			}
@@ -281,7 +283,9 @@ func DrawSNRGraph(out io.Writer, data models.Bins, params GraphParams) {
 		}
 		if snr > 0 && last != snr {
 			posY := h - math.Min(h, snr*scaleY)
-			path.LineTo(posX, lastPosY)
+			if last != 0 {
+				path.LineTo(posX, lastPosY)
+			}
 			path.LineTo(posX, posY)
 			lastPosY = posY
 		}
@@ -355,7 +359,9 @@ func DrawQLNGraph(out io.Writer, data models.Bins, params GraphParams) {
 		}
 		if qln > offsetY && last != qln {
 			posY := h - math.Max(0, math.Min(h, (qln-offsetY)*scaleY))
-			path.LineTo(posX, lastPosY)
+			if last > offsetY {
+				path.LineTo(posX, lastPosY)
+			}
 			path.LineTo(posX, posY)
 			lastPosY = posY
 		}
