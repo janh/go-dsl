@@ -135,6 +135,6 @@ func (p *Path) IsEmpty() bool {
 	return p.sb.Len() == 0
 }
 
-func (p *Path) String() string {
+func (p Path) String() string {
 	return p.sb.String()
 }

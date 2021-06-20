@@ -1,0 +1,7 @@
+{{ define "content" }}
+<g transform="{{ .Transform }}">
+	<path fill="{{ .ColorNeutral }}" d="{{ .PathNeutral }}"/>
+	<path fill="{{ .ColorUpstream }}" d="{{ .PathUpstream }}"/>
+	<path fill="{{ .ColorDownstream }}" d="{{ .PathDownstream }}"/>
+</g>
+{{ end }}

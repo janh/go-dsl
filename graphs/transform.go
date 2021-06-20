@@ -52,7 +52,7 @@ func (t *Transform) Translate(x, y float64) {
 	}
 }
 
-func (t *Transform) String() string {
+func (t Transform) String() string {
 	var sb strings.Builder
 
 	count := len(t.funcs)

@@ -9,8 +9,6 @@ import (
 	"io"
 	"math"
 
-	"github.com/ajstarks/svgo/float"
-
 	"3e8.eu/go/dsl/models"
 )
 
@@ -52,77 +50,73 @@ func getGraphColors(background, foreground Color) (colorGraph, colorGrid Color) 
 	return
 }
 
-func drawGraphBackground(s *svg.SVG, spec graphSpec) (x, y, w, h float64) {
-	x = 28.0
-	y = 4.0
-	w = float64(spec.Width) - 42.0
-	h = float64(spec.Height) - 23.0
+func getBaseModel(spec graphSpec) baseModel {
+	m := baseModel{}
 
-	colorBackground := spec.ColorBackground
-	colorText := spec.ColorForeground
-	colorGraph, colorGrid := getGraphColors(spec.ColorBackground, spec.ColorForeground)
+	m.Width = float64(spec.Width)
+	m.Height = float64(spec.Height)
+
+	m.GraphX = 28.0
+	m.GraphY = 4.0
+	m.GraphWidth = m.Width - 42.0
+	m.GraphHeight = m.Height - 23.0
+
+	m.ColorBackground = spec.ColorBackground
+	m.ColorText = spec.ColorForeground
+
+	m.ColorGraph, m.ColorGrid = getGraphColors(spec.ColorBackground, spec.ColorForeground)
+
+	m.ColorNeutral = colorNeutral
+	m.ColorUpstream = colorUpstream
+	m.ColorDownstream = colorDownstream
 
 	textOffset := 3.5
 
-	var pathLegend, pathGrid Path
-
-	// background
-	s.Rect(0, 0, float64(spec.Width), float64(spec.Height), "fill:"+colorBackground.String())
-	s.Rect(x, y, w, h, "fill:"+colorGraph.String())
+	x := m.GraphX
+	y := m.GraphY
+	w := m.GraphWidth
+	h := m.GraphHeight
 
 	// legend for x-axis
-	s.Gstyle("text-anchor:middle;font-family:Arial,Helvetica,sans-serif;font-size:10.5px;fill:" + colorText.String())
-	pathLegend.MoveTo(x-0.5, y+h+0.5)
-	pathLegend.LineTo(x-0.5+w, y+h+0.5)
+	m.PathLegend.MoveTo(x-0.5, y+h+0.5)
+	m.PathLegend.LineTo(x-0.5+w, y+h+0.5)
 	for i := 0.0; i <= spec.LegendXMax; i += float64(spec.LegendXStep) {
 		frac := i / spec.LegendXMax
 		pos := x - 0.5 + math.Round(w*frac)
-		pathLegend.MoveTo(pos, y+h+2.5)
-		pathLegend.LineTo(pos, y+h+1.5)
+		m.PathLegend.MoveTo(pos, y+h+2.5)
+		m.PathLegend.LineTo(pos, y+h+1.5)
 		text := fmt.Sprintf(spec.LegendXFormat, i*spec.LegendXFactor)
-		s.Text(pos, y+h+10.5+textOffset, text)
+		m.LabelsX = append(m.LabelsX, label{X: pos, Y: y + h + 10.5 + textOffset, Text: text})
 	}
-	s.Gend()
 
 	// legend for y-axis
-	s.Gstyle("text-anchor:end;font-family:Arial,Helvetica,sans-serif;font-size:10.5px;fill:" + colorText.String())
-	needsTransform := math.Max(math.Abs(float64(spec.LegendYLabelStart)), math.Abs(float64(spec.LegendYLabelEnd))) >= 100
-	if needsTransform {
-		var transform Transform
-		transform.Translate(10.5-x, 0)
-		transform.Scale(0.7, 1)
-		transform.Translate(x-10.5, 0)
-		s.Gtransform(transform.String())
+	if math.Max(math.Abs(float64(spec.LegendYLabelStart)), math.Abs(float64(spec.LegendYLabelEnd))) >= 100 {
+		m.LabelsYTransform.Translate(10.5-x, 0)
+		m.LabelsYTransform.Scale(0.7, 1)
+		m.LabelsYTransform.Translate(x-10.5, 0)
 	}
-	pathLegend.MoveTo(x-0.5, y+0.5)
-	pathLegend.LineTo(x-0.5, y+h+0.5)
+	m.PathLegend.MoveTo(x-0.5, y+0.5)
+	m.PathLegend.LineTo(x-0.5, y+h+0.5)
 	for i := spec.LegendYLabelStart + spec.LegendYLabelStep/2; i <= spec.LegendYLabelEnd; i += spec.LegendYLabelStep {
 		frac := (float64(i) - spec.LegendYBottom) / (spec.LegendYTop - spec.LegendYBottom)
 		pos := y + h + 0.5 - math.Round(h*frac)
-		pathLegend.MoveTo(x-2.5, pos)
-		pathLegend.LineTo(x-1.5, pos)
+		m.PathLegend.MoveTo(x-2.5, pos)
+		m.PathLegend.LineTo(x-1.5, pos)
 	}
 	for i := spec.LegendYLabelStart; i <= spec.LegendYLabelEnd; i += spec.LegendYLabelStep {
 		frac := (float64(i) - spec.LegendYBottom) / (spec.LegendYTop - spec.LegendYBottom)
 		pos := y + h + 0.5 - math.Round(h*frac)
-		pathLegend.MoveTo(x-4.5, pos)
-		pathLegend.LineTo(x-1.5, pos)
+		m.PathLegend.MoveTo(x-4.5, pos)
+		m.PathLegend.LineTo(x-1.5, pos)
 		if frac > 0.01 {
-			pathGrid.MoveTo(x+0.5, pos)
-			pathGrid.LineTo(x+w-0.5, pos)
+			m.PathGrid.MoveTo(x+0.5, pos)
+			m.PathGrid.LineTo(x+w-0.5, pos)
 		}
 		text := fmt.Sprintf("%d", i)
-		s.Text(x-10.5, pos+textOffset, text)
+		m.LabelsY = append(m.LabelsY, label{X: x - 10.5, Y: pos + textOffset, Text: text})
 	}
-	if needsTransform {
-		s.Gend()
-	}
-	s.Gend()
 
-	s.Path(pathLegend.String(), "fill:none;stroke-linecap:square;stroke:"+colorText.String())
-	s.Path(pathGrid.String(), "fill:none;stroke-linecap:square;stroke:"+colorGrid.String())
-
-	return
+	return m
 }
 
 func getLegendX(mode models.Mode) (bins int, step int, freq float64) {
@@ -143,7 +137,7 @@ func getLegendX(mode models.Mode) (bins int, step int, freq float64) {
 	return
 }
 
-func DrawBitsGraph(out io.Writer, data models.Bins, params GraphParams) {
+func DrawBitsGraph(out io.Writer, data models.Bins, params GraphParams) error {
 	bins, step, _ := getLegendX(data.Mode)
 
 	spec := graphSpec{
@@ -162,15 +156,16 @@ func DrawBitsGraph(out io.Writer, data models.Bins, params GraphParams) {
 		LegendYLabelStep:  2,
 	}
 
-	s := svg.New(out)
-	s.Start(float64(params.Width), float64(params.Height))
+	m := bitsModel{}
+	m.baseModel = getBaseModel(spec)
 
-	x, y, w, h := drawGraphBackground(s, spec)
+	x := m.GraphX
+	y := m.GraphY
+	w := m.GraphWidth
+	h := m.GraphHeight
 
 	scaleX := w / spec.LegendXMax
 	scaleY := h / spec.LegendYTop
-
-	var pathNone, pathUpstream, pathDownstream Path
 
 	var lastBits int8
 	var lastPosY float64
@@ -186,11 +181,11 @@ func DrawBitsGraph(out io.Writer, data models.Bins, params GraphParams) {
 		var path *Path
 		switch bin.Type {
 		case models.BinTypeNone:
-			path = &pathNone
+			path = &m.PathNeutral
 		case models.BinTypeUpstream:
-			path = &pathUpstream
+			path = &m.PathUpstream
 		case models.BinTypeDownstream:
-			path = &pathDownstream
+			path = &m.PathDownstream
 		default:
 			continue
 		}
@@ -226,19 +221,13 @@ func DrawBitsGraph(out io.Writer, data models.Bins, params GraphParams) {
 		lastPath.Close()
 	}
 
-	var transform Transform
-	transform.Scale(scaleX, 1)
-	transform.Translate(x, y)
-	s.Gtransform(transform.String())
-	s.Path(pathNone.String(), "fill:"+colorNeutral.String())
-	s.Path(pathUpstream.String(), "fill:"+colorUpstream.String())
-	s.Path(pathDownstream.String(), "fill:"+colorDownstream.String())
-	s.Gend()
+	m.Transform.Scale(scaleX, 1)
+	m.Transform.Translate(x, y)
 
-	s.End()
+	return writeTemplate(out, m, templateBase, templateBits)
 }
 
-func DrawSNRGraph(out io.Writer, data models.Bins, params GraphParams) {
+func DrawSNRGraph(out io.Writer, data models.Bins, params GraphParams) error {
 	bins, step, freq := getLegendX(data.Mode)
 
 	spec := graphSpec{
@@ -257,16 +246,18 @@ func DrawSNRGraph(out io.Writer, data models.Bins, params GraphParams) {
 		LegendYLabelStep:  10,
 	}
 
-	s := svg.New(out)
-	s.Start(float64(params.Width), float64(params.Height))
+	m := snrModel{}
+	m.baseModel = getBaseModel(spec)
 
-	x, y, w, h := drawGraphBackground(s, spec)
+	x := m.GraphX
+	y := m.GraphY
+	w := m.GraphWidth
+	h := m.GraphHeight
 
 	scaleX := w / spec.LegendXMax
 	scaleY := h / spec.LegendYTop
 
-	var path Path
-	path.SetPrecision(1)
+	m.Path.SetPrecision(1)
 
 	var last float64
 	var lastPosY float64
@@ -281,19 +272,19 @@ func DrawSNRGraph(out io.Writer, data models.Bins, params GraphParams) {
 		posX := float64(i)
 
 		if last > 0 && snr == 0 {
-			path.LineTo(posX, lastPosY)
-			path.LineTo(posX, h)
-			path.Close()
+			m.Path.LineTo(posX, lastPosY)
+			m.Path.LineTo(posX, h)
+			m.Path.Close()
 		}
 		if last == 0 && snr > 0 {
-			path.MoveTo(posX, h)
+			m.Path.MoveTo(posX, h)
 		}
 		if snr > 0 && last != snr {
 			posY := h - math.Min(h, snr*scaleY)
 			if last != 0 {
-				path.LineTo(posX, lastPosY)
+				m.Path.LineTo(posX, lastPosY)
 			}
-			path.LineTo(posX, posY)
+			m.Path.LineTo(posX, posY)
 			lastPosY = posY
 		}
 
@@ -301,22 +292,18 @@ func DrawSNRGraph(out io.Writer, data models.Bins, params GraphParams) {
 	}
 
 	if last > 0 {
-		path.LineTo(spec.LegendXMax, lastPosY)
-		path.LineTo(spec.LegendXMax, h)
-		path.Close()
+		m.Path.LineTo(spec.LegendXMax, lastPosY)
+		m.Path.LineTo(spec.LegendXMax, h)
+		m.Path.Close()
 	}
 
-	var transform Transform
-	transform.Scale(scaleX, 1)
-	transform.Translate(x, y)
-	s.Gtransform(transform.String())
-	s.Path(path.String(), "fill:"+colorNeutral.String())
-	s.Gend()
+	m.Transform.Scale(scaleX, 1)
+	m.Transform.Translate(x, y)
 
-	s.End()
+	return writeTemplate(out, m, templateBase, templateSNR)
 }
 
-func DrawQLNGraph(out io.Writer, data models.Bins, params GraphParams) {
+func DrawQLNGraph(out io.Writer, data models.Bins, params GraphParams) error {
 	bins, step, freq := getLegendX(data.Mode)
 
 	spec := graphSpec{
@@ -335,17 +322,19 @@ func DrawQLNGraph(out io.Writer, data models.Bins, params GraphParams) {
 		LegendYLabelStep:  20,
 	}
 
-	s := svg.New(out)
-	s.Start(float64(params.Width), float64(params.Height))
+	m := qlnModel{}
+	m.baseModel = getBaseModel(spec)
 
-	x, y, w, h := drawGraphBackground(s, spec)
+	x := m.GraphX
+	y := m.GraphY
+	w := m.GraphWidth
+	h := m.GraphHeight
 
 	scaleX := w / spec.LegendXMax
 	scaleY := h / (spec.LegendYTop - spec.LegendYBottom)
 	offsetY := spec.LegendYBottom
 
-	var path Path
-	path.SetPrecision(1)
+	m.Path.SetPrecision(1)
 
 	var last float64 = offsetY
 	var lastPosY float64
@@ -360,19 +349,19 @@ func DrawQLNGraph(out io.Writer, data models.Bins, params GraphParams) {
 		posX := float64(i)
 
 		if last > offsetY && qln <= offsetY {
-			path.LineTo(posX, lastPosY)
-			path.LineTo(posX, h)
-			path.Close()
+			m.Path.LineTo(posX, lastPosY)
+			m.Path.LineTo(posX, h)
+			m.Path.Close()
 		}
 		if last <= offsetY && qln > offsetY {
-			path.MoveTo(posX, h)
+			m.Path.MoveTo(posX, h)
 		}
 		if qln > offsetY && last != qln {
 			posY := h - math.Max(0, math.Min(h, (qln-offsetY)*scaleY))
 			if last > offsetY {
-				path.LineTo(posX, lastPosY)
+				m.Path.LineTo(posX, lastPosY)
 			}
-			path.LineTo(posX, posY)
+			m.Path.LineTo(posX, posY)
 			lastPosY = posY
 		}
 
@@ -380,22 +369,18 @@ func DrawQLNGraph(out io.Writer, data models.Bins, params GraphParams) {
 	}
 
 	if last > offsetY {
-		path.LineTo(spec.LegendXMax, lastPosY)
-		path.LineTo(spec.LegendXMax, h)
-		path.Close()
+		m.Path.LineTo(spec.LegendXMax, lastPosY)
+		m.Path.LineTo(spec.LegendXMax, h)
+		m.Path.Close()
 	}
 
-	var transform Transform
-	transform.Scale(scaleX, 1)
-	transform.Translate(x, y)
-	s.Gtransform(transform.String())
-	s.Path(path.String(), "fill:"+colorNeutral.String())
-	s.Gend()
+	m.Transform.Scale(scaleX, 1)
+	m.Transform.Translate(x, y)
 
-	s.End()
+	return writeTemplate(out, m, templateBase, templateQLN)
 }
 
-func DrawHlogGraph(out io.Writer, data models.Bins, params GraphParams) {
+func DrawHlogGraph(out io.Writer, data models.Bins, params GraphParams) error {
 	bins, step, freq := getLegendX(data.Mode)
 
 	spec := graphSpec{
@@ -414,17 +399,19 @@ func DrawHlogGraph(out io.Writer, data models.Bins, params GraphParams) {
 		LegendYLabelStep:  20,
 	}
 
-	s := svg.New(out)
-	s.Start(float64(params.Width), float64(params.Height))
+	m := hlogModel{}
+	m.baseModel = getBaseModel(spec)
 
-	x, y, w, h := drawGraphBackground(s, spec)
+	x := m.GraphX
+	y := m.GraphY
+	w := m.GraphWidth
+	h := m.GraphHeight
 
 	scaleX := w / spec.LegendXMax
 	scaleY := h / (spec.LegendYTop - spec.LegendYBottom)
 	offsetY := spec.LegendYBottom
 
-	var path Path
-	path.SetPrecision(1)
+	m.Path.SetPrecision(1)
 
 	var lastValid bool
 	var last float64
@@ -440,16 +427,16 @@ func DrawHlogGraph(out io.Writer, data models.Bins, params GraphParams) {
 		reset := lastValid && math.Abs(hlog-last) >= 10
 
 		if (last < 0 && hlog >= 0) || reset {
-			path.LineTo(posX-0.5, lastPosY/scaleX)
+			m.Path.LineTo(posX-0.5, lastPosY/scaleX)
 		}
 		if (last >= 0 && hlog < 0) || reset {
-			path.MoveTo(posX-0.5, posY/scaleX)
+			m.Path.MoveTo(posX-0.5, posY/scaleX)
 			lastPosY = posY
 		}
 		if hlog < 0 && last != hlog {
 			if lastValid && !reset {
-				path.LineTo(posX-1, lastPosY/scaleX)
-				path.LineTo(posX, posY/scaleX)
+				m.Path.LineTo(posX-1, lastPosY/scaleX)
+				m.Path.LineTo(posX, posY/scaleX)
 			}
 			lastPosY = posY
 		}
@@ -459,16 +446,14 @@ func DrawHlogGraph(out io.Writer, data models.Bins, params GraphParams) {
 	}
 
 	if last < 0 {
-		path.LineTo(spec.LegendXMax, lastPosY/scaleX)
+		m.Path.LineTo(spec.LegendXMax, lastPosY/scaleX)
 	}
 
 	// scaling of y by scaleX in order to simulate vector-effect="non-scaling-stroke" for non-supporting renderers
-	var transform Transform
-	transform.Scale(scaleX, scaleX)
-	transform.Translate(x, y)
-	s.Gtransform(transform.String())
-	s.Path(path.String(), fmt.Sprintf("fill:none;stroke-width:%f;stroke-linecap:butt;stroke:", 1.25/scaleX)+colorNeutral.String())
-	s.Gend()
+	m.Transform.Scale(scaleX, scaleX)
+	m.Transform.Translate(x, y)
 
-	s.End()
+	m.StrokeWidth = 1.25 / scaleX
+
+	return writeTemplate(out, m, templateBase, templateHlog)
 }
