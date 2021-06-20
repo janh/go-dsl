@@ -404,59 +404,44 @@ func DrawHlogGraph(out io.Writer, data models.Bins, params GraphParams) {
 	scaleY := h / (spec.LegendYTop - spec.LegendYBottom)
 	offsetY := spec.LegendYBottom
 
-	var path, pathPart Path
+	var path Path
 	path.SetPrecision(1)
-	pathPart.SetPrecision(1)
 
-	var lastHlog *float64
-	var lastDrawn bool
-	var lastPosX float64
+	var lastValid bool
+	var last float64
 	var lastPosY float64
 
 	for i := 0; i < bins; i++ {
 		bin := data.Bins[i]
 		hlog := bin.Hlog
 
-		if lastHlog != nil && (hlog >= 0 || math.Abs(hlog-*lastHlog) >= 10) {
-			if !lastDrawn {
-				pathPart.LineTo(lastPosX, lastPosY/scaleX)
-			}
-			pathPart.LineTo(lastPosX+0.5, lastPosY/scaleX)
-			path.AddPath(pathPart)
-			pathPart = Path{}
-			pathPart.SetPrecision(1)
-			lastHlog = nil
+		posX := float64(i) + 0.5
+		posY := h + 0.5 - math.Max(0, math.Min(h, (hlog-offsetY)*scaleY))
+
+		reset := lastValid && math.Abs(hlog-last) >= 10
+
+		if (last < 0 && hlog >= 0) || reset {
+			path.LineTo(posX-0.5, lastPosY/scaleX)
 		}
-
-		if hlog < 0 {
-			posX := float64(i) + 0.5
-			posY := h + 0.5 - math.Max(0, math.Min(h, (hlog-offsetY)*scaleY))
-			if pathPart.IsEmpty() {
-				pathPart.MoveTo(posX-0.5, posY/scaleX)
-				pathPart.LineTo(posX, posY/scaleX)
-				lastDrawn = true
-			} else if *lastHlog != hlog {
-				if !lastDrawn {
-					pathPart.LineTo(posX-1, lastPosY/scaleX)
-				}
-				pathPart.LineTo(posX, posY/scaleX)
-				lastDrawn = true
-			} else {
-				lastDrawn = false
-			}
-
-			lastHlog = &hlog
-			lastPosX = posX
+		if (last >= 0 && hlog < 0) || reset {
+			path.MoveTo(posX-0.5, posY/scaleX)
 			lastPosY = posY
 		}
+		if hlog < 0 && last != hlog {
+			if lastValid && !reset {
+				path.LineTo(posX-1, lastPosY/scaleX)
+				path.LineTo(posX, posY/scaleX)
+			}
+			lastPosY = posY
+		}
+
+		lastValid = hlog < 0
+		last = hlog
 	}
 
-	if !pathPart.IsEmpty() {
-		if !lastDrawn {
-			pathPart.LineTo(lastPosX, lastPosY/scaleX)
-		}
-		pathPart.LineTo(lastPosX+0.5, lastPosY/scaleX)
-		path.AddPath(pathPart)
+	if last < 0 {
+		path.LineTo(spec.LegendXMax, lastPosY/scaleX)
+		path.Close()
 	}
 
 	// scaling of y by scaleX in order to simulate vector-effect="non-scaling-stroke" for non-supporting renderers
