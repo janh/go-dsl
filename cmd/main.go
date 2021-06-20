@@ -6,6 +6,7 @@ package main
 
 import (
 	"fmt"
+	"io"
 	"os"
 	"syscall"
 	"time"
@@ -14,6 +15,7 @@ import (
 
 	"3e8.eu/go/dsl/broadcom"
 	"3e8.eu/go/dsl/graphs"
+	"3e8.eu/go/dsl/models"
 )
 
 func main() {
@@ -67,23 +69,10 @@ func main() {
 	writeFile(filenameBase+"summary.txt", []byte(client.Status().Summary()))
 	writeFile(filenameBase+"raw.txt", client.RawData())
 
-	graphParams := graphs.DefaultGraphParams
-
-	f := createFile(filenameBase + "bits.svg")
-	defer f.Close()
-	graphs.DrawBitsGraph(f, client.Bins(), graphParams)
-
-	f = createFile(filenameBase + "snr.svg")
-	defer f.Close()
-	graphs.DrawSNRGraph(f, client.Bins(), graphParams)
-
-	f = createFile(filenameBase + "qln.svg")
-	defer f.Close()
-	graphs.DrawQLNGraph(f, client.Bins(), graphParams)
-
-	f = createFile(filenameBase + "hlog.svg")
-	defer f.Close()
-	graphs.DrawHlogGraph(f, client.Bins(), graphParams)
+	writeGraph(filenameBase + "bits.svg", client.Bins(), graphs.DrawBitsGraph)
+	writeGraph(filenameBase + "snr.svg", client.Bins(), graphs.DrawSNRGraph)
+	writeGraph(filenameBase + "qln.svg", client.Bins(), graphs.DrawQLNGraph)
+	writeGraph(filenameBase + "hlog.svg", client.Bins(), graphs.DrawHlogGraph)
 }
 
 func createFile(filename string) *os.File {
@@ -102,6 +91,17 @@ func writeFile(filename string, data []byte) {
 	_, err := f.Write(data)
 	if err != nil {
 		fmt.Println("failed to write file:", err)
+		os.Exit(1)
+	}
+}
+
+func writeGraph(filename string, bins models.Bins, graphFunc func(out io.Writer, data models.Bins, params graphs.GraphParams) error) {
+	f := createFile(filename)
+	defer f.Close()
+
+	err := graphFunc(f, bins, graphs.DefaultGraphParams)
+	if err != nil {
+		fmt.Println("failed to write graph:", err)
 		os.Exit(1)
 	}
 }
