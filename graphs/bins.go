@@ -88,7 +88,11 @@ func drawGraphBackground(s *svg.SVG, spec graphSpec) (x, y, w, h float64) {
 	s.Gstyle("text-anchor:end;font-family:Arial,Helvetica,sans-serif;font-size:10.5px;fill:" + colorText.String())
 	needsTransform := math.Max(math.Abs(float64(spec.LegendYLabelStart)), math.Abs(float64(spec.LegendYLabelEnd))) >= 100
 	if needsTransform {
-		s.Gtransform(fmt.Sprintf("translate(%f 0) scale(0.7 1) translate(%f 0)", x-10.5, 10.5-x))
+		var transform Transform
+		transform.Translate(10.5-x, 0)
+		transform.Scale(0.7, 1)
+		transform.Translate(x-10.5, 0)
+		s.Gtransform(transform.String())
 	}
 	pathLegend.MoveTo(x-0.5, y+0.5)
 	pathLegend.LineTo(x-0.5, y+h+0.5)
@@ -222,7 +226,10 @@ func DrawBitsGraph(out io.Writer, data models.Bins, params GraphParams) {
 		lastPath.Close()
 	}
 
-	s.Gtransform(fmt.Sprintf("translate(%f %f) scale(%f 1)", x, y, scaleX))
+	var transform Transform
+	transform.Scale(scaleX, 1)
+	transform.Translate(x, y)
+	s.Gtransform(transform.String())
 	s.Path(pathNone.String(), "fill:"+colorNeutral.String())
 	s.Path(pathUpstream.String(), "fill:"+colorUpstream.String())
 	s.Path(pathDownstream.String(), "fill:"+colorDownstream.String())
@@ -299,7 +306,10 @@ func DrawSNRGraph(out io.Writer, data models.Bins, params GraphParams) {
 		path.Close()
 	}
 
-	s.Gtransform(fmt.Sprintf("translate(%f %f) scale(%f 1)", x, y, scaleX))
+	var transform Transform
+	transform.Scale(scaleX, 1)
+	transform.Translate(x, y)
+	s.Gtransform(transform.String())
 	s.Path(path.String(), "fill:"+colorNeutral.String())
 	s.Gend()
 
@@ -375,7 +385,10 @@ func DrawQLNGraph(out io.Writer, data models.Bins, params GraphParams) {
 		path.Close()
 	}
 
-	s.Gtransform(fmt.Sprintf("translate(%f %f) scale(%f 1)", x, y, scaleX))
+	var transform Transform
+	transform.Scale(scaleX, 1)
+	transform.Translate(x, y)
+	s.Gtransform(transform.String())
 	s.Path(path.String(), "fill:"+colorNeutral.String())
 	s.Gend()
 
@@ -451,7 +464,10 @@ func DrawHlogGraph(out io.Writer, data models.Bins, params GraphParams) {
 	}
 
 	// scaling of y by scaleX in order to simulate vector-effect="non-scaling-stroke" for non-supporting renderers
-	s.Gtransform(fmt.Sprintf("translate(%f %f) scale(%f %f)", x, y, scaleX, scaleX))
+	var transform Transform
+	transform.Scale(scaleX, scaleX)
+	transform.Translate(x, y)
+	s.Gtransform(transform.String())
 	s.Path(path.String(), fmt.Sprintf("fill:none;stroke-width:%f;stroke-linecap:butt;stroke:", 1.25/scaleX)+colorNeutral.String())
 	s.Gend()
 
