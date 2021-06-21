@@ -6,6 +6,7 @@ package telnet
 
 import (
 	"errors"
+	"os"
 	"regexp"
 	"strings"
 	"time"
@@ -56,6 +57,9 @@ func (c *Client) connect(host, username, password string) error {
 		prompts := []string{c.config.PromptAccount, c.config.PromptPassword, c.config.PromptCommand}
 		index, err := c.conn.SkipUntilIndex(prompts...)
 		if err != nil {
+			if errors.Is(err, os.ErrDeadlineExceeded) {
+				return errors.New("no prompt detected")
+			}
 			return err
 		}
 		prompt := prompts[index]
