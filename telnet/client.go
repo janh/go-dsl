@@ -6,11 +6,14 @@ package telnet
 
 import (
 	"errors"
+	"regexp"
 	"strings"
 	"time"
 
 	"github.com/ziutek/telnet"
 )
+
+var regexpPort = regexp.MustCompile(`:[0-9]+$`)
 
 type Client struct {
 	config ClientConfig
@@ -31,8 +34,12 @@ func NewClient(config ClientConfig, host, username, password string) (*Client, e
 }
 
 func (c *Client) connect(host, username, password string) error {
+	if !regexpPort.MatchString(host) {
+		host += ":23"
+	}
+
 	var err error
-	c.conn, err = telnet.DialTimeout("tcp", host+":23", 10*time.Second)
+	c.conn, err = telnet.DialTimeout("tcp", host, 10*time.Second)
 	if err != nil {
 		return err
 	}
