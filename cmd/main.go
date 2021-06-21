@@ -5,6 +5,7 @@
 package main
 
 import (
+	"flag"
 	"fmt"
 	"io"
 	"os"
@@ -13,19 +14,28 @@ import (
 
 	"golang.org/x/term"
 
+	"3e8.eu/go/dsl"
 	"3e8.eu/go/dsl/broadcom"
+	"3e8.eu/go/dsl/draytek"
 	"3e8.eu/go/dsl/graphs"
 	"3e8.eu/go/dsl/models"
 )
 
 func main() {
-	if len(os.Args) != 2 {
-		fmt.Println("missing host")
-		os.Exit(1)
+	flagSet := flag.NewFlagSet(os.Args[0], flag.ExitOnError)
+
+	device := flagSet.String("d", "", "device type (either broadcom or draytek)")
+	flagSet.Parse(os.Args[1:])
+
+	if (*device != "broadcom" && *device != "draytek") || len(flagSet.Args()) != 1 {
+		flagSet.Usage()
+		os.Exit(2)
 	}
 
-	host := os.Args[1]
+	loadData(*device, flagSet.Arg(0))
+}
 
+func loadData(device, host string) {
 	fmt.Print("Password: ")
 	passwordBytes, err := term.ReadPassword(int(syscall.Stdin))
 	if err != nil {
@@ -37,11 +47,21 @@ func main() {
 	fmt.Println()
 	fmt.Print("Connecting…")
 
-	telnetConfig := broadcom.TelnetConfig{
-		Host:     host,
-		Password: password,
+	var client dsl.Client
+	if device == "broadcom" {
+		telnetConfig := broadcom.TelnetConfig{
+			Host:     host,
+			Password: password,
+		}
+		client, err = broadcom.NewTelnetClient(telnetConfig)
+	} else if device == "draytek" {
+		telnetConfig := draytek.TelnetConfig{
+			Host:     host,
+			Password: password,
+		}
+		client, err = draytek.NewTelnetClient(telnetConfig)
 	}
-	client, err := broadcom.NewTelnetClient(telnetConfig)
+
 	if err != nil {
 		fmt.Println(" failed:", err)
 		os.Exit(1)
