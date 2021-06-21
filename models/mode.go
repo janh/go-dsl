@@ -26,7 +26,7 @@ func (t ModeType) String() string {
 	case ModeTypeADSL2:
 		return "ADSL2"
 	case ModeTypeADSL2Plus:
-		return "ADSL2Plus"
+		return "ADSL2+"
 	case ModeTypeVDSL2:
 		return "VDSL2"
 	}
