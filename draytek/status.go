@@ -47,13 +47,25 @@ func readStatus(status string) map[string]string {
 
 func readLine(values map[string]string, line string) {
 	line = strings.TrimSpace(line)
-
 	count := strings.Count(line, ":")
-	if count == 2 && regexpWhitespace.MatchString(line) {
+
+	if count == 2 {
 		line = regexpColonWhitespace.ReplaceAllString(line, " : ")
-		lineSplit := splitAtLongestWhitespace(line)
-		readLine(values, lineSplit[0])
-		readLine(values, lineSplit[1])
+		lineSplit := strings.SplitN(line, ":", 3)
+
+		middle := lineSplit[1]
+		if regexpWhitespace.MatchString(middle) {
+			middleSplit := splitAtLongestWhitespace(middle)
+
+			key1 := regexpFilterCharacters.ReplaceAllString(lineSplit[0], "")
+			value1 := regexpWhitespace.ReplaceAllString(strings.TrimSpace(middleSplit[0]), " ")
+			values[key1] = value1
+
+			key2 := regexpFilterCharacters.ReplaceAllString(middleSplit[1], "")
+			value2 := regexpWhitespace.ReplaceAllString(strings.TrimSpace(lineSplit[2]), " ")
+			values[key2] = value2
+		}
+
 	} else if count == 1 {
 		lineSplit := strings.SplitN(line, ":", 2)
 		key := regexpFilterCharacters.ReplaceAllString(lineSplit[0], "")
