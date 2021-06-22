@@ -14,6 +14,7 @@ var vendorMapping = map[string]string{
 	"ANDV": "Analog Devices",
 	"BDCM": "Broadcom",
 	"CENT": "Centillium",
+	"DRAY": "DrayTek",
 	"GPSN": "Globespan",
 	"IFTN": "Infineon",
 	"IKNS": "Ikanos",
