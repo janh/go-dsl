@@ -70,8 +70,18 @@ func (c *TelnetClient) UpdateData() error {
 		return err
 	}
 
+	qln, err := c.client.Execute("adsl status qln")
+	if err != nil {
+		return err
+	}
+
+	hlog, err := c.client.Execute("adsl status hlog")
+	if err != nil {
+		return err
+	}
+
 	c.status = parseStatus(status, counts)
-	c.bins = parseBins(c.status, downstream, upstream)
+	c.bins = parseBins(c.status, downstream, upstream, qln, hlog)
 
 	var b strings.Builder
 	fmt.Fprintln(&b, "# adsl status")
@@ -82,6 +92,10 @@ func (c *TelnetClient) UpdateData() error {
 	fmt.Fprintln(&b, downstream)
 	fmt.Fprintln(&b, "# adsl showbins up")
 	fmt.Fprintln(&b, upstream)
+	fmt.Fprintln(&b, "# adsl status qln")
+	fmt.Fprintln(&b, qln)
+	fmt.Fprintln(&b, "# adsl status hlog")
+	fmt.Fprintln(&b, hlog)
 	fmt.Fprintln(&b)
 	c.rawData = []byte(b.String())
 
