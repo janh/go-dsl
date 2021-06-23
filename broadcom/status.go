@@ -218,7 +218,9 @@ func parseVendor(status *models.Status, vendor string) {
 		} else if strings.HasPrefix(lineLower, "chipset versionnumber:") {
 			version := strings.TrimSpace(strings.Split(line, ":")[1])
 			versionByte := helpers.ParseHexadecimal(version)
-			status.LinecardVersion = fmt.Sprintf("%d.%d", versionByte[0], versionByte[1])
+			if len(versionByte) == 2 {
+				status.LinecardVersion = fmt.Sprintf("%d.%d", versionByte[0], versionByte[1])
+			}
 		}
 	}
 }
