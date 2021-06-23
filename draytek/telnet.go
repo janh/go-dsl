@@ -55,6 +55,11 @@ func (c *TelnetClient) UpdateData() error {
 		return err
 	}
 
+	counts, err := c.client.Execute("adsl status counts")
+	if err != nil {
+		return err
+	}
+
 	downstream, err := c.client.Execute("adsl showbins")
 	if err != nil {
 		return err
@@ -65,12 +70,14 @@ func (c *TelnetClient) UpdateData() error {
 		return err
 	}
 
-	c.status = parseStatus(status)
+	c.status = parseStatus(status, counts)
 	c.bins = parseBins(c.status, downstream, upstream)
 
 	var b strings.Builder
 	fmt.Fprintln(&b, "# adsl status")
 	fmt.Fprintln(&b, status)
+	fmt.Fprintln(&b, "# adsl status counts")
+	fmt.Fprintln(&b, counts)
 	fmt.Fprintln(&b, "# adsl showbins")
 	fmt.Fprintln(&b, downstream)
 	fmt.Fprintln(&b, "# adsl showbins up")

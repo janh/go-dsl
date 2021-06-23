@@ -21,11 +21,14 @@ var regexpFilterCharacters = regexp.MustCompile(`[^a-zA-Z0-9]+`)
 var regexpBrokenFloat = regexp.MustCompile(`^(-?)(\d+)\.(-?)\s*(\d+)$`)
 var regexpModemVersion = regexp.MustCompile(`^0([0-9A-F])-0([0-9A-F])-0([0-9A-F])-0([0-9A-F])-0([0-9A-F])-0([0-9A-F])$`)
 
-func parseStatus(statusStr string) models.Status {
+func parseStatus(statusStr, counts string) models.Status {
 	var status models.Status
 
 	values := readStatus(statusStr)
 	interpretStatus(&status, values)
+
+	valuesCounts := readCounts(counts)
+	interpretCounts(&status, valuesCounts)
 
 	return status
 }
@@ -223,4 +226,51 @@ func interpretStatusModemVersion(values map[string]string, key, alternateKey str
 
 	version = regexpModemVersion.ReplaceAllString(version, "$1.$2.$3.$4.$5.$6")
 	return version
+}
+
+func readCounts(counts string) map[string][2]string {
+	values := make(map[string][2]string)
+
+	scanner := bufio.NewScanner(strings.NewReader(counts))
+
+	for scanner.Scan() {
+		line := scanner.Text()
+
+		if strings.Contains(line, "[") && !strings.Contains(line, "Showtime") {
+			break
+		}
+
+		split := strings.SplitN(line, ":", 2)
+
+		if len(split) == 2 {
+			key := regexpFilterCharacters.ReplaceAllString(split[0], "")
+			val := split[1]
+			valSplit := strings.Fields(val)
+
+			if len(valSplit) >= 2 {
+				values[key] = [2]string{valSplit[0], valSplit[1]}
+			}
+		}
+	}
+
+	return values
+}
+
+func interpretCounts(status *models.Status, values map[string][2]string) {
+	status.DownstreamFECCount, status.UpstreamFECCount = interpretCountsInt64Ref(values, "FEC")
+}
+
+func interpretCountsInt64(values map[string][2]string, key string) (downstream, upstream int64) {
+	if val, ok := values[key]; ok {
+		downstream, _ = strconv.ParseInt(val[0], 10, 64)
+		upstream, _ = strconv.ParseInt(val[1], 10, 64)
+	}
+	return
+}
+
+func interpretCountsInt64Ref(values map[string][2]string, key string) (downstream, upstream *int64) {
+	d, u := interpretCountsInt64(values, key)
+	downstream = &d
+	upstream = &u
+	return
 }
