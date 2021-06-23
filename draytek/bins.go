@@ -6,20 +6,25 @@ package draytek
 
 import (
 	"bufio"
+	"regexp"
 	"strconv"
 	"strings"
 
 	"3e8.eu/go/dsl/models"
 )
 
-func parseBins(status models.Status, downstream, upstream, qln, hlog string) models.Bins {
+var regexpBandinfo = regexp.MustCompile(`Limits=\[\s*(\d+)-\s*(\d+)\]`)
+
+func parseBins(status models.Status, bandinfo, downstream, upstream, qln, hlog string) models.Bins {
 	var bins models.Bins
 
 	bins.Mode = status.Mode
 	bins.Bins = make([]models.Bin, bins.Mode.BinCount())
 
-	parseShowbinsData(&bins, downstream, models.BinTypeDownstream)
-	parseShowbinsData(&bins, upstream, models.BinTypeUpstream)
+	parseStatusBandinfo(&bins, bandinfo)
+
+	parseShowbinsData(&bins, downstream)
+	parseShowbinsData(&bins, upstream)
 
 	parseStatusQLN(&bins, qln)
 	parseStatusHlog(&bins, hlog)
@@ -27,7 +32,34 @@ func parseBins(status models.Status, downstream, upstream, qln, hlog string) mod
 	return bins
 }
 
-func parseShowbinsData(bins *models.Bins, data string, binType models.BinType) {
+func parseStatusBandinfo(bins *models.Bins, data string) {
+	scanner := bufio.NewScanner(strings.NewReader(data))
+
+	var binType models.BinType
+
+	for scanner.Scan() {
+		line := scanner.Text()
+		line = strings.TrimSpace(line)
+
+		if strings.HasPrefix(line, "US:") {
+			binType = models.BinTypeUpstream
+		} else if strings.HasPrefix(line, "DS:") {
+			binType = models.BinTypeDownstream
+		}
+
+		submatches := regexpBandinfo.FindStringSubmatch(line)
+		if len(submatches) == 3 {
+			start, _ := strconv.ParseInt(submatches[1], 10, 64)
+			end, _ := strconv.ParseInt(submatches[2], 10, 64)
+
+			for num := start; num <= end; num++ {
+				bins.Bins[num].Type = binType
+			}
+		}
+	}
+}
+
+func parseShowbinsData(bins *models.Bins, data string) {
 	scanner := bufio.NewScanner(strings.NewReader(data))
 
 	for scanner.Scan() {
@@ -35,7 +67,7 @@ func parseShowbinsData(bins *models.Bins, data string, binType models.BinType) {
 		if strings.Contains(line, "*") {
 			items := strings.Split(line, "*")
 			for _, item := range items {
-				readShowbinsBin(bins, item, binType)
+				readShowbinsBin(bins, item)
 			}
 		}
 	}
@@ -64,17 +96,18 @@ func parseShowbinsData(bins *models.Bins, data string, binType models.BinType) {
 	}
 }
 
-func readShowbinsBin(bins *models.Bins, item string, binType models.BinType) {
+func readShowbinsBin(bins *models.Bins, item string) {
 	data := strings.Fields(item)
 	if len(data) == 4 {
 		num, _ := strconv.Atoi(data[0])
 		snr, _ := strconv.ParseFloat(data[1], 64)
 		bits, _ := strconv.ParseInt(data[3], 10, 64)
 
-		if bits != 0 || snr != 0 {
-			bins.Bins[num].SNR = snr
+		if bits != 0 {
 			bins.Bins[num].Bits = int8(bits)
-			bins.Bins[num].Type = binType
+		}
+		if snr != 0 {
+			bins.Bins[num].SNR = snr
 		}
 	}
 }
