@@ -104,7 +104,10 @@ func (c *Client) Execute(command string) (string, error) {
 	if strings.HasPrefix(str, command+"\r\n") {
 		str = str[len(command)+2:]
 	}
-	if index := strings.LastIndex(str, "\r\n"); index >= 0 {
+	if index := strings.LastIndexAny(str, "\r\n"); index >= 0 {
+		for index >= 1 && str[index-1] == '\r' || str[index-1] == '\n' {
+			index -= 1
+		}
 		str = str[0:index]
 	}
 
