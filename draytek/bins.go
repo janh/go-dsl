@@ -62,41 +62,23 @@ func parseStatusBandinfo(bins *models.Bins, data string) {
 func parseShowbinsData(bins *models.Bins, data string) {
 	scanner := bufio.NewScanner(strings.NewReader(data))
 
+	var maxSNRIndex, maxBitsIndex int
+	snrData := make([]float64, bins.Mode.BinCount())
+
 	for scanner.Scan() {
 		line := scanner.Text()
 		if strings.Contains(line, "*") {
 			items := strings.Split(line, "*")
 			for _, item := range items {
-				readShowbinsBin(bins, item)
+				readShowbinsBin(bins, snrData, &maxSNRIndex, &maxBitsIndex, item)
 			}
 		}
 	}
 
-	binCount := bins.Mode.BinCount()
-	if binCount > 512 {
-		// There is a bug in the bin data for at least some VDSL firmwares: The SNR data of the entire
-		// VDSL frequency range is stored in the bins 0-511, with all others being zero.
-
-		var maxSnrIndex, maxBitsIndex int
-		for i := 0; i < len(bins.Bins); i++ {
-			if bins.Bins[i].SNR > 0 {
-				maxSnrIndex = i
-			}
-			if bins.Bins[i].Bits > 0 {
-				maxBitsIndex = i
-			}
-		}
-
-		factor := binCount / 512
-		if maxSnrIndex <= maxBitsIndex/factor {
-			for i := binCount - 1; i > 0; i-- {
-				bins.Bins[i].SNR = bins.Bins[i/factor].SNR
-			}
-		}
-	}
+	handleShowbinsSNR(bins, snrData, maxSNRIndex, maxBitsIndex)
 }
 
-func readShowbinsBin(bins *models.Bins, item string) {
+func readShowbinsBin(bins *models.Bins, snrData []float64, maxSNRIndex, maxBitsIndex *int, item string) {
 	data := strings.Fields(item)
 	if len(data) == 4 {
 		num, _ := strconv.Atoi(data[0])
@@ -105,10 +87,54 @@ func readShowbinsBin(bins *models.Bins, item string) {
 
 		if bits != 0 {
 			bins.Bins[num].Bits = int8(bits)
+			*maxBitsIndex = num
 		}
 		if snr != 0 {
-			bins.Bins[num].SNR = snr
+			snrData[num] = snr
+			*maxSNRIndex = num
 		}
+	}
+}
+
+func handleShowbinsSNR(bins *models.Bins, snrData []float64, maxSNRIndex, maxBitsIndex int) {
+	if maxSNRIndex == 0 {
+		return
+	}
+
+	if maxBitsIndex > 512 {
+
+		// There is a bug in the bin data for at least some VDSL firmwares: The SNR data of the entire
+		// frequency range is stored in the bins 0-511, with all others being zero.
+
+		maxFactor := bins.Mode.BinCount() / maxSNRIndex
+		var factor int
+		for factor = 1; factor < maxFactor; factor *= 2 {
+			// after applying factor, maxSNRIndex should be at most 10% larger than maxBitsIndex, because:
+			// - maxSNRIndex > maxBitsIndex is common when SNR is too low to allocate bits
+			// - maxSNRIndex << maxBitsIndex unlikely, as SNR value needed to allocate bins
+			if float64(maxSNRIndex*factor)/float64(maxBitsIndex) > 0.55 {
+				break
+			}
+		}
+
+		for i := 0; i <= maxSNRIndex; i++ {
+			val := snrData[i]
+			if val != 0 {
+				numBase := i * factor
+				for num := numBase; num < numBase+factor; num++ {
+					bins.Bins[num].SNR = val
+				}
+			}
+		}
+
+	} else {
+
+		for num, val := range snrData {
+			if val != 0 {
+				bins.Bins[num].SNR = val
+			}
+		}
+
 	}
 }
 
