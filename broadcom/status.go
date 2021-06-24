@@ -55,7 +55,7 @@ func parseBasicStats(stats string) map[string]string {
 			values[key] = val
 		}
 
-		if len(line) == 0 || line[0] == ' ' {
+		if len(line) == 0 || line[0] == ' ' || line[0] == '\t' {
 			break
 		}
 	}
@@ -125,7 +125,7 @@ func parseExtendedStats(stats string) map[string][2]string {
 	for scanner.Scan() {
 		line := scanner.Text()
 
-		if len(line) == 0 || line[0] == ' ' || strings.Contains(line, " time") {
+		if len(line) == 0 || line[0] == ' ' || line[0] == '\t' || strings.Contains(line, " time") {
 			lineLower := strings.ToLower(line)
 			if strings.Contains(lineLower, "bearer") && !strings.Contains(lineLower, "bearer 0") {
 				ignore = true
