@@ -5,9 +5,6 @@
 package broadcom
 
 import (
-	"fmt"
-	"strings"
-
 	"3e8.eu/go/dsl/models"
 	"3e8.eu/go/dsl/telnet"
 )
@@ -49,71 +46,9 @@ func (c *TelnetClient) Bins() models.Bins {
 	return c.bins
 }
 
-func (c *TelnetClient) UpdateData() error {
-	stats, err := c.client.Execute("xdslctl info --stats")
-	if err != nil {
-		return err
-	}
-
-	vendor, err := c.client.Execute("xdslctl info --vendor")
-	if err != nil {
-		return err
-	}
-
-	version, err := c.client.Execute("xdslctl --version")
-	if err != nil {
-		return err
-	}
-
-	pbParams, err := c.client.Execute("xdslctl info --pbParams")
-	if err != nil {
-		return err
-	}
-
-	bits, err := c.client.Execute("xdslctl info --Bits")
-	if err != nil {
-		return err
-	}
-
-	snr, err := c.client.Execute("xdslctl info --SNR")
-	if err != nil {
-		return err
-	}
-
-	qln, err := c.client.Execute("xdslctl info --QLN")
-	if err != nil {
-		return err
-	}
-
-	hlog, err := c.client.Execute("xdslctl info --Hlog")
-	if err != nil {
-		return err
-	}
-
-	c.status = parseStatus(stats, vendor, version)
-	c.bins = parseBins(c.status, pbParams, bits, snr, qln, hlog)
-
-	var b strings.Builder
-	fmt.Fprintln(&b, "# xdslctl info --stats")
-	fmt.Fprintln(&b, stats)
-	fmt.Fprintln(&b, "# xdslctl info --vendor")
-	fmt.Fprintln(&b, vendor)
-	fmt.Fprintln(&b, "# xdslctl info --version")
-	fmt.Fprintln(&b, version)
-	fmt.Fprintln(&b, "# xdslctl info --pbParams")
-	fmt.Fprintln(&b, pbParams)
-	fmt.Fprintln(&b, "# xdslctl info --Bits")
-	fmt.Fprintln(&b, bits)
-	fmt.Fprintln(&b, "# xdslctl info --SNR")
-	fmt.Fprintln(&b, snr)
-	fmt.Fprintln(&b, "# xdslctl info --QLN")
-	fmt.Fprintln(&b, qln)
-	fmt.Fprintln(&b, "# xdslctl info --Hlog")
-	fmt.Fprintln(&b, hlog)
-	fmt.Fprintln(&b)
-	c.rawData = []byte(b.String())
-
-	return nil
+func (c *TelnetClient) UpdateData() (err error) {
+	c.status, c.bins, c.rawData, err = updateData(c.client)
+	return
 }
 
 func (c *TelnetClient) Close() {

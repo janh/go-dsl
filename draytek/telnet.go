@@ -5,9 +5,6 @@
 package draytek
 
 import (
-	"fmt"
-	"strings"
-
 	"3e8.eu/go/dsl/models"
 	"3e8.eu/go/dsl/telnet"
 )
@@ -49,64 +46,9 @@ func (c *TelnetClient) Bins() models.Bins {
 	return c.bins
 }
 
-func (c *TelnetClient) UpdateData() error {
-	status, err := c.client.Execute("adsl status")
-	if err != nil {
-		return err
-	}
-
-	counts, err := c.client.Execute("adsl status counts")
-	if err != nil {
-		return err
-	}
-
-	bandinfo, err := c.client.Execute("adsl status bandinfo")
-	if err != nil {
-		return err
-	}
-
-	downstream, err := c.client.Execute("adsl showbins")
-	if err != nil {
-		return err
-	}
-
-	upstream, err := c.client.Execute("adsl showbins up")
-	if err != nil {
-		return err
-	}
-
-	qln, err := c.client.Execute("adsl status qln")
-	if err != nil {
-		return err
-	}
-
-	hlog, err := c.client.Execute("adsl status hlog")
-	if err != nil {
-		return err
-	}
-
-	c.status = parseStatus(status, counts)
-	c.bins = parseBins(c.status, bandinfo, downstream, upstream, qln, hlog)
-
-	var b strings.Builder
-	fmt.Fprintln(&b, "# adsl status")
-	fmt.Fprintln(&b, status)
-	fmt.Fprintln(&b, "# adsl status counts")
-	fmt.Fprintln(&b, counts)
-	fmt.Fprintln(&b, "# adsl status bandinfo")
-	fmt.Fprintln(&b, bandinfo)
-	fmt.Fprintln(&b, "# adsl showbins")
-	fmt.Fprintln(&b, downstream)
-	fmt.Fprintln(&b, "# adsl showbins up")
-	fmt.Fprintln(&b, upstream)
-	fmt.Fprintln(&b, "# adsl status qln")
-	fmt.Fprintln(&b, qln)
-	fmt.Fprintln(&b, "# adsl status hlog")
-	fmt.Fprintln(&b, hlog)
-	fmt.Fprintln(&b)
-	c.rawData = []byte(b.String())
-
-	return nil
+func (c *TelnetClient) UpdateData() (err error) {
+	c.status, c.bins, c.rawData, err = updateData(c.client)
+	return
 }
 
 func (c *TelnetClient) Close() {
