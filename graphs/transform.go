@@ -10,11 +10,11 @@ import (
 	"strings"
 )
 
-type Transform struct {
+type transform struct {
 	funcs []string
 }
 
-func (t *Transform) formatCoord(val float64) (valStr string) {
+func (t *transform) formatCoord(val float64) (valStr string) {
 	val = math.Round(val*100000) / 100000
 	valStr = strconv.FormatFloat(val, 'f', -1, 64)
 	if valStr[0] == '0' && len(valStr) > 1 {
@@ -23,7 +23,7 @@ func (t *Transform) formatCoord(val float64) (valStr string) {
 	return
 }
 
-func (t *Transform) addFunction(funcName string, coords ...float64) {
+func (t *transform) addFunction(funcName string, coords ...float64) {
 	f := funcName + "("
 	for i, val := range coords {
 		if i != 0 {
@@ -36,7 +36,7 @@ func (t *Transform) addFunction(funcName string, coords ...float64) {
 	t.funcs = append(t.funcs, f)
 }
 
-func (t *Transform) Scale(x, y float64) {
+func (t *transform) Scale(x, y float64) {
 	if x == y {
 		t.addFunction("scale", x)
 	} else {
@@ -44,7 +44,7 @@ func (t *Transform) Scale(x, y float64) {
 	}
 }
 
-func (t *Transform) Translate(x, y float64) {
+func (t *transform) Translate(x, y float64) {
 	if y != 0 {
 		t.addFunction("translate", x, y)
 	} else {
@@ -52,7 +52,7 @@ func (t *Transform) Translate(x, y float64) {
 	}
 }
 
-func (t Transform) String() string {
+func (t transform) String() string {
 	var sb strings.Builder
 
 	count := len(t.funcs)

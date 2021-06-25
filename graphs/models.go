@@ -21,12 +21,12 @@ type baseModel struct {
 	ColorUpstream   Color
 	ColorDownstream Color
 
-	PathLegend Path
-	PathGrid   Path
+	PathLegend path
+	PathGrid   path
 
 	LabelsX          []label
 	LabelsY          []label
-	LabelsYTransform Transform
+	LabelsYTransform transform
 }
 
 type label struct {
@@ -37,27 +37,27 @@ type label struct {
 
 type bitsModel struct {
 	baseModel
-	Transform      Transform
-	PathNeutral    Path
-	PathUpstream   Path
-	PathDownstream Path
+	Transform      transform
+	PathNeutral    path
+	PathUpstream   path
+	PathDownstream path
 }
 
 type snrModel struct {
 	baseModel
-	Transform Transform
-	Path      Path
+	Transform transform
+	Path      path
 }
 
 type qlnModel struct {
 	baseModel
-	Transform Transform
-	Path      Path
+	Transform transform
+	Path      path
 }
 
 type hlogModel struct {
 	baseModel
 	StrokeWidth float64
-	Transform   Transform
-	Path        Path
+	Transform   transform
+	Path        path
 }

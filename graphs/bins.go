@@ -169,7 +169,7 @@ func DrawBitsGraph(out io.Writer, data models.Bins, params GraphParams) error {
 
 	var lastBits int8
 	var lastPosY float64
-	var lastPath *Path
+	var lastPath *path
 
 	for i := 0; i < bins; i++ {
 		bin := data.Bins[i]
@@ -178,7 +178,7 @@ func DrawBitsGraph(out io.Writer, data models.Bins, params GraphParams) error {
 			bits = 0
 		}
 
-		var path *Path
+		var path *path
 		switch bin.Type {
 		case models.BinTypeNone:
 			path = &m.PathNeutral
