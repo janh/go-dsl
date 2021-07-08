@@ -64,7 +64,7 @@ func updateData(e executor) (status models.Status, bins models.Bins, rawData []b
 	fmt.Fprintln(&b, stats)
 	fmt.Fprintln(&b, "# xdslctl info --vendor")
 	fmt.Fprintln(&b, vendor)
-	fmt.Fprintln(&b, "# xdslctl info --version")
+	fmt.Fprintln(&b, "# xdslctl --version")
 	fmt.Fprintln(&b, version)
 	fmt.Fprintln(&b, "# xdslctl info --pbParams")
 	fmt.Fprintln(&b, pbParams)
