@@ -109,10 +109,10 @@ func handleShowbinsSNR(bins *models.Bins, snrData []float64, maxSNRIndex, maxBit
 		maxFactor := bins.Mode.BinCount() / maxSNRIndex
 		var factor int
 		for factor = 1; factor < maxFactor; factor *= 2 {
-			// after applying factor, maxSNRIndex should be at most 10% larger than maxBitsIndex, because:
+			// after applying factor, maxSNRIndex should be at most 10% lower than maxBitsIndex, because:
 			// - maxSNRIndex > maxBitsIndex is common when SNR is too low to allocate bits
-			// - maxSNRIndex << maxBitsIndex unlikely, as SNR value needed to allocate bins
-			if float64(maxSNRIndex*factor)/float64(maxBitsIndex) > 0.55 {
+			// - maxSNRIndex < maxBitsIndex unlikely, as SNR value needed to allocate bins
+			if float64(maxSNRIndex*factor)/float64(maxBitsIndex) > 0.9 {
 				break
 			}
 		}
