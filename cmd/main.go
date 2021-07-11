@@ -90,10 +90,10 @@ func loadData(device, host, user string) {
 	writeFile(filenameBase+"summary.txt", []byte(client.Status().Summary()))
 	writeFile(filenameBase+"raw.txt", client.RawData())
 
-	writeGraph(filenameBase + "bits.svg", client.Bins(), graphs.DrawBitsGraph)
-	writeGraph(filenameBase + "snr.svg", client.Bins(), graphs.DrawSNRGraph)
-	writeGraph(filenameBase + "qln.svg", client.Bins(), graphs.DrawQLNGraph)
-	writeGraph(filenameBase + "hlog.svg", client.Bins(), graphs.DrawHlogGraph)
+	writeGraph(filenameBase+"bits.svg", client.Bins(), graphs.DrawBitsGraph)
+	writeGraph(filenameBase+"snr.svg", client.Bins(), graphs.DrawSNRGraph)
+	writeGraph(filenameBase+"qln.svg", client.Bins(), graphs.DrawQLNGraph)
+	writeGraph(filenameBase+"hlog.svg", client.Bins(), graphs.DrawHlogGraph)
 }
 
 func createFile(filename string) *os.File {
