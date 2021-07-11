@@ -25,6 +25,7 @@ func main() {
 	flagSet := flag.NewFlagSet(os.Args[0], flag.ExitOnError)
 
 	device := flagSet.String("d", "", "device type (either broadcom or draytek)")
+	user := flagSet.String("u", "", "user name (optional)")
 	flagSet.Parse(os.Args[1:])
 
 	if (*device != "broadcom" && *device != "draytek") || len(flagSet.Args()) != 1 {
@@ -32,10 +33,10 @@ func main() {
 		os.Exit(2)
 	}
 
-	loadData(*device, flagSet.Arg(0))
+	loadData(*device, flagSet.Arg(0), *user)
 }
 
-func loadData(device, host string) {
+func loadData(device, host, user string) {
 	fmt.Print("Password: ")
 	passwordBytes, err := term.ReadPassword(int(syscall.Stdin))
 	if err != nil {
@@ -51,12 +52,14 @@ func loadData(device, host string) {
 	if device == "broadcom" {
 		telnetConfig := broadcom.TelnetConfig{
 			Host:     host,
+			User:     user,
 			Password: password,
 		}
 		client, err = broadcom.NewTelnetClient(telnetConfig)
 	} else if device == "draytek" {
 		telnetConfig := draytek.TelnetConfig{
 			Host:     host,
+			User:     user,
 			Password: password,
 		}
 		client, err = draytek.NewTelnetClient(telnetConfig)
