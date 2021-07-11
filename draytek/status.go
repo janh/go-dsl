@@ -11,7 +11,7 @@ import (
 	"strconv"
 	"strings"
 
-	"3e8.eu/go/dsl/helpers"
+	"3e8.eu/go/dsl/internal/helpers"
 	"3e8.eu/go/dsl/models"
 )
 

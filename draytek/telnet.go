@@ -5,8 +5,8 @@
 package draytek
 
 import (
+	"3e8.eu/go/dsl/internal/telnet"
 	"3e8.eu/go/dsl/models"
-	"3e8.eu/go/dsl/telnet"
 )
 
 type TelnetClient struct {
