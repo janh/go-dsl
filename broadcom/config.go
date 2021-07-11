@@ -6,5 +6,6 @@ package broadcom
 
 type TelnetConfig struct {
 	Host     string
+	User     string
 	Password string
 }
