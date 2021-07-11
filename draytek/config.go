@@ -6,5 +6,6 @@ package draytek
 
 type TelnetConfig struct {
 	Host     string
+	User     string
 	Password string
 }
