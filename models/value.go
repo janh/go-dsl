@@ -89,3 +89,15 @@ func (v ValuePower) String() string {
 func (v ValuePower) Unit() string {
 	return "dBm"
 }
+
+type ValueMilliseconds struct {
+	FloatValue
+}
+
+func (v ValueMilliseconds) String() string {
+	return v.FloatValue.String() + " " + v.Unit()
+}
+
+func (v ValueMilliseconds) Unit() string {
+	return "ms"
+}

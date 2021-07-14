@@ -23,6 +23,9 @@ type Status struct {
 	DownstreamInterleavingDepth IntValue
 	UpstreamInterleavingDepth   IntValue
 
+	DownstreamInterleavingDelay ValueMilliseconds
+	UpstreamInterleavingDelay   ValueMilliseconds
+
 	DownstreamAttenuation ValueDecibel
 	UpstreamAttenuation   ValueDecibel
 
@@ -66,6 +69,7 @@ func (s Status) Summary() string {
 	printValues(&b, "Actual rate", s.DownstreamActualRate, s.UpstreamActualRate)
 	printValues(&b, "Attainable rate", s.DownstreamAttainableRate, s.UpstreamAttainableRate)
 	printValues(&b, "Interleaving", s.DownstreamInterleavingDepth, s.UpstreamInterleavingDepth)
+	printValues(&b, "Interleaving", s.DownstreamInterleavingDelay, s.UpstreamInterleavingDelay)
 	fmt.Fprintln(&b)
 
 	printValues(&b, "Attenuation", s.DownstreamAttenuation, s.UpstreamAttenuation)
