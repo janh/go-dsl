@@ -214,12 +214,12 @@ func parseVendor(status *models.Status, vendor string) {
 
 		if strings.HasPrefix(lineLower, "chipset vendor id:") {
 			vendor := strings.TrimSpace(strings.Split(line, ":")[1])
-			status.LinecardVendor = helpers.FormatVendor(vendor)
+			status.FarEndInventory.Vendor = helpers.FormatVendor(vendor)
 		} else if strings.HasPrefix(lineLower, "chipset versionnumber:") {
 			version := strings.TrimSpace(strings.Split(line, ":")[1])
 			versionByte := helpers.ParseHexadecimal(version)
 			if len(versionByte) == 2 {
-				status.LinecardVersion = fmt.Sprintf("%d.%d", versionByte[0], versionByte[1])
+				status.FarEndInventory.Version = fmt.Sprintf("%d.%d", versionByte[0], versionByte[1])
 			}
 		}
 	}
@@ -238,8 +238,8 @@ func parseVersion(status *models.Status, version string) {
 			}
 
 			index := strings.LastIndexByte(line, separator)
-			status.ModemVendor = "Broadcom"
-			status.ModemVersion = strings.TrimSpace(line[index+1:])
+			status.NearEndInventory.Vendor = "Broadcom"
+			status.NearEndInventory.Version = strings.TrimSpace(line[index+1:])
 
 			break
 		}

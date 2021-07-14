@@ -50,11 +50,8 @@ type Status struct {
 	DownstreamESCount IntValue
 	UpstreamESCount   IntValue
 
-	LinecardVendor  string
-	LinecardVersion string
-
-	ModemVendor  string
-	ModemVersion string
+	FarEndInventory  Inventory
+	NearEndInventory Inventory
 }
 
 func (s Status) Summary() string {
@@ -62,8 +59,8 @@ func (s Status) Summary() string {
 
 	fmt.Fprintf(&b, "           State:    %s\n", s.State)
 	fmt.Fprintf(&b, "            Mode:    %s\n", s.Mode)
-	fmt.Fprintf(&b, "       Line card:    %s %s\n", s.LinecardVendor, s.LinecardVersion)
-	fmt.Fprintf(&b, "           Modem:    %s %s\n", s.ModemVendor, s.ModemVersion)
+	fmt.Fprintf(&b, "          Remote:    %s\n", s.FarEndInventory)
+	fmt.Fprintf(&b, "           Modem:    %s\n", s.NearEndInventory)
 	fmt.Fprintln(&b)
 
 	printValues(&b, "Actual rate", s.DownstreamActualRate, s.UpstreamActualRate)

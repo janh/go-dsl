@@ -135,11 +135,11 @@ func interpretStatus(status *models.Status, values map[string]string) {
 	status.DownstreamESCount = interpretStatusIntValue(values, "NEESCount")
 	status.UpstreamESCount = interpretStatusIntValue(values, "FEESCount")
 
-	status.LinecardVendor = interpretStatusVendor(values, "COITUVersion0", "COITUVersion1")
-	status.LinecardVersion = interpretStatusLinecardVersion(values, "COITUVersion1")
+	status.FarEndInventory.Vendor = interpretStatusVendor(values, "COITUVersion0", "COITUVersion1")
+	status.FarEndInventory.Version = interpretStatusCOVersion(values, "COITUVersion1")
 
-	status.ModemVendor = interpretStatusVendor(values, "ITUVersion0", "ITUVersion1")
-	status.ModemVersion = interpretStatusModemVersion(values, "ADSLFirmwareVersion", "VDSLFirmwareVersion")
+	status.NearEndInventory.Vendor = interpretStatusVendor(values, "ITUVersion0", "ITUVersion1")
+	status.NearEndInventory.Version = interpretStatusModemVersion(values, "ADSLFirmwareVersion", "VDSLFirmwareVersion")
 }
 
 func interpretStatusString(values map[string]string, key string) string {
@@ -202,7 +202,7 @@ func interpretStatusVendor(values map[string]string, key0, key1 string) string {
 	return ""
 }
 
-func interpretStatusLinecardVersion(values map[string]string, key string) string {
+func interpretStatusCOVersion(values map[string]string, key string) string {
 	v1 := helpers.ParseHexadecimal(interpretStatusString(values, key))
 	if len(v1) == 4 {
 		return fmt.Sprintf("%d.%d", v1[2], v1[3])
