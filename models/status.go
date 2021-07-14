@@ -14,11 +14,11 @@ type Status struct {
 	State State
 	Mode  Mode
 
-	ActualDownstreamRate ValueBandwidth
-	ActualUpstreamRate   ValueBandwidth
+	DownstreamActualRate ValueBandwidth
+	UpstreamActualRate   ValueBandwidth
 
-	AttainableDownstreamRate ValueBandwidth
-	AttainableUpstreamRate   ValueBandwidth
+	DownstreamAttainableRate ValueBandwidth
+	UpstreamAttainableRate   ValueBandwidth
 
 	DownstreamInterleavingDepth IntValue
 	UpstreamInterleavingDepth   IntValue
@@ -66,8 +66,8 @@ func (s Status) Summary() string {
 	fmt.Fprintf(&b, "           Modem:    %s %s\n", s.ModemVendor, s.ModemVersion)
 	fmt.Fprintln(&b)
 
-	printValues(&b, "Actual rate", s.ActualDownstreamRate, s.ActualUpstreamRate)
-	printValues(&b, "Attainable rate", s.AttainableDownstreamRate, s.AttainableUpstreamRate)
+	printValues(&b, "Actual rate", s.DownstreamActualRate, s.UpstreamActualRate)
+	printValues(&b, "Attainable rate", s.DownstreamAttainableRate, s.UpstreamAttainableRate)
 	printValues(&b, "Interleaving", s.DownstreamInterleavingDepth, s.UpstreamInterleavingDepth)
 	fmt.Fprintln(&b)
 

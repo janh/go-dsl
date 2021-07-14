@@ -78,8 +78,8 @@ func interpretBasicStats(status *models.Status, values map[string]string) {
 		status.Mode = models.ParseMode(mode)
 	}
 
-	status.AttainableDownstreamRate.IntValue, status.AttainableUpstreamRate.IntValue = interpretBasicStatsRate(values, "max")
-	status.ActualDownstreamRate.IntValue, status.ActualUpstreamRate.IntValue = interpretBasicStatsRate(values, "bearer")
+	status.DownstreamAttainableRate.IntValue, status.UpstreamAttainableRate.IntValue = interpretBasicStatsRate(values, "max")
+	status.DownstreamActualRate.IntValue, status.UpstreamActualRate.IntValue = interpretBasicStatsRate(values, "bearer")
 }
 
 func interpretBasicStatsString(values map[string]string, key string) string {

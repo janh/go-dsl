@@ -102,11 +102,11 @@ func interpretStatus(status *models.Status, values map[string]string) {
 	mode := interpretStatusString(values, "RunningMode")
 	status.Mode = models.ParseMode(mode)
 
-	status.ActualDownstreamRate.IntValue = interpretStatusIntValueSuffixFactor(values, "DSActualRate", " bps", 1000)
-	status.ActualUpstreamRate.IntValue = interpretStatusIntValueSuffixFactor(values, "USActualRate", " bps", 1000)
+	status.DownstreamActualRate.IntValue = interpretStatusIntValueSuffixFactor(values, "DSActualRate", " bps", 1000)
+	status.UpstreamActualRate.IntValue = interpretStatusIntValueSuffixFactor(values, "USActualRate", " bps", 1000)
 
-	status.AttainableDownstreamRate.IntValue = interpretStatusIntValueSuffixFactor(values, "DSAttainableRate", " bps", 1000)
-	status.AttainableUpstreamRate.IntValue = interpretStatusIntValueSuffixFactor(values, "USAttainableRate", " bps", 1000)
+	status.DownstreamAttainableRate.IntValue = interpretStatusIntValueSuffixFactor(values, "DSAttainableRate", " bps", 1000)
+	status.UpstreamAttainableRate.IntValue = interpretStatusIntValueSuffixFactor(values, "USAttainableRate", " bps", 1000)
 
 	status.DownstreamInterleavingDepth = interpretStatusIntValue(values, "DSInterleaveDepth")
 	status.UpstreamInterleavingDepth = interpretStatusIntValue(values, "USInterleaveDepth")
