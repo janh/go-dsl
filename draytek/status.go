@@ -21,14 +21,17 @@ var regexpFilterCharacters = regexp.MustCompile(`[^a-zA-Z0-9]+`)
 var regexpBrokenFloat = regexp.MustCompile(`^(-?)(\d+)\.(-?)\s*(\d+)$`)
 var regexpModemVersion = regexp.MustCompile(`^0([0-9A-F])-0([0-9A-F])-0([0-9A-F])-0([0-9A-F])-0([0-9A-F])-0([0-9A-F])$`)
 
-func parseStatus(statusStr, counts string) models.Status {
+func parseStatus(statusStr, counts, more string) models.Status {
 	var status models.Status
 
 	values := readStatus(statusStr)
 	interpretStatus(&status, values)
 
-	valuesCounts := readCounts(counts)
+	valuesCounts := readNearFar(counts)
 	interpretCounts(&status, valuesCounts)
+
+	valuesMore := readNearFar(more)
+	interpretMore(&status, valuesMore)
 
 	return status
 }
@@ -226,10 +229,10 @@ func interpretStatusModemVersion(values map[string]string, key, alternateKey str
 	return version
 }
 
-func readCounts(counts string) map[string][2]string {
+func readNearFar(nearFar string) map[string][2]string {
 	values := make(map[string][2]string)
 
-	scanner := bufio.NewScanner(strings.NewReader(counts))
+	scanner := bufio.NewScanner(strings.NewReader(nearFar))
 
 	for scanner.Scan() {
 		line := scanner.Text()
@@ -254,11 +257,7 @@ func readCounts(counts string) map[string][2]string {
 	return values
 }
 
-func interpretCounts(status *models.Status, values map[string][2]string) {
-	status.DownstreamFECCount, status.UpstreamFECCount = interpretCountsIntValue(values, "FEC")
-}
-
-func interpretCountsIntValue(values map[string][2]string, key string) (downstream, upstream models.IntValue) {
+func interpretNearFarIntValue(values map[string][2]string, key string) (downstream, upstream models.IntValue) {
 	if val, ok := values[key]; ok {
 		if ds, err := strconv.ParseInt(val[0], 10, 64); err == nil {
 			downstream.Int = ds
@@ -270,4 +269,33 @@ func interpretCountsIntValue(values map[string][2]string, key string) (downstrea
 		}
 	}
 	return
+}
+
+func interpretNearFarInterleavingDelay(values map[string][2]string) (downstream, upstream models.FloatValue) {
+	val, ok := values["InterleaveDelay"]
+	if !ok {
+		val, ok = values["INTLVDelay"]
+		if !ok {
+			return
+		}
+	}
+
+	if ds, err := strconv.ParseFloat(val[1], 64); err == nil {
+		downstream.Float = ds / 100
+		downstream.Valid = true
+	}
+	if us, err := strconv.ParseFloat(val[0], 64); err == nil {
+		upstream.Float = us / 100
+		upstream.Valid = true
+	}
+
+	return
+}
+
+func interpretCounts(status *models.Status, values map[string][2]string) {
+	status.DownstreamFECCount, status.UpstreamFECCount = interpretNearFarIntValue(values, "FEC")
+}
+
+func interpretMore(status *models.Status, values map[string][2]string) {
+	status.DownstreamInterleavingDelay.FloatValue, status.UpstreamInterleavingDelay.FloatValue = interpretNearFarInterleavingDelay(values)
 }

@@ -26,6 +26,11 @@ func updateData(e executor) (statusData models.Status, bins models.Bins, rawData
 		return
 	}
 
+	more, err := e.Execute("adsl status more")
+	if err != nil {
+		return
+	}
+
 	bandinfo, err := e.Execute("adsl status bandinfo")
 	if err != nil {
 		return
@@ -51,7 +56,7 @@ func updateData(e executor) (statusData models.Status, bins models.Bins, rawData
 		return
 	}
 
-	statusData = parseStatus(status, counts)
+	statusData = parseStatus(status, counts, more)
 	bins = parseBins(statusData, bandinfo, downstream, upstream, qln, hlog)
 
 	var b strings.Builder
@@ -59,6 +64,8 @@ func updateData(e executor) (statusData models.Status, bins models.Bins, rawData
 	fmt.Fprintln(&b, status)
 	fmt.Fprintln(&b, "# adsl status counts")
 	fmt.Fprintln(&b, counts)
+	fmt.Fprintln(&b, "# adsl status more")
+	fmt.Fprintln(&b, more)
 	fmt.Fprintln(&b, "# adsl status bandinfo")
 	fmt.Fprintln(&b, bandinfo)
 	fmt.Fprintln(&b, "# adsl showbins")
