@@ -96,7 +96,9 @@ func parseHlog(bins *models.Bins, hlog string) {
 	var val float64
 	parseBinList(hlog, func(num int, str string) {
 		val, _ = strconv.ParseFloat(str, 64)
-		bins.Bins[num].Hlog = val
+		if val > -96 {
+			bins.Bins[num].Hlog = val
+		}
 	})
 }
 
