@@ -111,9 +111,6 @@ func interpretStatus(status *models.Status, values map[string]string) {
 	status.DownstreamAttainableRate.IntValue = interpretStatusIntValueSuffixFactor(values, "DSAttainableRate", " bps", 1000)
 	status.UpstreamAttainableRate.IntValue = interpretStatusIntValueSuffixFactor(values, "USAttainableRate", " bps", 1000)
 
-	status.DownstreamInterleavingDepth = interpretStatusIntValue(values, "DSInterleaveDepth")
-	status.UpstreamInterleavingDepth = interpretStatusIntValue(values, "USInterleaveDepth")
-
 	status.DownstreamAttenuation.FloatValue = interpretStatusFloatValueSuffix(values, "NECurrentAttenuation", " dB")
 	status.UpstreamAttenuation.FloatValue = interpretStatusFloatValueSuffix(values, "FarCurrentAttenuation", " dB")
 
