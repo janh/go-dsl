@@ -43,7 +43,7 @@ func readStatus(status string) map[string]string {
 
 	for scanner.Scan() {
 		line := scanner.Text()
-		if strings.Contains(line, ":") && !strings.Contains(line, "---") {
+		if strings.Contains(line, ":") && !strings.Contains(line, "------") {
 			readLine(values, line)
 		}
 	}
