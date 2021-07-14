@@ -78,8 +78,8 @@ func interpretBasicStats(status *models.Status, values map[string]string) {
 		status.Mode = models.ParseMode(mode)
 	}
 
-	status.AttainableDownstreamRate, status.AttainableUpstreamRate = interpretBasicStatsRate(values, "max")
-	status.ActualDownstreamRate, status.ActualUpstreamRate = interpretBasicStatsRate(values, "bearer")
+	status.AttainableDownstreamRate.IntValue, status.AttainableUpstreamRate.IntValue = interpretBasicStatsRate(values, "max")
+	status.ActualDownstreamRate.IntValue, status.ActualUpstreamRate.IntValue = interpretBasicStatsRate(values, "bearer")
 }
 
 func interpretBasicStatsString(values map[string]string, key string) string {
@@ -89,7 +89,7 @@ func interpretBasicStatsString(values map[string]string, key string) string {
 	return ""
 }
 
-func interpretBasicStatsRate(values map[string]string, key string) (downstream, upstream int32) {
+func interpretBasicStatsRate(values map[string]string, key string) (downstream, upstream models.IntValue) {
 	if val, ok := values[key]; ok {
 		items := strings.Split(val, ",")
 
@@ -107,13 +107,18 @@ func interpretBasicStatsRate(values map[string]string, key string) (downstream, 
 	return
 }
 
-func interpretBasicStatsRateNumber(item string) int32 {
+func interpretBasicStatsRateNumber(item string) (out models.IntValue) {
 	separatorIndex := strings.LastIndexByte(item, '=')
 	valueWithUnit := strings.TrimSpace(item[separatorIndex+1:])
 	spaceIndex := strings.IndexRune(valueWithUnit, ' ')
+
 	value := valueWithUnit[0:spaceIndex]
-	valueInt, _ := strconv.ParseInt(value, 10, 32)
-	return int32(valueInt)
+	if valueInt, err := strconv.ParseInt(value, 10, 64); err == nil {
+		out.Int = valueInt
+		out.Valid = true
+	}
+
+	return
 }
 
 func parseExtendedStats(stats string) map[string][2]string {
@@ -156,51 +161,46 @@ func parseExtendedStats(stats string) map[string][2]string {
 }
 
 func interpretExtendedStats(status *models.Status, values map[string][2]string) {
-	status.DownstreamInterleavingDepth, status.UpstreamInterleavingDepth = interpretExtendedStatsInt16(values, "d")
+	status.DownstreamInterleavingDepth, status.UpstreamInterleavingDepth = interpretExtendedStatsIntValue(values, "d")
 
-	status.DownstreamAttenuation, status.UpstreamAttenuation = interpretExtendedStatsFloat64(values, "attndb")
-	status.DownstreamSNRMargin, status.UpstreamSNRMargin = interpretExtendedStatsFloat64(values, "snrdb")
-	status.DownstreamPower, status.UpstreamPower = interpretExtendedStatsFloat64(values, "pwrdbm")
+	status.DownstreamAttenuation.FloatValue, status.UpstreamAttenuation.FloatValue = interpretExtendedStatsFloatValue(values, "attndb")
+	status.DownstreamSNRMargin.FloatValue, status.UpstreamSNRMargin.FloatValue = interpretExtendedStatsFloatValue(values, "snrdb")
+	status.DownstreamPower.FloatValue, status.UpstreamPower.FloatValue = interpretExtendedStatsFloatValue(values, "pwrdbm")
 
-	status.DownstreamFECCount, status.UpstreamFECCount = interpretExtendedStatsInt64Ref(values, "fec")
+	status.DownstreamFECCount, status.UpstreamFECCount = interpretExtendedStatsIntValue(values, "fec")
 
-	status.DownstreamRTXTXCount, status.UpstreamRTXTXCount = interpretExtendedStatsInt64Ref(values, "rtxtx")
-	status.DownstreamRTXCCount, status.UpstreamRTXCCount = interpretExtendedStatsInt64Ref(values, "rtxc")
-	status.DownstreamRTXUCCount, status.UpstreamRTXUCCount = interpretExtendedStatsInt64Ref(values, "rtxuc")
+	status.DownstreamRTXTXCount, status.UpstreamRTXTXCount = interpretExtendedStatsIntValue(values, "rtxtx")
+	status.DownstreamRTXCCount, status.UpstreamRTXCCount = interpretExtendedStatsIntValue(values, "rtxc")
+	status.DownstreamRTXUCCount, status.UpstreamRTXUCCount = interpretExtendedStatsIntValue(values, "rtxuc")
 
-	status.DownstreamCRCCount, status.UpstreamCRCCount = interpretExtendedStatsInt64(values, "crc")
-	status.DownstreamESCount, status.UpstreamESCount = interpretExtendedStatsInt64(values, "es")
+	status.DownstreamCRCCount, status.UpstreamCRCCount = interpretExtendedStatsIntValue(values, "crc")
+	status.DownstreamESCount, status.UpstreamESCount = interpretExtendedStatsIntValue(values, "es")
 }
 
-func interpretExtendedStatsInt64(values map[string][2]string, key string) (downstream, upstream int64) {
+func interpretExtendedStatsIntValue(values map[string][2]string, key string) (downstream, upstream models.IntValue) {
 	if val, ok := values[key]; ok {
-		downstream, _ = strconv.ParseInt(val[0], 10, 64)
-		upstream, _ = strconv.ParseInt(val[1], 10, 64)
+		if ds, err := strconv.ParseInt(val[0], 10, 64); err == nil {
+			downstream.Int = ds
+			downstream.Valid = true
+		}
+		if us, err := strconv.ParseInt(val[1], 10, 64); err == nil {
+			upstream.Int = us
+			upstream.Valid = true
+		}
 	}
 	return
 }
 
-func interpretExtendedStatsInt64Ref(values map[string][2]string, key string) (downstream, upstream *int64) {
-	d, u := interpretExtendedStatsInt64(values, key)
-	downstream = &d
-	upstream = &u
-	return
-}
-
-func interpretExtendedStatsInt16(values map[string][2]string, key string) (downstream, upstream int16) {
+func interpretExtendedStatsFloatValue(values map[string][2]string, key string) (downstream, upstream models.FloatValue) {
 	if val, ok := values[key]; ok {
-		d, _ := strconv.ParseInt(val[0], 10, 16)
-		downstream = int16(d)
-		u, _ := strconv.ParseInt(val[1], 10, 16)
-		upstream = int16(u)
-	}
-	return
-}
-
-func interpretExtendedStatsFloat64(values map[string][2]string, key string) (downstream, upstream float64) {
-	if val, ok := values[key]; ok {
-		downstream, _ = strconv.ParseFloat(val[0], 64)
-		upstream, _ = strconv.ParseFloat(val[1], 64)
+		if ds, err := strconv.ParseFloat(val[0], 64); err == nil {
+			downstream.Float = ds
+			downstream.Valid = true
+		}
+		if us, err := strconv.ParseFloat(val[1], 64); err == nil {
+			upstream.Float = us
+			upstream.Valid = true
+		}
 	}
 	return
 }

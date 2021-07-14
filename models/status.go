@@ -6,7 +6,7 @@ package models
 
 import (
 	"fmt"
-	"strconv"
+	"io"
 	"strings"
 )
 
@@ -14,41 +14,41 @@ type Status struct {
 	State State
 	Mode  Mode
 
-	ActualDownstreamRate int32
-	ActualUpstreamRate   int32
+	ActualDownstreamRate ValueBandwidth
+	ActualUpstreamRate   ValueBandwidth
 
-	AttainableDownstreamRate int32
-	AttainableUpstreamRate   int32
+	AttainableDownstreamRate ValueBandwidth
+	AttainableUpstreamRate   ValueBandwidth
 
-	DownstreamInterleavingDepth int16
-	UpstreamInterleavingDepth   int16
+	DownstreamInterleavingDepth IntValue
+	UpstreamInterleavingDepth   IntValue
 
-	DownstreamAttenuation float64
-	UpstreamAttenuation   float64
+	DownstreamAttenuation ValueDecibel
+	UpstreamAttenuation   ValueDecibel
 
-	DownstreamSNRMargin float64
-	UpstreamSNRMargin   float64
+	DownstreamSNRMargin ValueDecibel
+	UpstreamSNRMargin   ValueDecibel
 
-	DownstreamPower float64
-	UpstreamPower   float64
+	DownstreamPower ValuePower
+	UpstreamPower   ValuePower
 
-	DownstreamFECCount *int64
-	UpstreamFECCount   *int64
+	DownstreamFECCount IntValue
+	UpstreamFECCount   IntValue
 
-	DownstreamRTXTXCount *int64
-	UpstreamRTXTXCount   *int64
+	DownstreamRTXTXCount IntValue
+	UpstreamRTXTXCount   IntValue
 
-	DownstreamRTXCCount *int64
-	UpstreamRTXCCount   *int64
+	DownstreamRTXCCount IntValue
+	UpstreamRTXCCount   IntValue
 
-	DownstreamRTXUCCount *int64
-	UpstreamRTXUCCount   *int64
+	DownstreamRTXUCCount IntValue
+	UpstreamRTXUCCount   IntValue
 
-	DownstreamCRCCount int64
-	UpstreamCRCCount   int64
+	DownstreamCRCCount IntValue
+	UpstreamCRCCount   IntValue
 
-	DownstreamESCount int64
-	UpstreamESCount   int64
+	DownstreamESCount IntValue
+	UpstreamESCount   IntValue
 
 	LinecardVendor  string
 	LinecardVersion string
@@ -66,29 +66,26 @@ func (s Status) Summary() string {
 	fmt.Fprintf(&b, "           Modem:    %s %s\n", s.ModemVendor, s.ModemVersion)
 	fmt.Fprintln(&b)
 
-	fmt.Fprintf(&b, "     Actual rate:    %8d kbit/s  %8d kbit/s\n", s.ActualDownstreamRate, s.ActualUpstreamRate)
-	fmt.Fprintf(&b, " Attainable rate:    %8d kbit/s  %8d kbit/s\n", s.AttainableDownstreamRate, s.AttainableUpstreamRate)
-	fmt.Fprintf(&b, "    Interleaving:    %8d         %8d\n", s.DownstreamInterleavingDepth, s.UpstreamInterleavingDepth)
+	printValues(&b, "Actual rate", s.ActualDownstreamRate, s.ActualUpstreamRate)
+	printValues(&b, "Attainable rate", s.AttainableDownstreamRate, s.AttainableUpstreamRate)
+	printValues(&b, "Interleaving", s.DownstreamInterleavingDepth, s.UpstreamInterleavingDepth)
 	fmt.Fprintln(&b)
 
-	fmt.Fprintf(&b, "     Attenuation:    %8.1f dB      %8.1f dB\n", s.DownstreamAttenuation, s.UpstreamAttenuation)
-	fmt.Fprintf(&b, "      SNR margin:    %8.1f dB      %8.1f dB\n", s.DownstreamSNRMargin, s.UpstreamSNRMargin)
-	fmt.Fprintf(&b, "  Transmit power:    %8.1f dBm     %8.1f dBm\n", s.DownstreamPower, s.UpstreamPower)
+	printValues(&b, "Attenuation", s.DownstreamAttenuation, s.UpstreamAttenuation)
+	printValues(&b, "SNR margin", s.DownstreamSNRMargin, s.UpstreamSNRMargin)
+	printValues(&b, "Transmit power", s.DownstreamPower, s.UpstreamPower)
 	fmt.Fprintln(&b)
 
-	fmt.Fprintf(&b, "       FEC Count:    %8s         %8s\n", formatNullInt(s.DownstreamFECCount), formatNullInt(s.UpstreamFECCount))
-	fmt.Fprintf(&b, "    RTX TX Count:    %8s         %8s\n", formatNullInt(s.DownstreamRTXTXCount), formatNullInt(s.UpstreamRTXTXCount))
-	fmt.Fprintf(&b, "     RTX C Count:    %8s         %8s\n", formatNullInt(s.DownstreamRTXCCount), formatNullInt(s.UpstreamRTXCCount))
-	fmt.Fprintf(&b, "    RTX UC Count:    %8s         %8s\n", formatNullInt(s.DownstreamRTXUCCount), formatNullInt(s.UpstreamRTXUCCount))
-	fmt.Fprintf(&b, "       CRC Count:    %8d         %8d\n", s.DownstreamCRCCount, s.UpstreamCRCCount)
-	fmt.Fprintf(&b, "        ES Count:    %8d         %8d\n", s.DownstreamESCount, s.UpstreamESCount)
+	printValues(&b, "FEC Count", s.DownstreamFECCount, s.UpstreamFECCount)
+	printValues(&b, "RTX TX Count", s.DownstreamRTXTXCount, s.UpstreamRTXTXCount)
+	printValues(&b, "RTX C Count", s.DownstreamRTXCCount, s.UpstreamRTXCCount)
+	printValues(&b, "RTX UC Count", s.DownstreamRTXUCCount, s.UpstreamRTXUCCount)
+	printValues(&b, "CRC Count", s.DownstreamCRCCount, s.UpstreamCRCCount)
+	printValues(&b, "ES Count", s.DownstreamESCount, s.UpstreamESCount)
 
 	return b.String()
 }
 
-func formatNullInt(val *int64) string {
-	if val != nil {
-		return strconv.FormatInt(*val, 10)
-	}
-	return "-"
+func printValues(w io.Writer, label string, valDown, valUp Value) {
+	fmt.Fprintf(w, "%16s:    %8s %-6s  %8s %-6s\n", label, valDown.Value(), valDown.Unit(), valUp.Value(), valUp.Unit())
 }

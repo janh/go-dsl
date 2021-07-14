@@ -102,38 +102,38 @@ func interpretStatus(status *models.Status, values map[string]string) {
 	mode := interpretStatusString(values, "RunningMode")
 	status.Mode = models.ParseMode(mode)
 
-	status.ActualDownstreamRate = interpretStatusInt32Suffix(values, "DSActualRate", " bps") / 1000
-	status.ActualUpstreamRate = interpretStatusInt32Suffix(values, "USActualRate", " bps") / 1000
+	status.ActualDownstreamRate.IntValue = interpretStatusIntValueSuffixFactor(values, "DSActualRate", " bps", 1000)
+	status.ActualUpstreamRate.IntValue = interpretStatusIntValueSuffixFactor(values, "USActualRate", " bps", 1000)
 
-	status.AttainableDownstreamRate = interpretStatusInt32Suffix(values, "DSAttainableRate", " bps") / 1000
-	status.AttainableUpstreamRate = interpretStatusInt32Suffix(values, "USAttainableRate", " bps") / 1000
+	status.AttainableDownstreamRate.IntValue = interpretStatusIntValueSuffixFactor(values, "DSAttainableRate", " bps", 1000)
+	status.AttainableUpstreamRate.IntValue = interpretStatusIntValueSuffixFactor(values, "USAttainableRate", " bps", 1000)
 
-	status.DownstreamInterleavingDepth = interpretStatusInt16(values, "DSInterleaveDepth")
-	status.UpstreamInterleavingDepth = interpretStatusInt16(values, "USInterleaveDepth")
+	status.DownstreamInterleavingDepth = interpretStatusIntValue(values, "DSInterleaveDepth")
+	status.UpstreamInterleavingDepth = interpretStatusIntValue(values, "USInterleaveDepth")
 
-	status.DownstreamAttenuation = interpretStatusFloat64Suffix(values, "NECurrentAttenuation", " dB")
-	status.UpstreamAttenuation = interpretStatusFloat64Suffix(values, "FarCurrentAttenuation", " dB")
+	status.DownstreamAttenuation.FloatValue = interpretStatusFloatValueSuffix(values, "NECurrentAttenuation", " dB")
+	status.UpstreamAttenuation.FloatValue = interpretStatusFloatValueSuffix(values, "FarCurrentAttenuation", " dB")
 
-	status.DownstreamSNRMargin = interpretStatusFloat64Suffix(values, "CurSNRMargin", " dB")
-	status.UpstreamSNRMargin = interpretStatusFloat64Suffix(values, "FarSNRMargin", " dB")
+	status.DownstreamSNRMargin.FloatValue = interpretStatusFloatValueSuffix(values, "CurSNRMargin", " dB")
+	status.UpstreamSNRMargin.FloatValue = interpretStatusFloatValueSuffix(values, "FarSNRMargin", " dB")
 
 	// the "actual PSD" values actually seem to be the transmit power, although with wrong unit,
 	// and at least for VDSL2 the upstream/downstream values are swapped
-	powerUS := interpretStatusFloat64Suffix(values, "USactualPSD", " dB")
-	powerDS := interpretStatusFloat64Suffix(values, "DSactualPSD", " dB")
-	if status.Mode.Type == models.ModeTypeVDSL2 && powerUS > powerDS {
-		status.DownstreamPower = powerUS
-		status.UpstreamPower = powerDS
+	powerUS := interpretStatusFloatValueSuffix(values, "USactualPSD", " dB")
+	powerDS := interpretStatusFloatValueSuffix(values, "DSactualPSD", " dB")
+	if status.Mode.Type == models.ModeTypeVDSL2 && powerUS.Float > powerDS.Float {
+		status.DownstreamPower.FloatValue = powerUS
+		status.UpstreamPower.FloatValue = powerDS
 	} else {
-		status.DownstreamPower = powerDS
-		status.UpstreamPower = powerUS
+		status.DownstreamPower.FloatValue = powerDS
+		status.UpstreamPower.FloatValue = powerUS
 	}
 
-	status.DownstreamCRCCount = interpretStatusInt64(values, "NECRCCount")
-	status.UpstreamCRCCount = interpretStatusInt64(values, "FECRCCount")
+	status.DownstreamCRCCount = interpretStatusIntValue(values, "NECRCCount")
+	status.UpstreamCRCCount = interpretStatusIntValue(values, "FECRCCount")
 
-	status.DownstreamESCount = interpretStatusInt64(values, "NEESCount")
-	status.UpstreamESCount = interpretStatusInt64(values, "FEESCount")
+	status.DownstreamESCount = interpretStatusIntValue(values, "NEESCount")
+	status.UpstreamESCount = interpretStatusIntValue(values, "FEESCount")
 
 	status.LinecardVendor = interpretStatusVendor(values, "COITUVersion0", "COITUVersion1")
 	status.LinecardVersion = interpretStatusLinecardVersion(values, "COITUVersion1")
@@ -149,26 +149,30 @@ func interpretStatusString(values map[string]string, key string) string {
 	return ""
 }
 
-func interpretStatusInt32Suffix(values map[string]string, key string, suffix string) int32 {
+func interpretStatusIntValueSuffixFactor(values map[string]string, key string, suffix string, factor int64) (out models.IntValue) {
 	if val, ok := values[key]; ok {
 		if strings.HasSuffix(val, suffix) {
 			val := val[:len(val)-len(suffix)]
-			valInt, _ := strconv.ParseInt(val, 10, 32)
-			return int32(valInt)
+			if valInt, err := strconv.ParseInt(val, 10, 64); err == nil {
+				out.Int = valInt / factor
+				out.Valid = true
+			}
 		}
 	}
-	return 0
+	return
 }
 
-func interpretStatusInt16(values map[string]string, key string) int16 {
+func interpretStatusIntValue(values map[string]string, key string) (out models.IntValue) {
 	if val, ok := values[key]; ok {
-		valInt, _ := strconv.ParseInt(val, 10, 16)
-		return int16(valInt)
+		if valInt, err := strconv.ParseInt(val, 10, 64); err == nil {
+			out.Int = valInt
+			out.Valid = true
+		}
 	}
-	return 0
+	return
 }
 
-func interpretStatusFloat64Suffix(values map[string]string, key string, suffix string) float64 {
+func interpretStatusFloatValueSuffix(values map[string]string, key string, suffix string) (out models.FloatValue) {
 	if val, ok := values[key]; ok {
 		if strings.HasSuffix(val, suffix) {
 			val := val[:len(val)-len(suffix)]
@@ -178,19 +182,13 @@ func interpretStatusFloat64Suffix(values map[string]string, key string, suffix s
 				val = val[1:]
 			}
 
-			valFloat, _ := strconv.ParseFloat(val, 64)
-			return valFloat
+			if valFloat, err := strconv.ParseFloat(val, 64); err == nil {
+				out.Float = valFloat
+				out.Valid = true
+			}
 		}
 	}
-	return 0
-}
-
-func interpretStatusInt64(values map[string]string, key string) int64 {
-	if val, ok := values[key]; ok {
-		valInt, _ := strconv.ParseInt(val, 10, 64)
-		return valInt
-	}
-	return 0
+	return
 }
 
 func interpretStatusVendor(values map[string]string, key0, key1 string) string {
@@ -257,20 +255,19 @@ func readCounts(counts string) map[string][2]string {
 }
 
 func interpretCounts(status *models.Status, values map[string][2]string) {
-	status.DownstreamFECCount, status.UpstreamFECCount = interpretCountsInt64Ref(values, "FEC")
+	status.DownstreamFECCount, status.UpstreamFECCount = interpretCountsIntValue(values, "FEC")
 }
 
-func interpretCountsInt64(values map[string][2]string, key string) (downstream, upstream int64) {
+func interpretCountsIntValue(values map[string][2]string, key string) (downstream, upstream models.IntValue) {
 	if val, ok := values[key]; ok {
-		downstream, _ = strconv.ParseInt(val[0], 10, 64)
-		upstream, _ = strconv.ParseInt(val[1], 10, 64)
+		if ds, err := strconv.ParseInt(val[0], 10, 64); err == nil {
+			downstream.Int = ds
+			downstream.Valid = true
+		}
+		if us, err := strconv.ParseInt(val[1], 10, 64); err == nil {
+			upstream.Int = us
+			upstream.Valid = true
+		}
 	}
-	return
-}
-
-func interpretCountsInt64Ref(values map[string][2]string, key string) (downstream, upstream *int64) {
-	d, u := interpretCountsInt64(values, key)
-	downstream = &d
-	upstream = &u
 	return
 }
