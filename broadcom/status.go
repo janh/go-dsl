@@ -162,6 +162,7 @@ func parseExtendedStats(stats string) map[string][2]string {
 
 func interpretExtendedStats(status *models.Status, values map[string][2]string) {
 	status.DownstreamInterleavingDepth, status.UpstreamInterleavingDepth = interpretExtendedStatsIntValue(values, "d")
+	status.DownstreamInterleavingDelay.FloatValue, status.UpstreamInterleavingDelay.FloatValue = interpretExtendedStatsFloatValue(values, "delay")
 
 	status.DownstreamAttenuation.FloatValue, status.UpstreamAttenuation.FloatValue = interpretExtendedStatsFloatValue(values, "attndb")
 	status.DownstreamSNRMargin.FloatValue, status.UpstreamSNRMargin.FloatValue = interpretExtendedStatsFloatValue(values, "snrdb")
