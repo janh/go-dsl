@@ -316,9 +316,9 @@ func DrawQLNGraph(out io.Writer, data models.Bins, params GraphParams) error {
 		LegendXFactor:     freq / 1000,
 		LegendXFormat:     "%.1f",
 		LegendYBottom:     -160,
-		LegendYTop:        -70,
+		LegendYTop:        -69,
 		LegendYLabelStart: -160,
-		LegendYLabelEnd:   -80,
+		LegendYLabelEnd:   -70,
 		LegendYLabelStep:  20,
 	}
 
