@@ -393,7 +393,7 @@ func DrawHlogGraph(out io.Writer, data models.Bins, params GraphParams) error {
 		LegendXFactor:     freq / 1000,
 		LegendXFormat:     "%.1f",
 		LegendYBottom:     -100,
-		LegendYTop:        5,
+		LegendYTop:        7,
 		LegendYLabelStart: -100,
 		LegendYLabelEnd:   0,
 		LegendYLabelStep:  20,
@@ -414,26 +414,27 @@ func DrawHlogGraph(out io.Writer, data models.Bins, params GraphParams) error {
 	m.Path.SetPrecision(1)
 
 	var lastValid bool
-	var last float64
+	var last float64 = -96.3
 	var lastPosY float64
 
 	for i := 0; i < bins; i++ {
 		bin := data.Bins[i]
 		hlog := bin.Hlog
+		valid := hlog >= -96.2 && hlog <= 6
 
 		posX := float64(i) + 0.5
 		posY := h + 0.5 - math.Max(0, math.Min(h, (hlog-offsetY)*scaleY))
 
 		reset := lastValid && math.Abs(hlog-last) >= 10
 
-		if (last < 0 && hlog >= 0) || reset {
+		if (lastValid && valid) || reset {
 			m.Path.LineTo(posX-0.5, lastPosY/scaleX)
 		}
-		if (last >= 0 && hlog < 0) || reset {
+		if (!lastValid && valid) || reset {
 			m.Path.MoveTo(posX-0.5, posY/scaleX)
 			lastPosY = posY
 		}
-		if hlog < 0 && last != hlog {
+		if valid && last != hlog {
 			if lastValid && !reset {
 				m.Path.LineTo(posX-1, lastPosY/scaleX)
 				m.Path.LineTo(posX, posY/scaleX)
@@ -441,11 +442,11 @@ func DrawHlogGraph(out io.Writer, data models.Bins, params GraphParams) error {
 			lastPosY = posY
 		}
 
-		lastValid = hlog < 0
+		lastValid = valid
 		last = hlog
 	}
 
-	if last < 0 {
+	if lastValid {
 		m.Path.LineTo(spec.LegendXMax, lastPosY/scaleX)
 	}
 
