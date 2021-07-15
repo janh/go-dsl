@@ -14,9 +14,17 @@ const (
 
 type Bin struct {
 	Type BinType
-	SNR  float64
+
+	// SNR is the signal-to-noise ratio in dB, valid range: -32 to 95
+	SNR float64
+
+	// Bits is the number of bits modulated onto the subcarrier, valid range: 0 to 15
 	Bits int8
-	QLN  float64
+
+	// QLN is the level of noise present on the line without any xDSL signal in dBm/Hz, valid range: -150 to -23
+	QLN float64
+
+	// Hlog is the channel characteristic and estimates the attenuation in dB, valid range: -96.2 to 6
 	Hlog float64
 }
 
