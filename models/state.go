@@ -13,6 +13,8 @@ type State int
 const (
 	StateUnknown State = iota
 	StateIdle
+	StateSilent
+	StateHandshake
 	StateTraining
 	StateShowtime
 )
@@ -21,6 +23,10 @@ func (s State) String() string {
 	switch s {
 	case StateIdle:
 		return "Idle"
+	case StateSilent:
+		return "Silent"
+	case StateHandshake:
+		return "Handshake"
 	case StateTraining:
 		return "Training"
 	case StateShowtime:
@@ -37,7 +43,15 @@ func ParseState(str string) State {
 	case strings.Contains(str, "idle"), strings.Contains(str, "ready"):
 		return StateIdle
 
-	case strings.Contains(str, "train"), strings.Contains(str, "start"), strings.Contains(str, "analysis"):
+	case strings.Contains(str, "silent"):
+		return StateSilent
+
+	case strings.Contains(str, "handshake"), strings.Contains(str, "g.994"):
+		return StateHandshake
+
+	case strings.Contains(str, "train"), strings.Contains(str, "g.992"), strings.Contains(str, "g.993"),
+		strings.Contains(str, "full init"), strings.Contains(str, "discovery"),
+		strings.Contains(str, "analysis"), strings.Contains(str, "exchange"):
 		return StateTraining
 
 	case strings.Contains(str, "showtime"):
