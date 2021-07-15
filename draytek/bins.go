@@ -139,22 +139,26 @@ func handleShowbinsSNR(bins *models.Bins, snrData []float64, maxSNRIndex, maxBit
 }
 
 func parseStatusQLN(bins *models.Bins, qln string) {
-	parseStatusBins(qln, func(num int, val float64) {
-		if val != -150 {
+	parseStatusBins(qln, func(num int, val float64, ok bool) {
+		if ok && val != -150 {
 			bins.Bins[num].QLN = val
 		}
 	})
 }
 
 func parseStatusHlog(bins *models.Bins, hlog string) {
-	parseStatusBins(hlog, func(num int, val float64) {
-		if val != 0 {
+	for num := range bins.Bins {
+		bins.Bins[num].Hlog = -96.3
+	}
+
+	parseStatusBins(hlog, func(num int, val float64, ok bool) {
+		if ok {
 			bins.Bins[num].Hlog = val
 		}
 	})
 }
 
-func parseStatusBins(data string, handler func(int, float64)) {
+func parseStatusBins(data string, handler func(int, float64, bool)) {
 	scanner := bufio.NewScanner(strings.NewReader(data))
 
 	var groupSize, groupSizeDS, groupSizeUS int
@@ -186,7 +190,7 @@ func parseStatusBins(data string, handler func(int, float64)) {
 	}
 }
 
-func readStatusBin(line string, groupSize int, handler func(int, float64)) {
+func readStatusBin(line string, groupSize int, handler func(int, float64, bool)) {
 	lineSplit := strings.SplitN(line, ":", 2)
 	if len(lineSplit) == 2 {
 		numBaseStr := strings.TrimSpace(lineSplit[0])
@@ -195,12 +199,13 @@ func readStatusBin(line string, groupSize int, handler func(int, float64)) {
 		dataSplit := strings.Split(lineSplit[1], ",")
 		for i := 0; i < len(dataSplit)-1; i++ {
 			valStr := strings.TrimSpace(dataSplit[i])
-			val, _ := strconv.ParseFloat(valStr, 64)
+			val, err := strconv.ParseFloat(valStr, 64)
+			ok := err == nil
 			numGroup := (numBase + i) * groupSize
 
 			for j := 0; j < groupSize; j++ {
 				num := numGroup + j
-				handler(num, val)
+				handler(num, val, ok)
 			}
 		}
 	}
