@@ -93,10 +93,15 @@ func parseQLN(bins *models.Bins, qln string) {
 }
 
 func parseHlog(bins *models.Bins, hlog string) {
+	for num := range bins.Bins {
+		bins.Bins[num].Hlog = -96.3
+	}
+
 	var val float64
+	var err error
 	parseBinList(hlog, func(num int, str string) {
-		val, _ = strconv.ParseFloat(str, 64)
-		if val > -96 {
+		val, err = strconv.ParseFloat(str, 64)
+		if err == nil && val > -96 {
 			bins.Bins[num].Hlog = val
 		}
 	})
