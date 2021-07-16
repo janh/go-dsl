@@ -268,6 +268,20 @@ func interpretNearFarIntValue(values map[string][2]string, key string) (near, fa
 	return
 }
 
+func interpretNearFarBoolValue(values map[string][2]string, key string) (near, far models.BoolValue) {
+	if val, ok := values[key]; ok {
+		if n, err := strconv.ParseBool(val[0]); err == nil {
+			near.Bool = n
+			near.Valid = true
+		}
+		if f, err := strconv.ParseBool(val[1]); err == nil {
+			far.Bool = f
+			far.Valid = true
+		}
+	}
+	return
+}
+
 func interpretNearFarInterleavingDelay(values map[string][2]string) (near, far models.FloatValue) {
 	val, ok := values["InterleaveDelay"]
 	if !ok {
@@ -295,4 +309,6 @@ func interpretCounts(status *models.Status, values map[string][2]string) {
 
 func interpretMore(status *models.Status, values map[string][2]string) {
 	status.UpstreamInterleavingDelay.FloatValue, status.DownstreamInterleavingDelay.FloatValue = interpretNearFarInterleavingDelay(values)
+
+	status.UpstreamRetransmissionEnabled, status.DownstreamRetransmissionEnabled = interpretNearFarBoolValue(values, "ReTxEnable")
 }
