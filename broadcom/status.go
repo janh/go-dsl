@@ -162,6 +162,7 @@ func parseExtendedStats(stats string) map[string][2]string {
 
 func interpretExtendedStats(status *models.Status, values map[string][2]string) {
 	status.DownstreamInterleavingDelay.FloatValue, status.UpstreamInterleavingDelay.FloatValue = interpretExtendedStatsFloatValue(values, "delay")
+	status.DownstreamRetransmissionEnabled, status.UpstreamRetransmissionEnabled = interpretExtendedStatsBoolValueNonZero(values, "q")
 
 	status.DownstreamAttenuation.FloatValue, status.UpstreamAttenuation.FloatValue = interpretExtendedStatsFloatValue(values, "attndb")
 	status.DownstreamSNRMargin.FloatValue, status.UpstreamSNRMargin.FloatValue = interpretExtendedStatsFloatValue(values, "snrdb")
@@ -199,6 +200,20 @@ func interpretExtendedStatsFloatValue(values map[string][2]string, key string) (
 		}
 		if us, err := strconv.ParseFloat(val[1], 64); err == nil {
 			upstream.Float = us
+			upstream.Valid = true
+		}
+	}
+	return
+}
+
+func interpretExtendedStatsBoolValueNonZero(values map[string][2]string, key string) (downstream, upstream models.BoolValue) {
+	if val, ok := values[key]; ok {
+		if ds, err := strconv.ParseInt(val[0], 10, 64); err == nil {
+			downstream.Bool = ds != 0
+			downstream.Valid = true
+		}
+		if us, err := strconv.ParseInt(val[1], 10, 64); err == nil {
+			upstream.Bool = us != 0
 			upstream.Valid = true
 		}
 	}
