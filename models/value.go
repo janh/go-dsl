@@ -6,6 +6,7 @@ package models
 
 import (
 	"fmt"
+	"math"
 )
 
 type Value interface {
@@ -95,7 +96,17 @@ type ValueMilliseconds struct {
 }
 
 func (v ValueMilliseconds) String() string {
-	return v.FloatValue.String() + " " + v.Unit()
+	return v.Value() + " " + v.Unit()
+}
+
+func (v ValueMilliseconds) Value() string {
+	if v.Valid {
+		if math.Abs(v.Float-math.Round(v.Float)) <= 0.005 {
+			return fmt.Sprintf("%.0f", v.Float)
+		}
+		return fmt.Sprintf("%.2f", v.Float)
+	}
+	return "-"
 }
 
 func (v ValueMilliseconds) Unit() string {
