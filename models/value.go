@@ -55,6 +55,30 @@ func (v FloatValue) Unit() string {
 	return ""
 }
 
+type BoolValue struct {
+	Valid bool
+	Bool  bool
+}
+
+func (v BoolValue) String() string {
+	return v.Value()
+}
+
+func (v BoolValue) Value() string {
+	if v.Valid {
+		if v.Bool {
+			return "on"
+		} else {
+			return "off"
+		}
+	}
+	return "-"
+}
+
+func (v BoolValue) Unit() string {
+	return ""
+}
+
 type ValueBandwidth struct {
 	IntValue
 }
