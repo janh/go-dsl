@@ -254,21 +254,21 @@ func readNearFar(nearFar string) map[string][2]string {
 	return values
 }
 
-func interpretNearFarIntValue(values map[string][2]string, key string) (downstream, upstream models.IntValue) {
+func interpretNearFarIntValue(values map[string][2]string, key string) (near, far models.IntValue) {
 	if val, ok := values[key]; ok {
-		if ds, err := strconv.ParseInt(val[0], 10, 64); err == nil {
-			downstream.Int = ds
-			downstream.Valid = true
+		if n, err := strconv.ParseInt(val[0], 10, 64); err == nil {
+			near.Int = n
+			near.Valid = true
 		}
-		if us, err := strconv.ParseInt(val[1], 10, 64); err == nil {
-			upstream.Int = us
-			upstream.Valid = true
+		if f, err := strconv.ParseInt(val[1], 10, 64); err == nil {
+			far.Int = f
+			far.Valid = true
 		}
 	}
 	return
 }
 
-func interpretNearFarInterleavingDelay(values map[string][2]string) (downstream, upstream models.FloatValue) {
+func interpretNearFarInterleavingDelay(values map[string][2]string) (near, far models.FloatValue) {
 	val, ok := values["InterleaveDelay"]
 	if !ok {
 		val, ok = values["INTLVDelay"]
@@ -277,13 +277,13 @@ func interpretNearFarInterleavingDelay(values map[string][2]string) (downstream,
 		}
 	}
 
-	if ds, err := strconv.ParseFloat(val[1], 64); err == nil {
-		downstream.Float = ds / 100
-		downstream.Valid = true
+	if n, err := strconv.ParseFloat(val[0], 64); err == nil {
+		near.Float = n / 100
+		near.Valid = true
 	}
-	if us, err := strconv.ParseFloat(val[0], 64); err == nil {
-		upstream.Float = us / 100
-		upstream.Valid = true
+	if f, err := strconv.ParseFloat(val[1], 64); err == nil {
+		far.Float = f / 100
+		far.Valid = true
 	}
 
 	return
@@ -294,5 +294,5 @@ func interpretCounts(status *models.Status, values map[string][2]string) {
 }
 
 func interpretMore(status *models.Status, values map[string][2]string) {
-	status.DownstreamInterleavingDelay.FloatValue, status.UpstreamInterleavingDelay.FloatValue = interpretNearFarInterleavingDelay(values)
+	status.UpstreamInterleavingDelay.FloatValue, status.DownstreamInterleavingDelay.FloatValue = interpretNearFarInterleavingDelay(values)
 }
