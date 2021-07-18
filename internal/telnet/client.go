@@ -105,7 +105,7 @@ func (c *Client) Execute(command string) (string, error) {
 		str = str[len(command)+2:]
 	}
 	if index := strings.LastIndexAny(str, "\r\n"); index >= 0 {
-		for index >= 1 && str[index-1] == '\r' || str[index-1] == '\n' {
+		for index >= 1 && (str[index-1] == '\r' || str[index-1] == '\n') {
 			index -= 1
 		}
 		str = str[0:index]
