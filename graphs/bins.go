@@ -427,7 +427,7 @@ func DrawHlogGraph(out io.Writer, data models.Bins, params GraphParams) error {
 
 		reset := lastValid && math.Abs(hlog-last) >= 10
 
-		if (lastValid && valid) || reset {
+		if (lastValid && !valid) || reset {
 			m.Path.LineTo(posX-0.5, lastPosY/scaleX)
 		}
 		if (!lastValid && valid) || reset {
