@@ -10,6 +10,7 @@ import (
 	"strconv"
 	"strings"
 
+	"3e8.eu/go/dsl/internal/helpers"
 	"3e8.eu/go/dsl/models"
 )
 
@@ -19,7 +20,6 @@ func parseBins(status models.Status, pbParams, bits, snr, qln, hlog string) mode
 	var bins models.Bins
 
 	bins.Mode = status.Mode
-	bins.Bins = make([]models.Bin, bins.Mode.BinCount())
 
 	parsePbParams(&bins, pbParams)
 	parseBits(&bins, bits)
@@ -50,18 +50,17 @@ func parsePbParams(bins *models.Bins, pbParams string) {
 		isDownstream := strings.HasPrefix(lineLower, "ds:")
 
 		if isUpstream || isDownstream {
-			binType := models.BinTypeDownstream
-			if isUpstream {
-				binType = models.BinTypeUpstream
-			}
-
 			matches := regexpPbParams.FindAllStringSubmatch(line, -1)
 			for _, match := range matches {
-				start, _ := strconv.ParseInt(match[1], 10, 64)
-				end, _ := strconv.ParseInt(match[2], 10, 64)
+				start, _ := strconv.Atoi(match[1])
+				end, _ := strconv.Atoi(match[2])
 
-				for num := start; num <= end; num++ {
-					bins.Bins[num].Type = binType
+				band := models.Band{Start: start, End: end}
+
+				if isUpstream {
+					bins.Bands.Upstream = append(bins.Bands.Upstream, band)
+				} else if isDownstream {
+					bins.Bands.Downstream = append(bins.Bands.Downstream, band)
 				}
 			}
 		}
@@ -69,45 +68,112 @@ func parsePbParams(bins *models.Bins, pbParams string) {
 }
 
 func parseBits(bins *models.Bins, bits string) {
+	bins.Bits.Downstream.Data = make([]int8, bins.Mode.BinCount())
+	bins.Bits.Upstream.Data = make([]int8, bins.Mode.BinCount())
+
 	var val int64
-	parseBinList(bits, func(num int, str string) {
+	parseBinList(bits, bins.Bands, func(num int, str string, isDownstream bool) {
 		val, _ = strconv.ParseInt(str, 10, 64)
-		bins.Bins[num].Bits = int8(val)
-	})
-}
 
-func parseSNR(bins *models.Bins, snr string) {
-	var val float64
-	parseBinList(snr, func(num int, str string) {
-		val, _ = strconv.ParseFloat(str, 64)
-		bins.Bins[num].SNR = val
-	})
-}
-
-func parseQLN(bins *models.Bins, qln string) {
-	var val float64
-	parseBinList(qln, func(num int, str string) {
-		val, _ = strconv.ParseFloat(str, 64)
-		bins.Bins[num].QLN = val
-	})
-}
-
-func parseHlog(bins *models.Bins, hlog string) {
-	for num := range bins.Bins {
-		bins.Bins[num].Hlog = -96.3
-	}
-
-	var val float64
-	var err error
-	parseBinList(hlog, func(num int, str string) {
-		val, err = strconv.ParseFloat(str, 64)
-		if err == nil && val > -96 {
-			bins.Bins[num].Hlog = val
+		if val != 0 {
+			if isDownstream {
+				bins.Bits.Downstream.Data[num] = int8(val)
+			} else {
+				bins.Bits.Upstream.Data[num] = int8(val)
+			}
 		}
 	})
 }
 
-func parseBinList(text string, handler func(int, string)) {
+func parseSNR(bins *models.Bins, snr string) {
+	bins.SNR.Downstream.GroupSize = 1
+	bins.SNR.Downstream.Data = make([]float64, bins.Mode.BinCount())
+
+	bins.SNR.Upstream.GroupSize = 1
+	bins.SNR.Upstream.Data = make([]float64, bins.Mode.BinCount())
+
+	var val float64
+	parseBinList(snr, bins.Bands, func(num int, str string, isDownstream bool) {
+		val, _ = strconv.ParseFloat(str, 64)
+
+		if val != 0 {
+			if isDownstream {
+				bins.SNR.Downstream.Data[num] = val
+			} else {
+				bins.SNR.Upstream.Data[num] = val
+			}
+		}
+	})
+
+	isValid := func(val float64) bool {
+		return val != 0
+	}
+	adjustGroupSize(&bins.SNR.Downstream, isValid)
+	adjustGroupSize(&bins.SNR.Upstream, isValid)
+}
+
+func parseQLN(bins *models.Bins, qln string) {
+	bins.QLN.Downstream.GroupSize = 1
+	bins.QLN.Downstream.Data = make([]float64, bins.Mode.BinCount())
+
+	bins.QLN.Upstream.GroupSize = 1
+	bins.QLN.Upstream.Data = make([]float64, bins.Mode.BinCount())
+
+	var val float64
+	parseBinList(qln, bins.Bands, func(num int, str string, isDownstream bool) {
+		val, _ = strconv.ParseFloat(str, 64)
+
+		if val != 0 && val != -160 {
+			if isDownstream {
+				bins.QLN.Downstream.Data[num] = val
+			} else {
+				bins.QLN.Upstream.Data[num] = val
+			}
+		}
+	})
+
+	isValid := func(val float64) bool {
+		return val != 0
+	}
+	adjustGroupSize(&bins.QLN.Downstream, isValid)
+	adjustGroupSize(&bins.QLN.Upstream, isValid)
+}
+
+func parseHlog(bins *models.Bins, hlog string) {
+	bins.Hlog.Downstream.GroupSize = 1
+	bins.Hlog.Downstream.Data = make([]float64, bins.Mode.BinCount())
+	for num := range bins.Hlog.Downstream.Data {
+		bins.Hlog.Downstream.Data[num] = -96.3
+	}
+
+	bins.Hlog.Upstream.GroupSize = 1
+	bins.Hlog.Upstream.Data = make([]float64, bins.Mode.BinCount())
+	for num := range bins.Hlog.Upstream.Data {
+		bins.Hlog.Upstream.Data[num] = -96.3
+	}
+
+	var val float64
+	var err error
+	parseBinList(hlog, bins.Bands, func(num int, str string, isDownstream bool) {
+		val, err = strconv.ParseFloat(str, 64)
+
+		if err == nil && val > -96 {
+			if isDownstream {
+				bins.Hlog.Downstream.Data[num] = val
+			} else {
+				bins.Hlog.Upstream.Data[num] = val
+			}
+		}
+	})
+
+	isValid := func(val float64) bool {
+		return val > -96
+	}
+	adjustGroupSize(&bins.Hlog.Downstream, isValid)
+	adjustGroupSize(&bins.Hlog.Upstream, isValid)
+}
+
+func parseBinList(text string, bands models.BandsDownUp, handler func(int, string, bool)) {
 	scanner := bufio.NewScanner(strings.NewReader(text))
 
 	for scanner.Scan() {
@@ -119,6 +185,8 @@ func parseBinList(text string, handler func(int, string)) {
 		}
 	}
 
+	bandDecider := helpers.NewBandDecider(bands)
+
 	for scanner.Scan() {
 		line := scanner.Text()
 
@@ -127,7 +195,46 @@ func parseBinList(text string, handler func(int, string)) {
 			num, _ := strconv.Atoi(data[0])
 			str := data[1]
 
-			handler(num, str)
+			handler(num, str, bandDecider.IsDownstream(num))
 		}
 	}
+}
+
+func determineGroupSize(bins *models.BinsFloat, isValid func(val float64) bool) (groupSize int) {
+	groupSize = 1
+
+	for ; groupSize < 16; groupSize *= 2 {
+		nextGroupSize := groupSize * 2
+
+		if len(bins.Data)%nextGroupSize != 0 {
+			return
+		}
+
+		for i := 0; i < len(bins.Data)-nextGroupSize; i += nextGroupSize {
+			a := bins.Data[i]
+			b := bins.Data[i+groupSize]
+
+			if isValid(a) && isValid(b) && a != b {
+				return
+			}
+		}
+
+	}
+
+	return
+}
+
+func adjustGroupSize(bins *models.BinsFloat, isValid func(val float64) bool) {
+	groupSize := determineGroupSize(bins, isValid)
+	if groupSize == 1 {
+		return
+	}
+
+	newData := make([]float64, len(bins.Data)/groupSize)
+	for num := 0; num < len(newData); num++ {
+		newData[num] = bins.Data[num*groupSize+groupSize/2]
+	}
+
+	bins.GroupSize = groupSize
+	bins.Data = newData
 }

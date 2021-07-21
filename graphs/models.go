@@ -38,7 +38,6 @@ type label struct {
 type bitsModel struct {
 	baseModel
 	Transform      transform
-	PathNeutral    path
 	PathUpstream   path
 	PathDownstream path
 }

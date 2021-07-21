@@ -137,6 +137,46 @@ func getLegendX(mode models.Mode) (bins int, step int, freq float64) {
 	return
 }
 
+func buildBitsPath(p *path, bins models.BinsBits, height, scaleY float64) {
+	var lastBits int8
+	var lastPosY float64
+
+	count := len(bins.Data)
+	for i := 0; i < count; i++ {
+		bits := bins.Data[i]
+		if bits < 0 {
+			bits = 0
+		}
+
+		posX := float64(i)
+
+		if lastBits > 0 && bits == 0 {
+			p.LineTo(posX, lastPosY)
+			p.LineTo(posX, height)
+			p.Close()
+		}
+		if lastBits == 0 && bits > 0 {
+			p.MoveTo(posX, height)
+		}
+		if bits > 0 && lastBits != bits {
+			posY := height - math.Ceil(float64(bits)*scaleY)
+			if lastBits != 0 {
+				p.LineTo(posX, lastPosY)
+			}
+			p.LineTo(posX, posY)
+			lastPosY = posY
+		}
+
+		lastBits = bits
+	}
+
+	if lastBits > 0 {
+		p.LineTo(float64(count), lastPosY)
+		p.LineTo(float64(count), height)
+		p.Close()
+	}
+}
+
 func DrawBitsGraph(out io.Writer, data models.Bins, params GraphParams) error {
 	bins, step, _ := getLegendX(data.Mode)
 
@@ -167,64 +207,53 @@ func DrawBitsGraph(out io.Writer, data models.Bins, params GraphParams) error {
 	scaleX := w / spec.LegendXMax
 	scaleY := h / spec.LegendYTop
 
-	var lastBits int8
-	var lastPosY float64
-	var lastPath *path
-
-	for i := 0; i < bins; i++ {
-		bin := data.Bins[i]
-		bits := bin.Bits
-		if bits < 0 {
-			bits = 0
-		}
-
-		var path *path
-		switch bin.Type {
-		case models.BinTypeNone:
-			path = &m.PathNeutral
-		case models.BinTypeUpstream:
-			path = &m.PathUpstream
-		case models.BinTypeDownstream:
-			path = &m.PathDownstream
-		default:
-			continue
-		}
-
-		posX := float64(i)
-
-		if lastBits > 0 && (bits == 0 || lastPath != path) {
-			lastPath.LineTo(posX, lastPosY)
-			lastPath.LineTo(posX, h)
-			lastPath.Close()
-		}
-		if (lastPath != path || lastBits == 0) && bits > 0 {
-			path.MoveTo(posX, h)
-		}
-		if bits > 0 {
-			posY := h - math.Ceil(float64(bits)*scaleY)
-			if lastPath != path || lastBits != bits {
-				if lastPath == path && lastBits != 0 {
-					path.LineTo(posX, lastPosY)
-				}
-				path.LineTo(posX, posY)
-				lastPosY = posY
-			}
-		}
-
-		lastBits = bits
-		lastPath = path
-	}
-
-	if lastBits > 0 {
-		lastPath.LineTo(spec.LegendXMax, lastPosY)
-		lastPath.LineTo(spec.LegendXMax, h)
-		lastPath.Close()
-	}
+	buildBitsPath(&m.PathDownstream, data.Bits.Downstream, h, scaleY)
+	buildBitsPath(&m.PathUpstream, data.Bits.Upstream, h, scaleY)
 
 	m.Transform.Scale(scaleX, 1)
 	m.Transform.Translate(x, y)
 
 	return writeTemplate(out, m, templateBase, templateBits)
+}
+
+func buildSNRPath(p *path, bins models.BinsFloat, height, scaleY float64) {
+	var last float64
+	var lastPosY float64
+
+	count := len(bins.Data)
+	for i := 0; i < count; i++ {
+		snr := bins.Data[i]
+		if snr < 0 {
+			snr = 0
+		}
+
+		posX := float64(i * bins.GroupSize)
+
+		if last > 0 && snr == 0 {
+			p.LineTo(posX, lastPosY)
+			p.LineTo(posX, height)
+			p.Close()
+		}
+		if last == 0 && snr > 0 {
+			p.MoveTo(posX, height)
+		}
+		if snr > 0 && last != snr {
+			posY := height - math.Min(height, snr*scaleY)
+			if last != 0 {
+				p.LineTo(posX, lastPosY)
+			}
+			p.LineTo(posX, posY)
+			lastPosY = posY
+		}
+
+		last = snr
+	}
+
+	if last > 0 {
+		p.LineTo(float64(count), lastPosY)
+		p.LineTo(float64(count), height)
+		p.Close()
+	}
 }
 
 func DrawSNRGraph(out io.Writer, data models.Bins, params GraphParams) error {
@@ -259,48 +288,53 @@ func DrawSNRGraph(out io.Writer, data models.Bins, params GraphParams) error {
 
 	m.Path.SetPrecision(1)
 
-	var last float64
-	var lastPosY float64
-
-	for i := 0; i < bins; i++ {
-		bin := data.Bins[i]
-		snr := bin.SNR
-		if snr < 0 {
-			snr = 0
-		}
-
-		posX := float64(i)
-
-		if last > 0 && snr == 0 {
-			m.Path.LineTo(posX, lastPosY)
-			m.Path.LineTo(posX, h)
-			m.Path.Close()
-		}
-		if last == 0 && snr > 0 {
-			m.Path.MoveTo(posX, h)
-		}
-		if snr > 0 && last != snr {
-			posY := h - math.Min(h, snr*scaleY)
-			if last != 0 {
-				m.Path.LineTo(posX, lastPosY)
-			}
-			m.Path.LineTo(posX, posY)
-			lastPosY = posY
-		}
-
-		last = snr
-	}
-
-	if last > 0 {
-		m.Path.LineTo(spec.LegendXMax, lastPosY)
-		m.Path.LineTo(spec.LegendXMax, h)
-		m.Path.Close()
-	}
+	buildSNRPath(&m.Path, data.SNR.Downstream, h, scaleY)
+	buildSNRPath(&m.Path, data.SNR.Upstream, h, scaleY)
 
 	m.Transform.Scale(scaleX, 1)
 	m.Transform.Translate(x, y)
 
 	return writeTemplate(out, m, templateBase, templateSNR)
+}
+
+func buildQLNPath(p *path, bins models.BinsFloat, height, scaleY, offsetY float64) {
+	var last float64 = offsetY
+	var lastPosY float64
+
+	count := len(bins.Data)
+	for i := 0; i < count; i++ {
+		qln := bins.Data[i]
+		if qln >= 0 {
+			qln = offsetY
+		}
+
+		posX := float64(i * bins.GroupSize)
+
+		if last > offsetY && qln <= offsetY {
+			p.LineTo(posX, lastPosY)
+			p.LineTo(posX, height)
+			p.Close()
+		}
+		if last <= offsetY && qln > offsetY {
+			p.MoveTo(posX, height)
+		}
+		if qln > offsetY && last != qln {
+			posY := height - math.Max(0, math.Min(height, (qln-offsetY)*scaleY))
+			if last > offsetY {
+				p.LineTo(posX, lastPosY)
+			}
+			p.LineTo(posX, posY)
+			lastPosY = posY
+		}
+
+		last = qln
+	}
+
+	if last > offsetY {
+		p.LineTo(float64(count), lastPosY)
+		p.LineTo(float64(count), height)
+		p.Close()
+	}
 }
 
 func DrawQLNGraph(out io.Writer, data models.Bins, params GraphParams) error {
@@ -336,48 +370,55 @@ func DrawQLNGraph(out io.Writer, data models.Bins, params GraphParams) error {
 
 	m.Path.SetPrecision(1)
 
-	var last float64 = offsetY
-	var lastPosY float64
-
-	for i := 0; i < bins; i++ {
-		bin := data.Bins[i]
-		qln := bin.QLN
-		if qln >= 0 {
-			qln = offsetY
-		}
-
-		posX := float64(i)
-
-		if last > offsetY && qln <= offsetY {
-			m.Path.LineTo(posX, lastPosY)
-			m.Path.LineTo(posX, h)
-			m.Path.Close()
-		}
-		if last <= offsetY && qln > offsetY {
-			m.Path.MoveTo(posX, h)
-		}
-		if qln > offsetY && last != qln {
-			posY := h - math.Max(0, math.Min(h, (qln-offsetY)*scaleY))
-			if last > offsetY {
-				m.Path.LineTo(posX, lastPosY)
-			}
-			m.Path.LineTo(posX, posY)
-			lastPosY = posY
-		}
-
-		last = qln
-	}
-
-	if last > offsetY {
-		m.Path.LineTo(spec.LegendXMax, lastPosY)
-		m.Path.LineTo(spec.LegendXMax, h)
-		m.Path.Close()
-	}
+	buildQLNPath(&m.Path, data.QLN.Downstream, h, scaleY, offsetY)
+	buildQLNPath(&m.Path, data.QLN.Upstream, h, scaleY, offsetY)
 
 	m.Transform.Scale(scaleX, 1)
 	m.Transform.Translate(x, y)
 
 	return writeTemplate(out, m, templateBase, templateQLN)
+}
+
+func buildHlogPath(p *path, bins models.BinsFloat, height, scaleX, scaleY, offsetY float64) {
+	width := float64(bins.GroupSize)
+
+	var lastValid bool
+	var last float64 = -96.3
+	var lastPosY float64
+
+	count := len(bins.Data)
+	for i := 0; i < count; i++ {
+		hlog := bins.Data[i]
+		valid := hlog >= -96.2 && hlog <= 6
+
+		posX := (float64(i) + 0.5) * width
+		posY := height + 0.5 - math.Max(0, math.Min(height, (hlog-offsetY)*scaleY))
+
+		reset := lastValid && math.Abs(hlog-last) >= 10
+
+		if (lastValid && !valid) || reset {
+			p.LineTo(posX-0.5*width, lastPosY/scaleX)
+		}
+		if (!lastValid && valid) || reset {
+			p.MoveTo(posX-0.5*width, posY/scaleX)
+			lastPosY = posY
+		}
+		if valid && last != hlog {
+			if lastValid && !reset {
+				p.LineTo(posX-width, lastPosY/scaleX)
+				p.LineTo(posX, posY/scaleX)
+			}
+			lastPosY = posY
+		}
+
+		lastValid = valid
+		last = hlog
+	}
+
+	if lastValid {
+		p.LineTo(float64(count), lastPosY/scaleX)
+	}
+
 }
 
 func DrawHlogGraph(out io.Writer, data models.Bins, params GraphParams) error {
@@ -413,42 +454,8 @@ func DrawHlogGraph(out io.Writer, data models.Bins, params GraphParams) error {
 
 	m.Path.SetPrecision(1)
 
-	var lastValid bool
-	var last float64 = -96.3
-	var lastPosY float64
-
-	for i := 0; i < bins; i++ {
-		bin := data.Bins[i]
-		hlog := bin.Hlog
-		valid := hlog >= -96.2 && hlog <= 6
-
-		posX := float64(i) + 0.5
-		posY := h + 0.5 - math.Max(0, math.Min(h, (hlog-offsetY)*scaleY))
-
-		reset := lastValid && math.Abs(hlog-last) >= 10
-
-		if (lastValid && !valid) || reset {
-			m.Path.LineTo(posX-0.5, lastPosY/scaleX)
-		}
-		if (!lastValid && valid) || reset {
-			m.Path.MoveTo(posX-0.5, posY/scaleX)
-			lastPosY = posY
-		}
-		if valid && last != hlog {
-			if lastValid && !reset {
-				m.Path.LineTo(posX-1, lastPosY/scaleX)
-				m.Path.LineTo(posX, posY/scaleX)
-			}
-			lastPosY = posY
-		}
-
-		lastValid = valid
-		last = hlog
-	}
-
-	if lastValid {
-		m.Path.LineTo(spec.LegendXMax, lastPosY/scaleX)
-	}
+	buildHlogPath(&m.Path, data.Hlog.Downstream, h, scaleX, scaleY, offsetY)
+	buildHlogPath(&m.Path, data.Hlog.Upstream, h, scaleX, scaleY, offsetY)
 
 	// scaling of y by scaleX in order to simulate vector-effect="non-scaling-stroke" for non-supporting renderers
 	m.Transform.Scale(scaleX, scaleX)
