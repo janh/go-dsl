@@ -250,8 +250,8 @@ func buildSNRPath(p *path, bins models.BinsFloat, height, scaleY float64) {
 	}
 
 	if last > 0 {
-		p.LineTo(float64(count), lastPosY)
-		p.LineTo(float64(count), height)
+		p.LineTo(float64(count*bins.GroupSize), lastPosY)
+		p.LineTo(float64(count*bins.GroupSize), height)
 		p.Close()
 	}
 }
@@ -331,8 +331,8 @@ func buildQLNPath(p *path, bins models.BinsFloat, height, scaleY, offsetY float6
 	}
 
 	if last > offsetY {
-		p.LineTo(float64(count), lastPosY)
-		p.LineTo(float64(count), height)
+		p.LineTo(float64(count*bins.GroupSize), lastPosY)
+		p.LineTo(float64(count*bins.GroupSize), height)
 		p.Close()
 	}
 }
@@ -416,7 +416,7 @@ func buildHlogPath(p *path, bins models.BinsFloat, height, scaleX, scaleY, offse
 	}
 
 	if lastValid {
-		p.LineTo(float64(count), lastPosY/scaleX)
+		p.LineTo(float64(count*bins.GroupSize), lastPosY/scaleX)
 	}
 
 }
