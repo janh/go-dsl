@@ -217,7 +217,9 @@ func DrawBitsGraph(out io.Writer, data models.Bins, params GraphParams) error {
 	return writeTemplate(out, m, templateBase, templateBits)
 }
 
-func buildSNRQLNPath(p *path, bins models.BinsFloat, scaleY, offsetY, maxY, maxYValid float64) {
+func buildSNRQLNPath(p *path, bins models.BinsFloat, scaleX, scaleY, offsetY, maxY, maxYValid float64) {
+	width := float64(bins.GroupSize) * scaleX
+
 	var lastValid bool
 	var last float64 = offsetY
 	var lastPosY float64
@@ -228,22 +230,23 @@ func buildSNRQLNPath(p *path, bins models.BinsFloat, scaleY, offsetY, maxY, maxY
 		valid := val > offsetY && val <= maxYValid
 		changed := last != val
 
-		posX := float64(i * bins.GroupSize)
+		posX := (float64(i) + 0.5) * width
 		posY := (math.Min(maxY, val) - offsetY) * scaleY
 
 		if lastValid && !valid {
-			p.LineTo(posX, lastPosY)
-			p.LineTo(posX, 0)
+			p.LineTo(posX-0.5*width, lastPosY)
+			p.LineTo(posX-0.5*width, 0)
 			p.Close()
 		}
 		if !lastValid && valid {
-			p.MoveTo(posX, 0)
+			p.MoveTo(posX-0.5*width, 0)
+			p.LineTo(posX-0.5*width, posY)
 		}
 		if valid && changed {
 			if lastValid {
-				p.LineTo(posX, lastPosY)
+				p.LineTo(posX-0.75*width, lastPosY)
+				p.LineTo(posX-0.25*width, posY)
 			}
-			p.LineTo(posX, posY)
 			lastPosY = posY
 		}
 
@@ -252,8 +255,9 @@ func buildSNRQLNPath(p *path, bins models.BinsFloat, scaleY, offsetY, maxY, maxY
 	}
 
 	if lastValid {
-		p.LineTo(float64(count*bins.GroupSize), lastPosY)
-		p.LineTo(float64(count*bins.GroupSize), 0)
+		posX := (float64(count) + 0.5) * width
+		p.LineTo(posX-0.5*width, lastPosY)
+		p.LineTo(posX-0.5*width, 0)
 		p.Close()
 	}
 }
@@ -290,10 +294,10 @@ func DrawSNRGraph(out io.Writer, data models.Bins, params GraphParams) error {
 
 	m.Path.SetPrecision(1)
 
-	buildSNRQLNPath(&m.Path, data.SNR.Downstream, scaleY, 0, spec.LegendYTop, 95)
-	buildSNRQLNPath(&m.Path, data.SNR.Upstream, scaleY, 0, spec.LegendYTop, 95)
+	buildSNRQLNPath(&m.Path, data.SNR.Downstream, 2, scaleY, 0, spec.LegendYTop, 95)
+	buildSNRQLNPath(&m.Path, data.SNR.Upstream, 2, scaleY, 0, spec.LegendYTop, 95)
 
-	m.Transform.Scale(scaleX, -1)
+	m.Transform.Scale(scaleX/2, -1)
 	m.Transform.Translate(x, y+h)
 
 	return writeTemplate(out, m, templateBase, templateSNR)
@@ -331,10 +335,10 @@ func DrawQLNGraph(out io.Writer, data models.Bins, params GraphParams) error {
 
 	m.Path.SetPrecision(1)
 
-	buildSNRQLNPath(&m.Path, data.QLN.Downstream, scaleY, spec.LegendYBottom, spec.LegendYTop, -23)
-	buildSNRQLNPath(&m.Path, data.QLN.Upstream, scaleY, spec.LegendYBottom, spec.LegendYTop, -23)
+	buildSNRQLNPath(&m.Path, data.QLN.Downstream, 2, scaleY, spec.LegendYBottom, spec.LegendYTop, -23)
+	buildSNRQLNPath(&m.Path, data.QLN.Upstream, 2, scaleY, spec.LegendYBottom, spec.LegendYTop, -23)
 
-	m.Transform.Scale(scaleX, -1)
+	m.Transform.Scale(scaleX/2, -1)
 	m.Transform.Translate(x, y+h)
 
 	return writeTemplate(out, m, templateBase, templateQLN)
