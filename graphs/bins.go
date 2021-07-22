@@ -138,39 +138,40 @@ func getLegendX(mode models.Mode) (bins int, step int, freq float64) {
 }
 
 func buildBitsPath(p *path, bins models.BinsBits, scaleY float64) {
+	var lastValid bool
 	var lastBits int8
 	var lastPosY float64
 
 	count := len(bins.Data)
 	for i := 0; i < count; i++ {
 		bits := bins.Data[i]
-		if bits < 0 {
-			bits = 0
-		}
+		valid := bits > 0
+		changed := lastBits != bits
 
 		posX := float64(i)
+		posY := math.Ceil(float64(bits)*scaleY)
 
-		if lastBits > 0 && bits == 0 {
+		if lastValid && !valid {
 			p.LineTo(posX, lastPosY)
 			p.LineTo(posX, 0)
 			p.Close()
 		}
-		if lastBits == 0 && bits > 0 {
+		if !lastValid && valid {
 			p.MoveTo(posX, 0)
 		}
-		if bits > 0 && lastBits != bits {
-			posY := math.Ceil(float64(bits)*scaleY)
-			if lastBits != 0 {
+		if valid && changed {
+			if lastValid {
 				p.LineTo(posX, lastPosY)
 			}
 			p.LineTo(posX, posY)
 			lastPosY = posY
 		}
 
+		lastValid = valid
 		lastBits = bits
 	}
 
-	if lastBits > 0 {
+	if lastValid {
 		p.LineTo(float64(count), lastPosY)
 		p.LineTo(float64(count), 0)
 		p.Close()
@@ -217,39 +218,40 @@ func DrawBitsGraph(out io.Writer, data models.Bins, params GraphParams) error {
 }
 
 func buildSNRQLNPath(p *path, bins models.BinsFloat, scaleY, offsetY, maxY, maxYValid float64) {
+	var lastValid bool
 	var last float64 = offsetY
 	var lastPosY float64
 
 	count := len(bins.Data)
 	for i := 0; i < count; i++ {
 		val := bins.Data[i]
-		if val < offsetY || val > maxYValid {
-			val = offsetY
-		}
+		valid := val > offsetY && val <= maxYValid
+		changed := last != val
 
 		posX := float64(i * bins.GroupSize)
+		posY := (math.Min(maxY, val) - offsetY) * scaleY
 
-		if last > offsetY && val <= offsetY {
+		if lastValid && !valid {
 			p.LineTo(posX, lastPosY)
 			p.LineTo(posX, 0)
 			p.Close()
 		}
-		if last <= offsetY && val > offsetY {
+		if !lastValid && valid {
 			p.MoveTo(posX, 0)
 		}
-		if val > offsetY && last != val {
-			posY := (math.Min(maxY, val) - offsetY) * scaleY
-			if last > offsetY {
+		if valid && changed {
+			if lastValid {
 				p.LineTo(posX, lastPosY)
 			}
 			p.LineTo(posX, posY)
 			lastPosY = posY
 		}
 
+		lastValid = valid
 		last = val
 	}
 
-	if last > offsetY {
+	if lastValid {
 		p.LineTo(float64(count*bins.GroupSize), lastPosY)
 		p.LineTo(float64(count*bins.GroupSize), 0)
 		p.Close()
