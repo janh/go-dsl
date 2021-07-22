@@ -341,7 +341,7 @@ func DrawQLNGraph(out io.Writer, data models.Bins, params GraphParams) error {
 func buildHlogPath(p *path, bins models.BinsFloat, scaleY, offsetY, maxY, postScaleY float64) {
 	width := float64(bins.GroupSize)
 
-	var lastValid bool
+	var lastValid, lastChanged bool
 	var last float64 = -96.3
 	var lastPosY float64
 
@@ -349,6 +349,7 @@ func buildHlogPath(p *path, bins models.BinsFloat, scaleY, offsetY, maxY, postSc
 	for i := 0; i < count; i++ {
 		hlog := bins.Data[i]
 		valid := hlog >= -96.2 && hlog <= 6
+		changed := last != hlog
 
 		posX := (float64(i) + 0.5) * width
 		posY := math.Max(0, math.Min(maxY, hlog) - offsetY) * scaleY - 0.5
@@ -362,15 +363,18 @@ func buildHlogPath(p *path, bins models.BinsFloat, scaleY, offsetY, maxY, postSc
 			p.MoveTo(posX-0.5*width, posY * postScaleY)
 			lastPosY = posY
 		}
-		if valid && last != hlog {
+		if valid && changed {
 			if lastValid && !reset {
-				p.LineTo(posX-width, lastPosY * postScaleY)
+				if !lastChanged {
+					p.LineTo(posX-width, lastPosY * postScaleY)
+				}
 				p.LineTo(posX, posY * postScaleY)
 			}
 			lastPosY = posY
 		}
 
 		lastValid = valid
+		lastChanged = changed
 		last = hlog
 	}
 
