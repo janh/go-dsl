@@ -149,7 +149,7 @@ func buildBitsPath(p *path, bins models.BinsBits, scaleY float64) {
 		changed := lastBits != bits
 
 		posX := float64(i)
-		posY := math.Ceil(float64(bits)*scaleY)
+		posY := math.Ceil(float64(bits) * scaleY)
 
 		if lastValid && !valid {
 			p.LineTo(posX, lastPosY)
@@ -354,23 +354,23 @@ func buildHlogPath(p *path, bins models.BinsFloat, scaleY, offsetY, maxY, postSc
 		changed := last != hlog
 
 		posX := (float64(i) + 0.5) * width
-		posY := math.Max(0, math.Min(maxY, hlog) - offsetY) * scaleY - 0.5
+		posY := math.Max(0, math.Min(maxY, hlog)-offsetY)*scaleY - 0.5
 
 		reset := lastValid && math.Abs(hlog-last) >= 10
 
 		if (lastValid && !valid) || reset {
-			p.LineTo(posX-0.5*width, lastPosY * postScaleY)
+			p.LineTo(posX-0.5*width, lastPosY*postScaleY)
 		}
 		if (!lastValid && valid) || reset {
-			p.MoveTo(posX-0.5*width, posY * postScaleY)
+			p.MoveTo(posX-0.5*width, posY*postScaleY)
 			lastPosY = posY
 		}
 		if valid && changed {
 			if lastValid && !reset {
 				if !lastChanged {
-					p.LineTo(posX-width, lastPosY * postScaleY)
+					p.LineTo(posX-width, lastPosY*postScaleY)
 				}
-				p.LineTo(posX, posY * postScaleY)
+				p.LineTo(posX, posY*postScaleY)
 			}
 			lastPosY = posY
 		}
@@ -381,7 +381,7 @@ func buildHlogPath(p *path, bins models.BinsFloat, scaleY, offsetY, maxY, postSc
 	}
 
 	if lastValid {
-		p.LineTo(float64(count*bins.GroupSize), lastPosY * postScaleY)
+		p.LineTo(float64(count*bins.GroupSize), lastPosY*postScaleY)
 	}
 
 }
