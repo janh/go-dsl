@@ -220,15 +220,16 @@ func DrawBitsGraph(out io.Writer, data models.Bins, params GraphParams) error {
 func buildSNRQLNPath(p *path, bins models.BinsFloat, scaleX, scaleY, offsetY, maxY, maxYValid float64) {
 	width := float64(bins.GroupSize) * scaleX
 
-	var lastValid bool
+	var lastValid, lastDrawn bool
 	var last float64 = offsetY
-	var lastPosY float64
+	var lastBezierPosX, lastPosY float64
 
 	count := len(bins.Data)
 	for i := 0; i < count; i++ {
 		val := bins.Data[i]
 		valid := val > offsetY && val <= maxYValid
 		changed := last != val
+		drawn := false
 
 		posX := (float64(i) + 0.5) * width
 		posY := (math.Min(maxY, val) - offsetY) * scaleY
@@ -241,15 +242,21 @@ func buildSNRQLNPath(p *path, bins models.BinsFloat, scaleX, scaleY, offsetY, ma
 		if !lastValid && valid {
 			p.MoveTo(posX-0.5*width, 0)
 			p.LineTo(posX-0.5*width, posY)
+			lastBezierPosX = posX - width
 		}
 		if valid && changed {
 			if lastValid {
-				p.LineTo(posX-0.75*width, lastPosY)
-				p.LineTo(posX-0.25*width, posY)
+				if !lastDrawn {
+					p.BezierCurveTo(lastBezierPosX+0.5*width, lastPosY, posX-1.5*width, lastPosY, posX-width, lastPosY)
+				}
+				p.BezierCurveTo(posX-0.5*width, lastPosY, posX-0.5*width, posY, posX, posY)
+				lastBezierPosX = posX
+				drawn = true
 			}
 			lastPosY = posY
 		}
 
+		lastDrawn = drawn
 		lastValid = valid
 		last = val
 	}
