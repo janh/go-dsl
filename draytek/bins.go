@@ -34,12 +34,17 @@ func parseBins(status models.Status, bandinfo, downstream, upstream, qln, hlog s
 func parseStatusBandinfo(bins *models.Bins, data string) {
 	scanner := bufio.NewScanner(strings.NewReader(data))
 
+	var bands *[]models.Band
+
 	for scanner.Scan() {
 		line := scanner.Text()
 		line = strings.TrimSpace(line)
 
-		isUpstream := strings.HasPrefix(line, "US:")
-		isDownstream := strings.HasPrefix(line, "DS:")
+		if strings.HasPrefix(line, "US:") {
+			bands = &bins.Bands.Upstream
+		} else if strings.HasPrefix(line, "DS:") {
+			bands = &bins.Bands.Downstream
+		}
 
 		submatches := regexpBandinfo.FindStringSubmatch(line)
 		if len(submatches) == 3 {
@@ -48,10 +53,8 @@ func parseStatusBandinfo(bins *models.Bins, data string) {
 
 			band := models.Band{Start: start, End: end}
 
-			if isUpstream {
-				bins.Bands.Upstream = append(bins.Bands.Upstream, band)
-			} else if isDownstream {
-				bins.Bands.Downstream = append(bins.Bands.Downstream, band)
+			if bands != nil {
+				*bands = append(*bands, band)
 			}
 		}
 	}
