@@ -14,10 +14,17 @@ var vendorMapping = map[string]string{
 	"ANDV": "Analog Devices",
 	"BDCM": "Broadcom",
 	"CENT": "Centillium",
+	"CNXT": "Conexant",
 	"DRAY": "DrayTek",
-	"GPSN": "Globespan",
+	"GSPN": "Globespan",
 	"IFTN": "Infineon",
 	"IKNS": "Ikanos",
+	"RETK": "Realtek",
+	"META": "Metanoia",
+	"MTIA": "Metanoia",
+	"STMI": "STMicro",
+	"TCTN": "TrendChip",
+	"TMMB": "Thomson",
 	"TSTC": "Texas Instruments",
 }
 
