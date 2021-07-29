@@ -16,6 +16,10 @@
 	</g>
 </g>
 
+<path fill="{{ .ColorBandsUpstream }}" d="{{ .PathBandsUpstream }}"/>
+<path fill="{{ .ColorBandsDownstream }}" d="{{ .PathBandsDownstream }}"/>
+<path fill="none" stroke-linecap="square" stroke="{{ .ColorBandsStroke }}" d="{{ .PathBandsStroke }}"/>
+
 {{ template "content" . }}
 
 </svg>

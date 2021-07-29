@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"io"
 	"math"
+	"sort"
 
 	"3e8.eu/go/dsl/models"
 )
@@ -119,6 +120,95 @@ func getBaseModel(spec graphSpec) baseModel {
 	return m
 }
 
+func setBandsData(m *baseModel, data models.Bins, useColor bool) {
+	if useColor {
+		m.ColorBandsDownstream = colorDownstream
+		m.ColorBandsUpstream = colorUpstream
+	} else {
+		m.ColorBandsDownstream = colorNeutral
+		m.ColorBandsUpstream = colorNeutral
+	}
+	m.ColorBandsDownstream.A = 0.075
+	m.ColorBandsUpstream.A = 0.075
+
+	m.ColorBandsStroke = colorNeutral
+	m.ColorBandsStroke.A = 0.1
+
+	type bandWithPath struct {
+		models.Band
+		PathFill *path
+	}
+
+	bands := make([]bandWithPath, 0, len(data.Bands.Downstream)+len(data.Bands.Upstream))
+	for _, b := range data.Bands.Downstream {
+		bands = append(bands, bandWithPath{Band: b, PathFill: &m.PathBandsDownstream})
+	}
+	for _, b := range data.Bands.Upstream {
+		bands = append(bands, bandWithPath{Band: b, PathFill: &m.PathBandsUpstream})
+	}
+	sort.Slice(bands, func(i, j int) bool {
+		return bands[i].Start < bands[j].Start
+	})
+
+	top := m.GraphY
+	bottom := m.GraphY + m.GraphHeight
+	scaleX := m.GraphWidth / float64(data.Mode.BinCount())
+
+	if len(bands) > 0 {
+		band := bands[0]
+		start := m.GraphX + math.Floor((float64(band.Start)+0.5)*scaleX)
+
+		band.PathFill.MoveTo(start, bottom)
+		band.PathFill.LineTo(start, top)
+
+		m.PathBandsStroke.MoveTo(start+0.5, bottom-0.5)
+		m.PathBandsStroke.LineTo(start+0.5, top+0.5)
+	}
+
+	for i := 1; i < len(bands); i++ {
+		band1 := bands[i-1]
+		band2 := bands[i]
+
+		end := m.GraphX + math.Ceil((float64(band1.End)+0.5)*scaleX)
+		start := m.GraphX + math.Floor((float64(band2.Start)+0.5)*scaleX)
+
+		if start-end <= 1 {
+			center := float64(band2.Start+band1.End) / 2
+			pos := m.GraphX + math.Floor((center+0.5)*scaleX) + 0.5
+			end = pos
+			start = pos
+
+			m.PathBandsStroke.MoveTo(pos, bottom-0.5)
+			m.PathBandsStroke.LineTo(pos, top+0.5)
+		} else {
+			m.PathBandsStroke.MoveTo(end-0.5, bottom-0.5)
+			m.PathBandsStroke.LineTo(end-0.5, top+0.5)
+
+			m.PathBandsStroke.MoveTo(start+0.5, bottom-0.5)
+			m.PathBandsStroke.LineTo(start+0.5, top+0.5)
+		}
+
+		band1.PathFill.LineTo(end, top)
+		band1.PathFill.LineTo(end, bottom)
+		band1.PathFill.Close()
+
+		band2.PathFill.MoveTo(start, bottom)
+		band2.PathFill.LineTo(start, top)
+	}
+
+	if len(bands) > 0 {
+		band := bands[len(bands)-1]
+		end := m.GraphX + math.Ceil((float64(band.End)+0.5)*scaleX)
+
+		band.PathFill.LineTo(end, top)
+		band.PathFill.LineTo(end, bottom)
+		band.PathFill.Close()
+
+		m.PathBandsStroke.MoveTo(end-0.5, bottom-0.5)
+		m.PathBandsStroke.LineTo(end-0.5, top+0.5)
+	}
+}
+
 func getLegendX(mode models.Mode) (bins int, step int, freq float64) {
 	bins = mode.BinCount()
 	freq = mode.CarrierSpacing()
@@ -207,6 +297,8 @@ func DrawBitsGraph(out io.Writer, data models.Bins, params GraphParams) error {
 
 	scaleX := w / spec.LegendXMax
 	scaleY := h / spec.LegendYTop
+
+	setBandsData(&m.baseModel, data, false)
 
 	buildBitsPath(&m.PathDownstream, data.Bits.Downstream, scaleY)
 	buildBitsPath(&m.PathUpstream, data.Bits.Upstream, scaleY)
@@ -299,6 +391,8 @@ func DrawSNRGraph(out io.Writer, data models.Bins, params GraphParams) error {
 	scaleX := w / spec.LegendXMax
 	scaleY := h / spec.LegendYTop
 
+	setBandsData(&m.baseModel, data, true)
+
 	m.Path.SetPrecision(1)
 
 	buildSNRQLNPath(&m.Path, data.SNR.Downstream, 2, scaleY, 0, spec.LegendYTop, 95)
@@ -339,6 +433,8 @@ func DrawQLNGraph(out io.Writer, data models.Bins, params GraphParams) error {
 
 	scaleX := w / spec.LegendXMax
 	scaleY := h / (spec.LegendYTop - spec.LegendYBottom)
+
+	setBandsData(&m.baseModel, data, true)
 
 	m.Path.SetPrecision(1)
 
@@ -428,6 +524,8 @@ func DrawHlogGraph(out io.Writer, data models.Bins, params GraphParams) error {
 
 	scaleX := w / spec.LegendXMax
 	scaleY := h / (spec.LegendYTop - spec.LegendYBottom)
+
+	setBandsData(&m.baseModel, data, true)
 
 	m.Path.SetPrecision(1)
 

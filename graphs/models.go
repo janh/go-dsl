@@ -27,6 +27,14 @@ type baseModel struct {
 	LabelsX          []label
 	LabelsY          []label
 	LabelsYTransform transform
+
+	ColorBandsDownstream Color
+	ColorBandsUpstream   Color
+	ColorBandsStroke     Color
+
+	PathBandsDownstream path
+	PathBandsUpstream   path
+	PathBandsStroke     path
 }
 
 type label struct {
