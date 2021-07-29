@@ -27,6 +27,8 @@ func parseBins(status models.Status, pbParams, bits, snr, qln, hlog string) mode
 	parseQLN(&bins, qln)
 	parseHlog(&bins, hlog)
 
+	helpers.GenerateBandsData(&bins)
+
 	return bins
 }
 

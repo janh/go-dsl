@@ -10,6 +10,7 @@ import (
 	"strconv"
 	"strings"
 
+	"3e8.eu/go/dsl/internal/helpers"
 	"3e8.eu/go/dsl/models"
 )
 
@@ -27,6 +28,8 @@ func parseBins(status models.Status, bandinfo, downstream, upstream, qln, hlog s
 
 	parseStatusQLN(&bins, qln)
 	parseStatusHlog(&bins, hlog)
+
+	helpers.GenerateBandsData(&bins)
 
 	return bins
 }
