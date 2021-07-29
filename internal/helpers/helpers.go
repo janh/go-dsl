@@ -25,6 +25,12 @@ func FormatVendor(vendor string) string {
 	if formattedVendor, ok := vendorMapping[vendor]; ok {
 		return formattedVendor
 	}
+
+	end := strings.IndexByte(vendor, 0)
+	if end != -1 {
+		vendor = vendor[:end]
+	}
+
 	return vendor
 }
 
