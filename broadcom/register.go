@@ -22,4 +22,21 @@ func init() {
 		SupportedAuthTypes: dsl.AuthTypePassword,
 	}
 	dsl.RegisterClient("broadcom_telnet", newTelnet, clientDescTelnet)
+
+	newSSH := func(config dsl.Config) (dsl.Client, error) {
+		sshConfig := SSHConfig{
+			Host:       config.Host,
+			User:       config.User,
+			Password:   config.AuthPassword,
+			PrivateKey: config.AuthPrivateKey,
+			KnownHost:  config.KnownHost,
+		}
+		return NewSSHClient(sshConfig)
+	}
+	clientDescSSH := dsl.ClientDesc{
+		RequiresUser:       dsl.TristateYes,
+		SupportedAuthTypes: dsl.AuthTypePassword | dsl.AuthTypePrivateKey,
+		RequiresKnownHost:  true,
+	}
+	dsl.RegisterClient("broadcom_ssh", newSSH, clientDescSSH)
 }
