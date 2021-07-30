@@ -15,56 +15,92 @@ import (
 	"golang.org/x/term"
 
 	"3e8.eu/go/dsl"
-	"3e8.eu/go/dsl/broadcom"
-	"3e8.eu/go/dsl/draytek"
 	"3e8.eu/go/dsl/graphs"
 	"3e8.eu/go/dsl/models"
+
+	_ "3e8.eu/go/dsl/broadcom"
+	_ "3e8.eu/go/dsl/draytek"
 )
 
 func main() {
 	flagSet := flag.NewFlagSet(os.Args[0], flag.ExitOnError)
+	flagSet.Usage = func() { printUsage(flagSet) }
 
-	device := flagSet.String("d", "", "device type (either broadcom or draytek)")
-	user := flagSet.String("u", "", "user name (optional)")
+	clientTypes := dsl.GetClientTypes()
+	deviceTypeOptions := ""
+	for i, clientType := range clientTypes {
+		if i != 0 {
+			deviceTypeOptions += ", "
+		}
+		deviceTypeOptions += string(clientType)
+	}
+
+	device := flagSet.String("d", "", "device type (valid options: "+deviceTypeOptions+")")
+	user := flagSet.String("u", "", "user name (optional depending on device type)")
 	flagSet.Parse(os.Args[1:])
 
-	if (*device != "broadcom" && *device != "draytek") || len(flagSet.Args()) != 1 {
-		flagSet.Usage()
-		os.Exit(2)
+	clientType := dsl.ClientType(*device)
+	if !clientType.IsValid() {
+		exitWithUsage(flagSet, "Invalid or missing device type.")
+	}
+	clientDesc := clientType.ClientDesc()
+
+	if flagSet.NArg() == 0 {
+		exitWithUsage(flagSet, "No hostname specified.")
+	} else if flagSet.NArg() > 1 {
+		exitWithUsage(flagSet, "Too many arguments.")
 	}
 
-	loadData(*device, flagSet.Arg(0), *user)
+	if clientDesc.RequiresUser == dsl.TristateNo && *user != "" {
+		exitWithUsage(flagSet, "Username specified, but not required for device.")
+	} else if clientDesc.RequiresUser == dsl.TristateYes && *user == "" {
+		exitWithUsage(flagSet, "No username specified.")
+	}
+
+	loadData(clientType, flagSet.Arg(0), *user)
 }
 
-func loadData(device, host, user string) {
-	fmt.Print("Password: ")
-	passwordBytes, err := term.ReadPassword(int(syscall.Stdin))
-	if err != nil {
-		panic(err)
-	}
+func printUsage(flagSet *flag.FlagSet) {
+	fmt.Println("\nUsage:")
+	fmt.Printf("  %s -d device [options] hostname\n\n", flagSet.Name())
+
+	fmt.Println("List of options:")
+	flagSet.PrintDefaults()
+
 	fmt.Println()
-	password := string(passwordBytes)
+}
+
+func exitWithUsage(flagSet *flag.FlagSet, message string) {
+	fmt.Println(message)
+	flagSet.Usage()
+	os.Exit(2)
+}
+
+func loadData(clientType dsl.ClientType, host, user string) {
+	clientDesc := clientType.ClientDesc()
+
+	var password string
+	if clientDesc.SupportedAuthTypes&dsl.AuthTypePassword != 0 {
+		fmt.Print("Password: ")
+		passwordBytes, err := term.ReadPassword(int(syscall.Stdin))
+		if err != nil {
+			panic(err)
+		}
+		fmt.Println()
+		password = string(passwordBytes)
+	}
 
 	fmt.Println()
 	fmt.Print("Connecting…")
 
-	var client dsl.Client
-	if device == "broadcom" {
-		telnetConfig := broadcom.TelnetConfig{
-			Host:     host,
-			User:     user,
-			Password: password,
-		}
-		client, err = broadcom.NewTelnetClient(telnetConfig)
-	} else if device == "draytek" {
-		telnetConfig := draytek.TelnetConfig{
-			Host:     host,
-			User:     user,
-			Password: password,
-		}
-		client, err = draytek.NewTelnetClient(telnetConfig)
+	config := dsl.Config{
+		Type:         clientType,
+		Host:         host,
+		User:         user,
+		AuthPassword: password,
 	}
 
+	client, err := dsl.NewClient(config)
 	if err != nil {
 		fmt.Println(" failed:", err)
 		os.Exit(1)
