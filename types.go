@@ -16,11 +16,13 @@ type AuthTypes int
 
 const (
 	AuthTypePassword AuthTypes = 1 << iota
+	AuthTypePrivateKey
 )
 
 type ClientDesc struct {
 	RequiresUser       Tristate
 	SupportedAuthTypes AuthTypes
+	RequiresKnownHost  bool
 }
 
 type ClientType string
