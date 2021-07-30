@@ -79,6 +79,12 @@ func exitWithUsage(flagSet *flag.FlagSet, message string) {
 func loadData(clientType dsl.ClientType, host, user string) {
 	clientDesc := clientType.ClientDesc()
 
+	var knownHost string
+	if clientDesc.RequiresKnownHost {
+		fmt.Println("Warning: host key validation is not yet implemented!\n")
+		knownHost = "IGNORE"
+	}
+
 	var password string
 	if clientDesc.SupportedAuthTypes&dsl.AuthTypePassword != 0 {
 		fmt.Print("Password: ")
@@ -98,6 +104,7 @@ func loadData(clientType dsl.ClientType, host, user string) {
 		Host:         host,
 		User:         user,
 		AuthPassword: password,
+		KnownHost:    knownHost,
 	}
 
 	client, err := dsl.NewClient(config)
