@@ -15,5 +15,5 @@ type SSHConfig struct {
 	User       string
 	Password   string
 	PrivateKey string
-	KnownHost  string
+	KnownHosts string
 }

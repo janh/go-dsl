@@ -5,10 +5,13 @@
 package ssh
 
 import (
+	"bufio"
 	"errors"
 	"regexp"
+	"strings"
 
 	"golang.org/x/crypto/ssh"
+	"golang.org/x/crypto/ssh/knownhosts"
 )
 
 var regexpPort = regexp.MustCompile(`:[0-9]+$`)
@@ -17,10 +20,10 @@ type Client struct {
 	client *ssh.Client
 }
 
-func NewClient(host, username, password, privateKey, knownHost string) (*Client, error) {
+func NewClient(host, username, password, privateKey, knownHosts string) (*Client, error) {
 	c := Client{}
 
-	err := c.connect(host, username, password, privateKey, knownHost)
+	err := c.connect(host, username, password, privateKey, knownHosts)
 	if err != nil {
 		return nil, err
 	}
@@ -28,7 +31,7 @@ func NewClient(host, username, password, privateKey, knownHost string) (*Client,
 	return &c, nil
 }
 
-func (c *Client) connect(host, username, password, privateKey, knownHost string) error {
+func (c *Client) connect(host, username, password, privateKey, knownHosts string) error {
 	if !regexpPort.MatchString(host) {
 		host += ":22"
 	}
@@ -48,16 +51,42 @@ func (c *Client) connect(host, username, password, privateKey, knownHost string)
 		config.Auth = append(config.Auth, ssh.Password(password))
 	}
 
-	if knownHost == "" {
+	if knownHosts == "" {
 		return errors.New("missing SSH host key")
-	} else if knownHost == "IGNORE" {
+	} else if knownHosts == "IGNORE" {
 		config.HostKeyCallback = ssh.InsecureIgnoreHostKey()
 	} else {
-		hostKey, _, _, _, err := ssh.ParseAuthorizedKey([]byte(knownHost))
-		if err != nil {
-			return err
+		var hostKey ssh.PublicKey
+
+		hostNormalized := knownhosts.Normalize(host)
+
+		scanner := bufio.NewScanner(strings.NewReader(knownHosts))
+		for scanner.Scan() {
+			line := scanner.Text()
+			line = strings.TrimSpace(line)
+
+			if len(line) == 0 {
+				continue
+			}
+
+			_, hosts, key, _, _, err := ssh.ParseKnownHosts([]byte(line))
+			if err != nil {
+				return err
+			}
+
+			for _, h := range hosts {
+				if h == hostNormalized {
+					hostKey = key
+					break
+				}
+			}
 		}
 
+		if hostKey == nil {
+			return errors.New("no matching SSH host key found")
+		}
+
+		config.HostKeyAlgorithms = []string{hostKey.Type()}
 		config.HostKeyCallback = ssh.FixedHostKey(hostKey)
 	}
 

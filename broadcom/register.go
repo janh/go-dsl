@@ -29,14 +29,14 @@ func init() {
 			User:       config.User,
 			Password:   config.AuthPassword,
 			PrivateKey: config.AuthPrivateKey,
-			KnownHost:  config.KnownHost,
+			KnownHosts: config.KnownHosts,
 		}
 		return NewSSHClient(sshConfig)
 	}
 	clientDescSSH := dsl.ClientDesc{
 		RequiresUser:       dsl.TristateYes,
 		SupportedAuthTypes: dsl.AuthTypePassword | dsl.AuthTypePrivateKey,
-		RequiresKnownHost:  true,
+		RequiresKnownHosts: true,
 	}
 	dsl.RegisterClient("broadcom_ssh", newSSH, clientDescSSH)
 }

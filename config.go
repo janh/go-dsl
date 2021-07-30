@@ -10,5 +10,5 @@ type Config struct {
 	User           string
 	AuthPassword   string
 	AuthPrivateKey string
-	KnownHost      string
+	KnownHosts     string
 }
