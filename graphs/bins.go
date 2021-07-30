@@ -16,10 +16,9 @@ import (
 var (
 	colorUpstream   = Color{96, 192, 0, .75}
 	colorDownstream = Color{0, 127, 255, .75}
-	colorNeutral    = Color{127, 127, 127, .75}
 )
 
-func getGraphColors(background, foreground Color) (colorGraph, colorGrid Color) {
+func getGraphColors(background, foreground Color) (colorGraph, colorGrid, colorNeutralFill, colorNeutralStroke Color) {
 	brightnessBackground := 0.299*float64(background.R) + 0.587*float64(background.G) + 0.114*float64(background.B)
 	brightnessForeground := 0.299*float64(foreground.R) + 0.587*float64(foreground.G) + 0.114*float64(foreground.B)
 	brightness := brightnessBackground
@@ -45,8 +44,18 @@ func getGraphColors(background, foreground Color) (colorGraph, colorGrid Color) 
 		grayGrid = math.Min(gray+20, 255)
 	}
 
+	var grayNeutral float64
+	if brightness > 127 {
+		grayNeutral = 95
+	} else {
+		grayNeutral = 159
+	}
+
 	colorGraph = Color{uint8(gray), uint8(gray), uint8(gray), 1.0}
 	colorGrid = Color{uint8(grayGrid), uint8(grayGrid), uint8(grayGrid), 1.0}
+
+	colorNeutralFill = Color{uint8(grayNeutral), uint8(grayNeutral), uint8(grayNeutral), .6}
+	colorNeutralStroke = Color{uint8(grayNeutral), uint8(grayNeutral), uint8(grayNeutral), .75}
 
 	return
 }
@@ -65,9 +74,9 @@ func getBaseModel(spec graphSpec) baseModel {
 	m.ColorBackground = spec.ColorBackground
 	m.ColorText = spec.ColorForeground
 
-	m.ColorGraph, m.ColorGrid = getGraphColors(spec.ColorBackground, spec.ColorForeground)
+	m.ColorGraph, m.ColorGrid, m.ColorNeutralFill, m.ColorNeutralStroke =
+		getGraphColors(spec.ColorBackground, spec.ColorForeground)
 
-	m.ColorNeutral = colorNeutral
 	m.ColorUpstream = colorUpstream
 	m.ColorDownstream = colorDownstream
 
@@ -125,13 +134,13 @@ func setBandsData(m *baseModel, data models.Bins, useColor bool) {
 		m.ColorBandsDownstream = colorDownstream
 		m.ColorBandsUpstream = colorUpstream
 	} else {
-		m.ColorBandsDownstream = colorNeutral
-		m.ColorBandsUpstream = colorNeutral
+		m.ColorBandsDownstream = m.ColorNeutralFill
+		m.ColorBandsUpstream = m.ColorNeutralFill
 	}
 	m.ColorBandsDownstream.A = 0.075
 	m.ColorBandsUpstream.A = 0.075
 
-	m.ColorBandsStroke = colorNeutral
+	m.ColorBandsStroke = m.ColorNeutralStroke
 	m.ColorBandsStroke.A = 0.1
 
 	type bandWithPath struct {
@@ -536,7 +545,7 @@ func DrawHlogGraph(out io.Writer, data models.Bins, params GraphParams) error {
 	m.Transform.Scale(scaleX, -scaleX)
 	m.Transform.Translate(x, y+h)
 
-	m.StrokeWidth = 1.25 / scaleX
+	m.StrokeWidth = 1 / scaleX
 
 	return writeTemplate(out, m, templateBase, templateHlog)
 }

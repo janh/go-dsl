@@ -13,13 +13,14 @@ type baseModel struct {
 	GraphWidth  float64
 	GraphHeight float64
 
-	ColorBackground Color
-	ColorText       Color
-	ColorGraph      Color
-	ColorGrid       Color
-	ColorNeutral    Color
-	ColorUpstream   Color
-	ColorDownstream Color
+	ColorBackground    Color
+	ColorText          Color
+	ColorGraph         Color
+	ColorGrid          Color
+	ColorNeutralFill   Color
+	ColorNeutralStroke Color
+	ColorUpstream      Color
+	ColorDownstream    Color
 
 	PathLegend path
 	PathGrid   path
