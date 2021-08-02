@@ -4,8 +4,12 @@
 
 package draytek
 
+import (
+	"3e8.eu/go/dsl"
+)
+
 type TelnetConfig struct {
 	Host     string
 	User     string
-	Password string
+	Password dsl.PasswordCallback
 }

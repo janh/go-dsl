@@ -4,17 +4,21 @@
 
 package lantiq
 
+import (
+	"3e8.eu/go/dsl"
+)
+
 type TelnetConfig struct {
 	Host     string
 	User     string
-	Password string
+	Password dsl.PasswordCallback
 	Command  string
 }
 
 type SSHConfig struct {
 	Host        string
 	User        string
-	Password    string
+	Password    dsl.PasswordCallback
 	PrivateKeys []string
 	KnownHosts  string
 	Command     string

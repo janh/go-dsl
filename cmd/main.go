@@ -144,25 +144,34 @@ func loadData(clientType dsl.ClientType, host, user string, options map[string]s
 		knownHosts = "IGNORE"
 	}
 
-	var password string
-	if clientDesc.SupportedAuthTypes&dsl.AuthTypePassword != 0 {
-		fmt.Print("Password: ")
-		passwordBytes, err := term.ReadPassword(int(syscall.Stdin))
-		if err != nil {
-			panic(err)
-		}
-		fmt.Println()
-		password = string(passwordBytes)
-	}
-
 	fmt.Println()
 	fmt.Print("Connecting…")
+
+	var passwordCallback dsl.PasswordCallback
+	if clientDesc.SupportedAuthTypes&dsl.AuthTypePassword != 0 {
+		passwordCallback = func() string {
+			fmt.Println(" password required")
+
+			var password string
+			fmt.Print("Password: ")
+			passwordBytes, err := term.ReadPassword(int(syscall.Stdin))
+			if err != nil {
+				panic(err)
+			}
+			fmt.Println()
+			password = string(passwordBytes)
+
+			fmt.Print("Authenticating…")
+
+			return password
+		}
+	}
 
 	config := dsl.Config{
 		Type:         clientType,
 		Host:         host,
 		User:         user,
-		AuthPassword: password,
+		AuthPassword: passwordCallback,
 		KnownHosts:   knownHosts,
 		Options:      options,
 	}

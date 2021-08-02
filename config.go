@@ -4,11 +4,17 @@
 
 package dsl
 
+type PasswordCallback func() string
+
+func Password(password string) PasswordCallback {
+	return func() string { return password }
+}
+
 type Config struct {
 	Type            ClientType
 	Host            string
 	User            string
-	AuthPassword    string
+	AuthPassword    PasswordCallback
 	AuthPrivateKeys []string
 	KnownHosts      string
 	Options         map[string]string

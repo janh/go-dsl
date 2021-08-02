@@ -12,6 +12,8 @@ import (
 	"time"
 
 	"github.com/ziutek/telnet"
+
+	"3e8.eu/go/dsl"
 )
 
 var regexpPort = regexp.MustCompile(`:[0-9]+$`)
@@ -21,7 +23,7 @@ type Client struct {
 	conn   *telnet.Conn
 }
 
-func NewClient(config ClientConfig, host, username, password string) (*Client, error) {
+func NewClient(config ClientConfig, host, username string, password dsl.PasswordCallback) (*Client, error) {
 	c := Client{
 		config: config,
 	}
@@ -34,7 +36,7 @@ func NewClient(config ClientConfig, host, username, password string) (*Client, e
 	return &c, nil
 }
 
-func (c *Client) connect(host, username, password string) error {
+func (c *Client) connect(host, username string, passwordCallback dsl.PasswordCallback) error {
 	if !regexpPort.MatchString(host) {
 		host += ":23"
 	}
@@ -71,6 +73,7 @@ func (c *Client) connect(host, username, password string) error {
 				return errors.New("invalid username/password")
 			}
 			triedUsername = true
+
 			c.conn.Write([]byte(username + "\r\n"))
 
 		case c.config.PromptPassword:
@@ -78,6 +81,12 @@ func (c *Client) connect(host, username, password string) error {
 				return errors.New("invalid username/password")
 			}
 			triedPassword = true
+
+			var password string
+			if passwordCallback != nil {
+				password = passwordCallback()
+			}
+
 			c.conn.Write([]byte(password + "\r\n"))
 
 		case c.config.PromptCommand:

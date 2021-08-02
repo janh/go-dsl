@@ -12,6 +12,8 @@ import (
 
 	"golang.org/x/crypto/ssh"
 	"golang.org/x/crypto/ssh/knownhosts"
+
+	"3e8.eu/go/dsl"
 )
 
 var regexpPort = regexp.MustCompile(`:[0-9]+$`)
@@ -20,7 +22,7 @@ type Client struct {
 	client *ssh.Client
 }
 
-func NewClient(host, username, password string, privateKeys []string, knownHosts string) (*Client, error) {
+func NewClient(host, username string, password dsl.PasswordCallback, privateKeys []string, knownHosts string) (*Client, error) {
 	c := Client{}
 
 	err := c.connect(host, username, password, privateKeys, knownHosts)
@@ -31,7 +33,7 @@ func NewClient(host, username, password string, privateKeys []string, knownHosts
 	return &c, nil
 }
 
-func (c *Client) connect(host, username, password string, privateKeys []string, knownHosts string) error {
+func (c *Client) connect(host, username string, passwordCallback dsl.PasswordCallback, privateKeys []string, knownHosts string) error {
 	if !regexpPort.MatchString(host) {
 		host += ":22"
 	}
@@ -53,8 +55,11 @@ func (c *Client) connect(host, username, password string, privateKeys []string, 
 		config.Auth = append(config.Auth, ssh.PublicKeys(signers...))
 	}
 
-	if password != "" {
-		config.Auth = append(config.Auth, ssh.Password(password))
+	if passwordCallback != nil {
+		config.Auth = append(config.Auth, ssh.PasswordCallback(func() (string, error) {
+			password := passwordCallback()
+			return password, nil
+		}))
 	}
 
 	if knownHosts == "" {

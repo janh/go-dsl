@@ -4,16 +4,20 @@
 
 package broadcom
 
+import (
+	"3e8.eu/go/dsl"
+)
+
 type TelnetConfig struct {
 	Host     string
 	User     string
-	Password string
+	Password dsl.PasswordCallback
 }
 
 type SSHConfig struct {
 	Host        string
 	User        string
-	Password    string
+	Password    dsl.PasswordCallback
 	PrivateKeys []string
 	KnownHosts  string
 }
