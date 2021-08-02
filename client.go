@@ -33,5 +33,5 @@ func GetClientTypes() []ClientType {
 
 	sort.Slice(clientTypes, func(i, j int) bool { return clientTypes[i] < clientTypes[j] })
 
-	return getClientTypes()
+	return clientTypes
 }
