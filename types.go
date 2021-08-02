@@ -23,6 +23,7 @@ type ClientDesc struct {
 	RequiresUser       Tristate
 	SupportedAuthTypes AuthTypes
 	RequiresKnownHosts bool
+	OptionDescriptions map[string]string
 }
 
 type ClientType string

@@ -11,4 +11,5 @@ type Config struct {
 	AuthPassword    string
 	AuthPrivateKeys []string
 	KnownHosts      string
+	Options         map[string]string
 }

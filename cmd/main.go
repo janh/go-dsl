@@ -5,10 +5,12 @@
 package main
 
 import (
+	"errors"
 	"flag"
 	"fmt"
 	"io"
 	"os"
+	"strings"
 	"syscall"
 	"time"
 
@@ -21,6 +23,27 @@ import (
 	_ "3e8.eu/go/dsl/broadcom"
 	_ "3e8.eu/go/dsl/draytek"
 )
+
+type optionsFlag map[string]string
+
+func (o *optionsFlag) String() string {
+	// not needed for flag parsing
+	return ""
+}
+
+func (o *optionsFlag) Set(val string) error {
+	if *o == nil {
+		*o = make(map[string]string)
+	}
+
+	valSplit := strings.SplitN(val, "=", 2)
+	if len(valSplit) != 2 {
+		return errors.New("invalid format for device specific option")
+	}
+
+	(*o)[valSplit[0]] = valSplit[1]
+	return nil
+}
 
 func main() {
 	flagSet := flag.NewFlagSet(os.Args[0], flag.ExitOnError)
@@ -35,8 +58,11 @@ func main() {
 		deviceTypeOptions += string(clientType)
 	}
 
+	var options optionsFlag
+
 	device := flagSet.String("d", "", "device type (valid options: "+deviceTypeOptions+")")
 	user := flagSet.String("u", "", "user name (optional depending on device type)")
+	flagSet.Var(&options, "o", "device-specific option, in format Key=Value")
 	flagSet.Parse(os.Args[1:])
 
 	clientType := dsl.ClientType(*device)
@@ -57,7 +83,20 @@ func main() {
 		exitWithUsage(flagSet, "No username specified.")
 	}
 
-	loadData(clientType, flagSet.Arg(0), *user)
+	for optionKey := range options {
+		valid := false
+		for option := range clientDesc.OptionDescriptions {
+			if optionKey == option {
+				valid = true
+				break
+			}
+		}
+		if !valid {
+			exitWithUsage(flagSet, "Invalid device-specific option: "+optionKey)
+		}
+	}
+
+	loadData(clientType, flagSet.Arg(0), *user, options)
 }
 
 func printUsage(flagSet *flag.FlagSet) {
@@ -66,8 +105,27 @@ func printUsage(flagSet *flag.FlagSet) {
 
 	fmt.Println("List of options:")
 	flagSet.PrintDefaults()
-
 	fmt.Println()
+
+	fmt.Println("Device-specific options:")
+	fmt.Println()
+
+	clientTypes := dsl.GetClientTypes()
+	for _, clientType := range clientTypes {
+		clientDesc := clientType.ClientDesc()
+		if len(clientDesc.OptionDescriptions) == 0 {
+			continue
+		}
+
+		fmt.Println("  " + clientType + ":")
+
+		for key, desc := range clientDesc.OptionDescriptions {
+			fmt.Println("    " + key)
+			fmt.Println("\t" + desc)
+		}
+
+		fmt.Println()
+	}
 }
 
 func exitWithUsage(flagSet *flag.FlagSet, message string) {
@@ -76,7 +134,7 @@ func exitWithUsage(flagSet *flag.FlagSet, message string) {
 	os.Exit(2)
 }
 
-func loadData(clientType dsl.ClientType, host, user string) {
+func loadData(clientType dsl.ClientType, host, user string, options map[string]string) {
 	clientDesc := clientType.ClientDesc()
 
 	var knownHosts string
@@ -105,6 +163,7 @@ func loadData(clientType dsl.ClientType, host, user string) {
 		User:         user,
 		AuthPassword: password,
 		KnownHosts:   knownHosts,
+		Options:      options,
 	}
 
 	client, err := dsl.NewClient(config)
