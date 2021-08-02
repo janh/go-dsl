@@ -119,7 +119,7 @@ func loadData(clientType dsl.ClientType, host, user string) {
 
 	err = client.UpdateData()
 	if err != nil {
-		fmt.Println(" failed", err)
+		fmt.Println(" failed:", err)
 		os.Exit(1)
 	}
 
