@@ -5,10 +5,10 @@
 package dsl
 
 type Config struct {
-	Type           ClientType
-	Host           string
-	User           string
-	AuthPassword   string
-	AuthPrivateKey string
-	KnownHosts     string
+	Type            ClientType
+	Host            string
+	User            string
+	AuthPassword    string
+	AuthPrivateKeys []string
+	KnownHosts      string
 }

@@ -21,7 +21,7 @@ func NewSSHClient(config SSHConfig) (*SSHClient, error) {
 
 	var err error
 
-	c.client, err = ssh.NewClient(config.Host, config.User, config.Password, config.PrivateKey, config.KnownHosts)
+	c.client, err = ssh.NewClient(config.Host, config.User, config.Password, config.PrivateKeys, config.KnownHosts)
 	if err != nil {
 		return nil, err
 	}

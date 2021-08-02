@@ -20,10 +20,10 @@ type Client struct {
 	client *ssh.Client
 }
 
-func NewClient(host, username, password, privateKey, knownHosts string) (*Client, error) {
+func NewClient(host, username, password string, privateKeys []string, knownHosts string) (*Client, error) {
 	c := Client{}
 
-	err := c.connect(host, username, password, privateKey, knownHosts)
+	err := c.connect(host, username, password, privateKeys, knownHosts)
 	if err != nil {
 		return nil, err
 	}
@@ -31,20 +31,26 @@ func NewClient(host, username, password, privateKey, knownHosts string) (*Client
 	return &c, nil
 }
 
-func (c *Client) connect(host, username, password, privateKey, knownHosts string) error {
+func (c *Client) connect(host, username, password string, privateKeys []string, knownHosts string) error {
 	if !regexpPort.MatchString(host) {
 		host += ":22"
 	}
 
 	config := &ssh.ClientConfig{User: username}
 
-	if privateKey != "" {
-		signer, err := ssh.ParsePrivateKey([]byte(privateKey))
-		if err != nil {
-			return err
+	if len(privateKeys) != 0 {
+		signers := make([]ssh.Signer, 0)
+
+		for _, key := range privateKeys {
+			signer, err := ssh.ParsePrivateKey([]byte(key))
+			if err != nil {
+				return err
+			}
+
+			signers = append(signers, signer)
 		}
 
-		config.Auth = append(config.Auth, ssh.PublicKeys(signer))
+		config.Auth = append(config.Auth, ssh.PublicKeys(signers...))
 	}
 
 	if password != "" {

@@ -11,9 +11,9 @@ type TelnetConfig struct {
 }
 
 type SSHConfig struct {
-	Host       string
-	User       string
-	Password   string
-	PrivateKey string
-	KnownHosts string
+	Host        string
+	User        string
+	Password    string
+	PrivateKeys []string
+	KnownHosts  string
 }

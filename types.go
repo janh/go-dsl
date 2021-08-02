@@ -16,7 +16,7 @@ type AuthTypes int
 
 const (
 	AuthTypePassword AuthTypes = 1 << iota
-	AuthTypePrivateKey
+	AuthTypePrivateKeys
 )
 
 type ClientDesc struct {
