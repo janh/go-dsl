@@ -22,7 +22,11 @@ type Client struct {
 	client *ssh.Client
 }
 
-func NewClient(host, username string, password dsl.PasswordCallback, privateKeys []string, knownHosts string) (*Client, error) {
+func NewClient(host, username string,
+	password dsl.PasswordCallback,
+	privateKeys dsl.PrivateKeysCallback,
+	knownHosts string) (*Client, error) {
+
 	c := Client{}
 
 	err := c.connect(host, username, password, privateKeys, knownHosts)
@@ -33,26 +37,43 @@ func NewClient(host, username string, password dsl.PasswordCallback, privateKeys
 	return &c, nil
 }
 
-func (c *Client) connect(host, username string, passwordCallback dsl.PasswordCallback, privateKeys []string, knownHosts string) error {
+func (c *Client) connect(host, username string,
+	passwordCallback dsl.PasswordCallback,
+	privateKeysCallback dsl.PrivateKeysCallback,
+	knownHosts string) error {
+
 	if !regexpPort.MatchString(host) {
 		host += ":22"
 	}
 
 	config := &ssh.ClientConfig{User: username}
 
-	if len(privateKeys) != 0 {
-		signers := make([]ssh.Signer, 0)
+	if privateKeysCallback.Keys != nil {
+		config.Auth = append(config.Auth, ssh.PublicKeysCallback(func() ([]ssh.Signer, error) {
+			signers := make([]ssh.Signer, 0)
 
-		for _, key := range privateKeys {
-			signer, err := ssh.ParsePrivateKey([]byte(key))
-			if err != nil {
-				return err
+			privateKeys := privateKeysCallback.Keys()
+			for _, key := range privateKeys {
+				signer, err := ssh.ParsePrivateKey([]byte(key))
+
+				if errPassphrase, ok := err.(*ssh.PassphraseMissingError); ok && privateKeysCallback.Passphrase != nil {
+					fingerprint := ssh.FingerprintSHA256(errPassphrase.PublicKey)
+					passphrase := privateKeysCallback.Passphrase(fingerprint)
+
+					signer, err = ssh.ParsePrivateKeyWithPassphrase([]byte(key), []byte(passphrase))
+					if err != nil {
+						return nil, err
+					}
+
+				} else if err != nil {
+					return nil, err
+				}
+
+				signers = append(signers, signer)
 			}
 
-			signers = append(signers, signer)
-		}
-
-		config.Auth = append(config.Auth, ssh.PublicKeys(signers...))
+			return signers, nil
+		}))
 	}
 
 	if passwordCallback != nil {

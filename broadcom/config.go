@@ -18,6 +18,6 @@ type SSHConfig struct {
 	Host        string
 	User        string
 	Password    dsl.PasswordCallback
-	PrivateKeys []string
+	PrivateKeys dsl.PrivateKeysCallback
 	KnownHosts  string
 }
