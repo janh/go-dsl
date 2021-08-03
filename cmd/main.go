@@ -10,6 +10,7 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"path/filepath"
 	"strings"
 	"syscall"
 	"time"
@@ -64,6 +65,8 @@ func main() {
 	device := flagSet.String("d", "", "device type (valid options: "+deviceTypeOptions+")")
 	user := flagSet.String("u", "", "user name (optional depending on device type)")
 	flagSet.Var(&options, "o", "device-specific option, in format Key=Value")
+	privateKey := flagSet.String("private-key", "", "private key file for SSH authentication (by default, the system keys are used)")
+	knownHosts := flagSet.String("known-hosts", "", "known hosts file for SSH host key validation, validation is skipped if set to \"IGNORE\" (by default, the system file is used)")
 	flagSet.Parse(os.Args[1:])
 
 	clientType := dsl.ClientType(*device)
@@ -97,7 +100,7 @@ func main() {
 		}
 	}
 
-	loadData(clientType, flagSet.Arg(0), *user, options)
+	loadData(clientType, flagSet.Arg(0), *user, *privateKey, *knownHosts, options)
 }
 
 func printUsage(flagSet *flag.FlagSet) {
@@ -135,13 +138,73 @@ func exitWithUsage(flagSet *flag.FlagSet, message string) {
 	os.Exit(2)
 }
 
-func loadData(clientType dsl.ClientType, host, user string, options map[string]string) {
+func loadKnownHosts(file string) (string, error) {
+	if file == "" {
+		home, err := os.UserHomeDir()
+		if err != nil {
+			return "", nil
+		}
+
+		file = filepath.Join(home, ".ssh", "known_hosts")
+		data, _ := os.ReadFile(file)
+		return string(data), nil
+	}
+
+	data, err := os.ReadFile(file)
+	return string(data), err
+}
+
+func loadPrivateKeys(file string) ([]string, error) {
+	if file == "" {
+		home, err := os.UserHomeDir()
+		if err != nil {
+			return nil, nil
+		}
+
+		var keys []string
+
+		keyFileNames := []string{"id_ed25519", "id_rsa", "id_ecdsa"}
+		for _, name := range keyFileNames {
+			file = filepath.Join(home, ".ssh", name)
+
+			data, err := os.ReadFile(file)
+			if err == nil {
+				keys = append(keys, string(data))
+			}
+		}
+
+		return keys, nil
+	}
+
+	data, err := os.ReadFile(file)
+	return []string{string(data)}, err
+}
+
+func readPassword(prompt string) string {
+	fmt.Print(prompt)
+	passwordBytes, err := term.ReadPassword(int(syscall.Stdin))
+	if err != nil {
+		panic(err)
+	}
+	fmt.Println()
+
+	return string(passwordBytes)
+}
+
+func loadData(clientType dsl.ClientType, host, user, privateKey, knownHosts string, options map[string]string) {
 	clientDesc := clientType.ClientDesc()
 
-	var knownHosts string
 	if clientDesc.RequiresKnownHosts {
-		fmt.Println("Warning: host key validation is not yet implemented!\n")
-		knownHosts = "IGNORE"
+		if knownHosts == "IGNORE" {
+			fmt.Println("WARNING: Host key validation disabled!")
+		} else {
+			var err error
+			knownHosts, err = loadKnownHosts(knownHosts)
+			if err != nil {
+				fmt.Println("failed to load known hosts file:", err)
+				os.Exit(1)
+			}
+		}
 	}
 
 	fmt.Println()
@@ -151,29 +214,40 @@ func loadData(clientType dsl.ClientType, host, user string, options map[string]s
 	if clientDesc.SupportedAuthTypes&dsl.AuthTypePassword != 0 {
 		passwordCallback = func() string {
 			fmt.Println(" password required")
-
-			var password string
-			fmt.Print("Password: ")
-			passwordBytes, err := term.ReadPassword(int(syscall.Stdin))
-			if err != nil {
-				panic(err)
-			}
-			fmt.Println()
-			password = string(passwordBytes)
-
+			password := readPassword("Password: ")
 			fmt.Print("Authenticating…")
-
 			return password
 		}
 	}
 
+	var privateKeysCallback dsl.PrivateKeysCallback
+	if clientDesc.SupportedAuthTypes&dsl.AuthTypePrivateKeys != 0 {
+		privateKeysCallback.Keys = func() []string {
+			keys, err := loadPrivateKeys(privateKey)
+			if err != nil {
+				fmt.Println("failed to load private key file:", err)
+				os.Exit(1)
+			}
+			return keys
+		}
+
+		privateKeysCallback.Passphrase = func(fingerprint string) string {
+			fmt.Println(" passphrase required")
+			fmt.Println("Fingerprint: " + fingerprint)
+			passphrase := readPassword("Passphrase: ")
+			fmt.Print("Authenticating…")
+			return passphrase
+		}
+	}
+
 	config := dsl.Config{
-		Type:         clientType,
-		Host:         host,
-		User:         user,
-		AuthPassword: passwordCallback,
-		KnownHosts:   knownHosts,
-		Options:      options,
+		Type:            clientType,
+		Host:            host,
+		User:            user,
+		AuthPassword:    passwordCallback,
+		AuthPrivateKeys: privateKeysCallback,
+		KnownHosts:      knownHosts,
+		Options:         options,
 	}
 
 	client, err := dsl.NewClient(config)
