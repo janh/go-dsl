@@ -43,7 +43,7 @@ func generateBandsDataADSL(bins *models.Bins) {
 }
 
 func generateBandsDataFromBitloading(bins *models.Bins) {
-	if len(bins.Bits.Downstream.Data) != bins.Mode.BinCount() || len(bins.Bits.Upstream.Data) != bins.Mode.BinCount() {
+	if len(bins.Bits.Downstream.Data) < bins.Mode.BinCount() || len(bins.Bits.Upstream.Data) < bins.Mode.BinCount() {
 		return
 	}
 
