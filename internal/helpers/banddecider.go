@@ -38,7 +38,7 @@ func NewBandDecider(bands models.BandsDownUp) *BandDecider {
 
 	var band, lastBand models.Band
 	for i := 0; i < len(d.isDownstream); i++ {
-		if len(bandsUp) == 0 || bandsDown[0].Start < bandsUp[0].Start {
+		if len(bandsUp) == 0 || (len(bandsDown) != 0 && bandsDown[0].Start < bandsUp[0].Start) {
 			band = bandsDown[0]
 			d.isDownstream[i] = true
 			bandsDown = bandsDown[1:]
