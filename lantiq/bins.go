@@ -23,23 +23,23 @@ func parseBins(status *models.Status, data *data) models.Bins {
 	parseBitAllocation(&bins.Bits.Upstream, data.G997_BitAllocationNscShort_US)
 	parseBitAllocation(&bins.Bits.Downstream, data.G997_BitAllocationNscShort_DS)
 
+	helpers.GenerateBandsData(&bins)
+
 	parseSNRAllocation(&bins.SNR.Upstream, data.G997_SnrAllocationNscShort_US)
 	parseSNRAllocation(&bins.SNR.Downstream, data.G997_SnrAllocationNscShort_DS)
 
 	if len(bins.SNR.Upstream.Data) != len(bins.Bits.Upstream.Data) {
-		parseDELTSNR(&bins.SNR.Upstream, bins.Mode.BinCount(), data.G997_DeltSNR_US)
+		parseDELTSNR(&bins.SNR.Upstream, bins.Bands.Upstream, data.G997_DeltSNR_US)
 	}
 	if len(bins.SNR.Downstream.Data) != len(bins.Bits.Downstream.Data) {
-		parseDELTSNR(&bins.SNR.Downstream, bins.Mode.BinCount(), data.G997_DeltSNR_DS)
+		parseDELTSNR(&bins.SNR.Downstream, bins.Bands.Downstream, data.G997_DeltSNR_DS)
 	}
 
-	parseDELTQLN(&bins.QLN.Upstream, bins.Mode.BinCount(), data.G997_DeltQLN_US)
-	parseDELTQLN(&bins.QLN.Downstream, bins.Mode.BinCount(), data.G997_DeltQLN_DS)
+	parseDELTQLN(&bins.QLN.Upstream, bins.Bands.Upstream, data.G997_DeltQLN_US)
+	parseDELTQLN(&bins.QLN.Downstream, bins.Bands.Downstream, data.G997_DeltQLN_DS)
 
-	parseDELTHlog(&bins.Hlog.Upstream, bins.Mode.BinCount(), data.G997_DeltHLOG_US)
-	parseDELTHlog(&bins.Hlog.Downstream, bins.Mode.BinCount(), data.G997_DeltHLOG_DS)
-
-	helpers.GenerateBandsData(&bins)
+	parseDELTHlog(&bins.Hlog.Upstream, bins.Bands.Upstream, data.G997_DeltHLOG_US)
+	parseDELTHlog(&bins.Hlog.Downstream, bins.Bands.Downstream, data.G997_DeltHLOG_DS)
 
 	return bins
 }
@@ -116,7 +116,7 @@ func parseSNRAllocation(out *models.BinsFloat, data string) {
 	}
 }
 
-func parseBinsDELT(data string, binCount int) (rawItems []string, groupSize int) {
+func parseBinsDELT(data string, bands []models.Band) (rawItems []string, groupSize int) {
 	v := parseValues(data)
 
 	numData, err := strconv.Atoi(v["nNumData"])
@@ -128,9 +128,12 @@ func parseBinsDELT(data string, binCount int) (rawItems []string, groupSize int)
 	if err != nil {
 		return
 	}
-	// apparently the group size is sometimes not reported correctly
-	if groupSize == 1 {
-		groupSize = binCount / numData
+	// apparently the group size is sometimes not reported correctly, try to calculate it
+	if groupSize == 1 && len(bands) != 0 {
+		lastBin := bands[len(bands)-1].End
+		for numData*groupSize < lastBin+1 {
+			groupSize *= 2
+		}
 	}
 
 	rawItems = make([]string, numData)
@@ -158,8 +161,8 @@ func parseBinsDELT(data string, binCount int) (rawItems []string, groupSize int)
 	return
 }
 
-func parseDELTSNR(out *models.BinsFloat, binCount int, data string) {
-	rawValues, groupSize := parseBinsDELT(data, binCount)
+func parseDELTSNR(out *models.BinsFloat, bands []models.Band, data string) {
+	rawValues, groupSize := parseBinsDELT(data, bands)
 
 	out.GroupSize = groupSize
 	out.Data = make([]float64, len(rawValues))
@@ -173,8 +176,8 @@ func parseDELTSNR(out *models.BinsFloat, binCount int, data string) {
 	}
 }
 
-func parseDELTQLN(out *models.BinsFloat, binCount int, data string) {
-	rawValues, groupSize := parseBinsDELT(data, binCount)
+func parseDELTQLN(out *models.BinsFloat, bands []models.Band, data string) {
+	rawValues, groupSize := parseBinsDELT(data, bands)
 
 	out.GroupSize = groupSize
 	out.Data = make([]float64, len(rawValues))
@@ -188,8 +191,8 @@ func parseDELTQLN(out *models.BinsFloat, binCount int, data string) {
 	}
 }
 
-func parseDELTHlog(out *models.BinsFloat, binCount int, data string) {
-	rawValues, groupSize := parseBinsDELT(data, binCount)
+func parseDELTHlog(out *models.BinsFloat, bands []models.Band, data string) {
+	rawValues, groupSize := parseBinsDELT(data, bands)
 
 	out.GroupSize = groupSize
 	out.Data = make([]float64, len(rawValues))
