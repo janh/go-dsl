@@ -14,6 +14,7 @@ import (
 	"strings"
 	"syscall"
 	"time"
+	"unicode"
 
 	"golang.org/x/term"
 
@@ -62,11 +63,11 @@ func main() {
 
 	var options optionsFlag
 
-	device := flagSet.String("d", "", "device type (valid options: "+deviceTypeOptions+")")
-	user := flagSet.String("u", "", "user name (optional depending on device type)")
-	flagSet.Var(&options, "o", "device-specific option, in format Key=Value")
-	privateKey := flagSet.String("private-key", "", "private key file for SSH authentication (by default, the system keys are used)")
-	knownHosts := flagSet.String("known-hosts", "", "known hosts file for SSH host key validation, validation is skipped if set to \"IGNORE\" (by default, the system file is used)")
+	device := flagSet.String("d", "", wordWrap(64, "device type (valid options: "+deviceTypeOptions+")"))
+	user := flagSet.String("u", "", wordWrap(64, "user name (optional depending on device type)"))
+	flagSet.Var(&options, "o", wordWrap(64, "device-specific option, in format Key=Value"))
+	privateKey := flagSet.String("private-key", "", wordWrap(64, "private key file for SSH authentication (by default, the system keys are used)"))
+	knownHosts := flagSet.String("known-hosts", "", wordWrap(64, "known hosts file for SSH host key validation, validation is skipped if set to \"IGNORE\" (by default, the system file is used)"))
 	flagSet.Parse(os.Args[1:])
 
 	clientType := dsl.ClientType(*device)
@@ -103,6 +104,79 @@ func main() {
 	loadData(clientType, flagSet.Arg(0), *user, *privateKey, *knownHosts, options)
 }
 
+func wordWrap(maxLength int, str string) string {
+	runes := []rune(str)
+
+	i := 0
+	nextWord := func() (space, word []rune, linebreaks int, ok bool) {
+		if i == len(runes) {
+			return nil, nil, 0, false
+		}
+
+		start := i
+		firstNonSpace := -1
+		hasNonSpace := false
+
+		for ; i < len(runes); i++ {
+			r := runes[i]
+
+			isNonBreakingSpace := r == '\u00A0' || r == '\u2007' || r == '\u202F'
+			isSpace := unicode.IsSpace(r) && !isNonBreakingSpace
+			isLinebreak := r == '\n'
+
+			if hasNonSpace && isSpace {
+				break
+			}
+
+			if isLinebreak {
+				linebreaks++
+			}
+
+			if !isSpace && !hasNonSpace {
+				hasNonSpace = true
+				firstNonSpace = i
+			}
+		}
+
+		if firstNonSpace == -1 {
+			firstNonSpace = i
+		}
+
+		return runes[start:firstNonSpace], runes[firstNonSpace:i], linebreaks, true
+	}
+
+	var b strings.Builder
+	var line []rune
+
+	for {
+		space, word, linebreaks, ok := nextWord()
+		if !ok {
+			break
+		}
+
+		// this assumes every rune has a width of 1
+		if (len(line) != 0 && len(word) != 0 && len(line)+len(space)+len(word) > maxLength) || linebreaks != 0 {
+			fmt.Fprintln(&b, string(line))
+			line = []rune{}
+
+			if linebreaks > 1 {
+				for i := 1; i < linebreaks; i++ {
+					fmt.Fprintln(&b)
+				}
+			}
+		}
+
+		if linebreaks == 0 && len(line) != 0 && len(word) != 0 {
+			line = append(line, space...)
+		}
+		line = append(line, word...)
+	}
+
+	fmt.Fprint(&b, string(line))
+
+	return b.String()
+}
+
 func printUsage(flagSet *flag.FlagSet) {
 	fmt.Println("\nUsage:")
 	fmt.Printf("  %s -d device [options] hostname\n\n", flagSet.Name())
@@ -125,7 +199,7 @@ func printUsage(flagSet *flag.FlagSet) {
 
 		for key, desc := range clientDesc.OptionDescriptions {
 			fmt.Println("    " + key)
-			fmt.Println("\t" + desc)
+			fmt.Println("\t" + strings.ReplaceAll(wordWrap(64, desc), "\n", "\n\t"))
 		}
 
 		fmt.Println()
