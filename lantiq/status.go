@@ -77,7 +77,7 @@ func interpretStatusFloatValueWeightedPositiveAverage(values map[string]string, 
 	var weightSum float64
 
 	for i := 0; i < maxCount; i++ {
-		if val[i].Valid && val[i].Float > 0 {
+		if val[i].Valid && val[i].Float >= 0 {
 			out.Float += val[i].Float * weights[i]
 			weightSum += weights[i]
 		}
