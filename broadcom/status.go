@@ -55,7 +55,7 @@ func parseBasicStats(stats string) map[string]string {
 			values[key] = val
 		}
 
-		if len(line) == 0 || line[0] == ' ' || line[0] == '\t' {
+		if len(line) > 0 && (line[0] == ' ' || line[0] == '\t') {
 			break
 		}
 	}
