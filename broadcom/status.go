@@ -64,7 +64,7 @@ func parseBasicStats(stats string) map[string]string {
 }
 
 func interpretBasicStats(status *models.Status, values map[string]string) {
-	state := interpretBasicStatsString(values, "trainingstatus")
+	state := interpretBasicStatsString(values, "status")
 	status.State = models.ParseState(state)
 
 	mode := interpretBasicStatsString(values, "mode")
