@@ -5,6 +5,7 @@
 package helpers
 
 import (
+	"errors"
 	"sort"
 
 	"3e8.eu/go/dsl/models"
@@ -24,11 +25,15 @@ func (d *BandDecider) IsDownstream(num int) bool {
 	return d.isDownstream[len(d.isDownstream)-1]
 }
 
-func NewBandDecider(bands models.BandsDownUp) *BandDecider {
+func NewBandDecider(bands models.BandsDownUp) (*BandDecider, error) {
 	d := BandDecider{}
 
 	bandsDown := bands.Downstream
 	bandsUp := bands.Upstream
+
+	if len(bandsDown) == 0 || len(bandsUp) == 0 {
+		return nil, errors.New("no bands data available")
+	}
 
 	d.maxIndex = make([]int, len(bandsDown)+len(bandsUp)-1)
 	d.isDownstream = make([]bool, len(bandsDown)+len(bandsUp))
@@ -54,5 +59,5 @@ func NewBandDecider(bands models.BandsDownUp) *BandDecider {
 		lastBand = band
 	}
 
-	return &d
+	return &d, nil
 }

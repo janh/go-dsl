@@ -187,7 +187,10 @@ func parseBinList(text string, bands models.BandsDownUp, handler func(int, strin
 		}
 	}
 
-	bandDecider := helpers.NewBandDecider(bands)
+	bandDecider, err := helpers.NewBandDecider(bands)
+	if err != nil {
+		return
+	}
 
 	for scanner.Scan() {
 		line := scanner.Text()
