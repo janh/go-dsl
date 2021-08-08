@@ -108,6 +108,13 @@ func (c *Client) Execute(command string) (string, error) {
 	if err != nil {
 		return "", err
 	}
+	if len(data) >= 2 && data[0] == '\r' && data[1] != '\n' {
+		// found carriage return: we likely read the same prompt again, continue reading
+		data, err = c.conn.ReadUntil(c.config.PromptCommand)
+		if err != nil {
+			return "", err
+		}
+	}
 	str := string(data)
 
 	if strings.HasPrefix(str, command+"\r\n") {
