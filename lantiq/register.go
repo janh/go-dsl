@@ -23,6 +23,7 @@ func init() {
 		return NewTelnetClient(telnetConfig)
 	}
 	clientDescTelnet := dsl.ClientDesc{
+		RequiresUser:       dsl.TristateMaybe,
 		SupportedAuthTypes: dsl.AuthTypePassword,
 		OptionDescriptions: options,
 	}
