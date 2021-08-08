@@ -110,6 +110,9 @@ func (c *Client) connect(host, username string,
 				if h == hostNormalized {
 					hostKey = key
 					break
+				} else if strings.HasPrefix(h, "|1|") && checkHashedHost(h, hostNormalized) {
+					hostKey = key
+					break
 				}
 			}
 		}
