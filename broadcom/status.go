@@ -78,6 +78,14 @@ func interpretBasicStats(status *models.Status, values map[string]string) {
 		status.Mode = models.ParseMode(mode)
 	}
 
+	if status.Mode.Type == models.ModeTypeUnknown {
+		if strings.Contains(state, "G.993") {
+			status.Mode.Type = models.ModeTypeVDSL2
+		} else if strings.Contains(state, "G.992") {
+			status.Mode.Type = models.ModeTypeADSL
+		}
+	}
+
 	status.DownstreamAttainableRate.IntValue, status.UpstreamAttainableRate.IntValue = interpretBasicStatsRate(values, "max")
 	status.DownstreamActualRate.IntValue, status.UpstreamActualRate.IntValue = interpretBasicStatsRate(values, "bearer")
 }
