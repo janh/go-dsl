@@ -9,17 +9,23 @@ import (
 )
 
 func init() {
+	options := map[string]string{
+		"Command": "name of the xdslctl command on the device",
+	}
+
 	newTelnet := func(config dsl.Config) (dsl.Client, error) {
 		telnetConfig := TelnetConfig{
 			Host:     config.Host,
 			User:     config.User,
 			Password: config.AuthPassword,
+			Command:  config.Options["Command"],
 		}
 		return NewTelnetClient(telnetConfig)
 	}
 	clientDescTelnet := dsl.ClientDesc{
 		RequiresUser:       dsl.TristateMaybe,
 		SupportedAuthTypes: dsl.AuthTypePassword,
+		OptionDescriptions: options,
 	}
 	dsl.RegisterClient("broadcom_telnet", newTelnet, clientDescTelnet)
 
@@ -30,6 +36,7 @@ func init() {
 			Password:    config.AuthPassword,
 			PrivateKeys: config.AuthPrivateKeys,
 			KnownHosts:  config.KnownHosts,
+			Command:     config.Options["Command"],
 		}
 		return NewSSHClient(sshConfig)
 	}
@@ -37,6 +44,7 @@ func init() {
 		RequiresUser:       dsl.TristateYes,
 		SupportedAuthTypes: dsl.AuthTypePassword | dsl.AuthTypePrivateKeys,
 		RequiresKnownHosts: true,
+		OptionDescriptions: options,
 	}
 	dsl.RegisterClient("broadcom_ssh", newSSH, clientDescSSH)
 }

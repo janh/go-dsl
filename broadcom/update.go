@@ -15,43 +15,47 @@ type executor interface {
 	Execute(cmd string) (string, error)
 }
 
-func updateData(e executor) (status models.Status, bins models.Bins, rawData []byte, err error) {
-	stats, err := e.Execute("xdslctl info --stats")
+func updateData(e executor, command string) (status models.Status, bins models.Bins, rawData []byte, err error) {
+	if command == "" {
+		command = "xdslctl"
+	}
+
+	stats, err := e.Execute(command + " info --stats")
 	if err != nil {
 		return
 	}
 
-	vendor, err := e.Execute("xdslctl info --vendor")
+	vendor, err := e.Execute(command + " info --vendor")
 	if err != nil {
 		return
 	}
 
-	version, err := e.Execute("xdslctl --version")
+	version, err := e.Execute(command + " --version")
 	if err != nil {
 		return
 	}
 
-	pbParams, err := e.Execute("xdslctl info --pbParams")
+	pbParams, err := e.Execute(command + " info --pbParams")
 	if err != nil {
 		return
 	}
 
-	bits, err := e.Execute("xdslctl info --Bits")
+	bits, err := e.Execute(command + " info --Bits")
 	if err != nil {
 		return
 	}
 
-	snr, err := e.Execute("xdslctl info --SNR")
+	snr, err := e.Execute(command + " info --SNR")
 	if err != nil {
 		return
 	}
 
-	qln, err := e.Execute("xdslctl info --QLN")
+	qln, err := e.Execute(command + " info --QLN")
 	if err != nil {
 		return
 	}
 
-	hlog, err := e.Execute("xdslctl info --Hlog")
+	hlog, err := e.Execute(command + " info --Hlog")
 	if err != nil {
 		return
 	}

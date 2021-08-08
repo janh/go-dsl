@@ -12,6 +12,7 @@ type TelnetConfig struct {
 	Host     string
 	User     string
 	Password dsl.PasswordCallback
+	Command  string
 }
 
 type SSHConfig struct {
@@ -20,4 +21,5 @@ type SSHConfig struct {
 	Password    dsl.PasswordCallback
 	PrivateKeys dsl.PrivateKeysCallback
 	KnownHosts  string
+	Command     string
 }

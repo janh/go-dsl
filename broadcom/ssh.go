@@ -10,6 +10,7 @@ import (
 )
 
 type SSHClient struct {
+	command string
 	client  *ssh.Client
 	rawData []byte
 	status  models.Status
@@ -18,6 +19,7 @@ type SSHClient struct {
 
 func NewSSHClient(config SSHConfig) (*SSHClient, error) {
 	c := SSHClient{}
+	c.command = config.Command
 
 	var err error
 
@@ -42,7 +44,7 @@ func (c *SSHClient) Bins() models.Bins {
 }
 
 func (c *SSHClient) UpdateData() (err error) {
-	c.status, c.bins, c.rawData, err = updateData(c.client)
+	c.status, c.bins, c.rawData, err = updateData(c.client, c.command)
 	return
 }
 

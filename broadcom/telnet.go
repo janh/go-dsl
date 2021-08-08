@@ -10,6 +10,7 @@ import (
 )
 
 type TelnetClient struct {
+	command string
 	client  *telnet.Client
 	rawData []byte
 	status  models.Status
@@ -18,6 +19,7 @@ type TelnetClient struct {
 
 func NewTelnetClient(config TelnetConfig) (*TelnetClient, error) {
 	c := TelnetClient{}
+	c.command = config.Command
 
 	var err error
 
@@ -52,7 +54,7 @@ func (c *TelnetClient) Bins() models.Bins {
 }
 
 func (c *TelnetClient) UpdateData() (err error) {
-	c.status, c.bins, c.rawData, err = updateData(c.client)
+	c.status, c.bins, c.rawData, err = updateData(c.client, c.command)
 	return
 }
 
