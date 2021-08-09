@@ -12,7 +12,7 @@ import (
 
 type data struct {
 	LineState                    string `command:"lsg" commandLegacy:"lsg 0"`
-	G997_XTUSystemEnablingStatus string `command:"g997xtusesg" commandLegacy:"g997atusecg"`
+	G997_XTUSystemEnablingStatus string `command:"g997xtusesg" commandLegacy:"g997atusecg 0"`
 	BandPlanSTatus               string `command:"bpstg" commandLegacy:"bpcg 0"`
 	VersionInformation           string `command:"vig" commandLegacy:"vig"`
 	G997_LineInventory_Far       string `command:"g997lig 1" commandLegacy:"g997lig 0 1"`
