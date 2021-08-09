@@ -45,12 +45,6 @@ type data struct {
 	G997_DeltHLOG_DS              string `command:"g997dhlogg 1 1" commandLegacy:"g997dhlogg 0 1"`
 }
 
-type dataItemDesc struct {
-	Data           *string
-	Commands       []string
-	CommandsLegacy []string
-}
-
 func (d *data) LoadData(e executor, command string) (err error) {
 	var tagName = "command"
 
