@@ -11,6 +11,7 @@ import (
 	"io"
 	"os"
 	"path/filepath"
+	"sort"
 	"strings"
 	"syscall"
 	"time"
@@ -62,7 +63,7 @@ func (o *optionsFlag) Set(val string) error {
 }
 
 func main() {
-	flagSet := flag.NewFlagSet(os.Args[0], flag.ExitOnError)
+	flagSet := flag.NewFlagSet(os.Args[0], flag.ContinueOnError)
 	flagSet.Usage = func() { printUsage(flagSet) }
 
 	clientTypes := dsl.GetClientTypes()
@@ -81,7 +82,16 @@ func main() {
 	flagSet.Var(&options, "o", "device-specific option, in format Key=Value")
 	privateKey := flagSet.String("private-key", defaultPrivateKey, "private key file for SSH authentication")
 	knownHosts := flagSet.String("known-hosts", defaultKnownHosts, "known hosts file for SSH host key validation, validation is skipped if set to \"IGNORE\"")
-	flagSet.Parse(os.Args[1:])
+
+	err := flagSet.Parse(os.Args[1:])
+	if err != nil {
+		if err == flag.ErrHelp {
+			printHelp()
+			os.Exit(0)
+		} else {
+			os.Exit(2)
+		}
+	}
 
 	clientType := dsl.ClientType(*device)
 	if !clientType.IsValid() {
@@ -196,20 +206,46 @@ func indentAndWordWrap(str string) string {
 }
 
 func printUsage(flagSet *flag.FlagSet) {
-	fmt.Println("\nUsage:")
+	fmt.Print("\nUsage:")
+	if len(flagSet.Name()) > 20 {
+		fmt.Println()
+	}
 	fmt.Printf("  %s -d device [options] hostname\n\n", flagSet.Name())
 
 	fmt.Println("List of options:")
+	fmt.Println()
 
-	flagSet.VisitAll(func (flag *flag.Flag) {
-		fmt.Println("  -" + flag.Name)
+	var flags []*flag.Flag
+	flagSet.VisitAll(func(flag *flag.Flag) {
+		flags = append(flags, flag)
+	})
+
+	helpFlag := flag.Flag{
+		Name:  "help",
+		Usage: "print information about available options",
+	}
+	flags = append(flags, &helpFlag)
+
+	sort.Slice(flags, func(i, j int) bool {
+		return flags[i].Name < flags[j].Name
+	})
+
+	for _, flag := range flags {
+		fmt.Print("  -" + flag.Name)
+		if len(flag.Name) > 1 {
+			fmt.Println()
+		}
 
 		fmt.Println(indentAndWordWrap(flag.Usage))
 		if flag.DefValue != "" {
 			fmt.Println(indentAndWordWrap("(default: " + flag.DefValue + ")"))
 		}
-	})
 
+		fmt.Println()
+	}
+}
+
+func printHelp() {
 	fmt.Println()
 
 	fmt.Println("Device-specific options:")
