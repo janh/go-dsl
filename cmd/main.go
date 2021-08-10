@@ -27,6 +27,19 @@ import (
 	_ "3e8.eu/go/dsl/lantiq"
 )
 
+var (
+	defaultPrivateKey string
+	defaultKnownHosts string
+)
+
+func init() {
+	home, err := os.UserHomeDir()
+	if err == nil {
+		defaultPrivateKey = filepath.Join(home, ".ssh") + string(filepath.Separator)
+		defaultKnownHosts = filepath.Join(home, ".ssh", "known_hosts")
+	}
+}
+
 type optionsFlag map[string]string
 
 func (o *optionsFlag) String() string {
@@ -65,9 +78,9 @@ func main() {
 
 	device := flagSet.String("d", "", wordWrap(64, "device type (valid options: "+deviceTypeOptions+")"))
 	user := flagSet.String("u", "", wordWrap(64, "user name (optional depending on device type)"))
-	flagSet.Var(&options, "o", wordWrap(64, "device-specific option, in format Key=Value"))
-	privateKey := flagSet.String("private-key", "", wordWrap(64, "private key file for SSH authentication (by default, the system keys are used)"))
-	knownHosts := flagSet.String("known-hosts", "", wordWrap(64, "known hosts file for SSH host key validation, validation is skipped if set to \"IGNORE\" (by default, the system file is used)"))
+	flagSet.Var(&options, "o", wordWrap(64, "device-specific option, in format `Key=Value`"))
+	privateKey := flagSet.String("private-key", defaultPrivateKey, wordWrap(64, "private key file for SSH authentication"))
+	knownHosts := flagSet.String("known-hosts", defaultKnownHosts, wordWrap(64, "known hosts file for SSH host key validation, validation is skipped if set to \"IGNORE\""))
 	flagSet.Parse(os.Args[1:])
 
 	clientType := dsl.ClientType(*device)
@@ -214,34 +227,32 @@ func exitWithUsage(flagSet *flag.FlagSet, message string) {
 
 func loadKnownHosts(file string) (string, error) {
 	if file == "" {
-		home, err := os.UserHomeDir()
-		if err != nil {
-			return "", nil
-		}
-
-		file = filepath.Join(home, ".ssh", "known_hosts")
-		data, _ := os.ReadFile(file)
-		return string(data), nil
+		return "", nil
 	}
 
 	data, err := os.ReadFile(file)
-	return string(data), err
+	if err != nil && file != defaultKnownHosts {
+		return "", err
+	}
+
+	return string(data), nil
 }
 
 func loadPrivateKeys(file string) ([]string, error) {
 	if file == "" {
-		home, err := os.UserHomeDir()
-		if err != nil {
-			return nil, nil
-		}
+		return nil, nil
+	}
 
+	if file[len(file)-1] == filepath.Separator {
 		var keys []string
 
 		keyFileNames := []string{"id_ed25519", "id_rsa", "id_ecdsa"}
 		for _, name := range keyFileNames {
-			file = filepath.Join(home, ".ssh", name)
+			data, err := os.ReadFile(file + name)
+			if err != nil && file != defaultPrivateKey {
+				return []string{}, err
+			}
 
-			data, err := os.ReadFile(file)
 			if err == nil {
 				keys = append(keys, string(data))
 			}
@@ -251,7 +262,11 @@ func loadPrivateKeys(file string) ([]string, error) {
 	}
 
 	data, err := os.ReadFile(file)
-	return []string{string(data)}, err
+	if err != nil && file != defaultPrivateKey {
+		return []string{}, err
+	}
+
+	return []string{string(data)}, nil
 }
 
 func readPassword(prompt string) string {
