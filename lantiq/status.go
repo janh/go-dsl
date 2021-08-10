@@ -121,8 +121,8 @@ func interpretStatusByte(values map[string]string, key string) byte {
 	return byte(valInt)
 }
 
-func parseStatusState(status *models.Status, lsg string) {
-	lsgValues := parseValues(lsg)
+func parseStatusState(status *models.Status, lsg dataItem) {
+	lsgValues := parseValues(lsg.Output)
 
 	lineStateStr := lsgValues["nLineState"]
 	if strings.HasPrefix(lineStateStr, "0x") {
@@ -165,8 +165,8 @@ func parseStatusState(status *models.Status, lsg string) {
 	}
 }
 
-func parseStatusMode(status *models.Status, g997xtusesg, bpstg string) {
-	g977xtusesgValues := parseValues(g997xtusesg)
+func parseStatusMode(status *models.Status, g997xtusesg, bpstg dataItem) {
+	g977xtusesgValues := parseValues(g997xtusesg.Output)
 	xtse1 := interpretStatusByte(g977xtusesgValues, "XTSE1")
 	xtse2 := interpretStatusByte(g977xtusesgValues, "XTSE2")
 	xtse3 := interpretStatusByte(g977xtusesgValues, "XTSE3")
@@ -180,7 +180,7 @@ func parseStatusMode(status *models.Status, g997xtusesg, bpstg string) {
 
 	if status.Mode.Type == models.ModeTypeVDSL2 || (status.Mode.Type == models.ModeTypeUnknown && status.Mode.Subtype == models.ModeSubtypeUnknown) {
 
-		bpstgValues := parseValues(bpstg)
+		bpstgValues := parseValues(bpstg.Output)
 		nProfile, err := strconv.Atoi(bpstgValues["nProfile"])
 		if err != nil {
 			return
@@ -210,12 +210,12 @@ func parseStatusMode(status *models.Status, g997xtusesg, bpstg string) {
 	}
 }
 
-func parseStatusInventory(status *models.Status, vig, g997ligFar string) {
-	vigValues := parseValues(vig)
+func parseStatusInventory(status *models.Status, vig, g997ligFar dataItem) {
+	vigValues := parseValues(vig.Output)
 	status.NearEndInventory.Vendor = "Infineon"
 	status.NearEndInventory.Version = vigValues["DSL_ChipSetFWVersion"]
 
-	g997ligFarValues := parseValues(g997ligFar)
+	g997ligFarValues := parseValues(g997ligFar.Output)
 	vendorID := interpretStatusBytes(g997ligFarValues, "G994VendorID")
 	if len(vendorID) == 8 {
 		status.FarEndInventory.Vendor = helpers.FormatVendor(string(vendorID[2:6]))
@@ -223,9 +223,9 @@ func parseStatusInventory(status *models.Status, vig, g997ligFar string) {
 	}
 }
 
-func parseStatusChannelStatus(status *models.Status, g997csgUS, g997csgDS string) {
-	g997csgUSValues := parseValues(g997csgUS)
-	g997csgDSValues := parseValues(g997csgDS)
+func parseStatusChannelStatus(status *models.Status, g997csgUS, g997csgDS dataItem) {
+	g997csgUSValues := parseValues(g997csgUS.Output)
+	g997csgDSValues := parseValues(g997csgDS.Output)
 
 	status.UpstreamActualRate.IntValue = interpretStatusIntValue(g997csgUSValues, "ActualNetDataRate", 1000)
 	if !status.UpstreamActualRate.Valid {
@@ -254,9 +254,9 @@ func getBandWeights(bands []models.Band) []float64 {
 	return weights
 }
 
-func parseStatusLineStatus(status *models.Status, bins *models.Bins, g997lsgUS, g997lsgDS string) {
-	g997lsgUSValues := parseValues(g997lsgUS)
-	g997lsgDSValues := parseValues(g997lsgDS)
+func parseStatusLineStatus(status *models.Status, bins *models.Bins, g997lsgUS, g997lsgDS dataItem) {
+	g997lsgUSValues := parseValues(g997lsgUS.Output)
+	g997lsgDSValues := parseValues(g997lsgDS.Output)
 
 	status.UpstreamAttainableRate.IntValue = interpretStatusIntValue(g997lsgUSValues, "ATTNDR", 1000)
 	status.DownstreamAttainableRate.IntValue = interpretStatusIntValue(g997lsgDSValues, "ATTNDR", 1000)
@@ -298,17 +298,17 @@ func parseStatusLineStatus(status *models.Status, bins *models.Bins, g997lsgUS, 
 	}
 }
 
-func parseStatusLineFeatures(status *models.Status, lfsgUS, lfsgDS string) {
-	lfsgUSValues := parseValues(lfsgUS)
-	lfsgDSValues := parseValues(lfsgDS)
+func parseStatusLineFeatures(status *models.Status, lfsgUS, lfsgDS dataItem) {
+	lfsgUSValues := parseValues(lfsgUS.Output)
+	lfsgDSValues := parseValues(lfsgDS.Output)
 
 	status.UpstreamRetransmissionEnabled = interpretStatusBoolValue(lfsgUSValues, "bReTxEnable")
 	status.DownstreamRetransmissionEnabled = interpretStatusBoolValue(lfsgDSValues, "bReTxEnable")
 }
 
-func parseStatusChannelCounters(status *models.Status, pmccsgNear, pmccsgFar string) {
-	pmccsgNearValues := parseValues(pmccsgNear)
-	pmccsgFarValues := parseValues(pmccsgFar)
+func parseStatusChannelCounters(status *models.Status, pmccsgNear, pmccsgFar dataItem) {
+	pmccsgNearValues := parseValues(pmccsgNear.Output)
+	pmccsgFarValues := parseValues(pmccsgFar.Output)
 
 	status.UpstreamFECCount = interpretStatusIntValue(pmccsgFarValues, "nFEC", 1)
 	status.DownstreamFECCount = interpretStatusIntValue(pmccsgNearValues, "nFEC", 1)
@@ -317,17 +317,17 @@ func parseStatusChannelCounters(status *models.Status, pmccsgNear, pmccsgFar str
 	status.DownstreamCRCCount = interpretStatusIntValue(pmccsgNearValues, "nCodeViolations", 1)
 }
 
-func parseStatusLineSecCounters(status *models.Status, pmlscsgNear, pmlscsgFar string) {
-	pmlscsgNearValues := parseValues(pmlscsgNear)
-	pmlscsgFarValues := parseValues(pmlscsgFar)
+func parseStatusLineSecCounters(status *models.Status, pmlscsgNear, pmlscsgFar dataItem) {
+	pmlscsgNearValues := parseValues(pmlscsgNear.Output)
+	pmlscsgFarValues := parseValues(pmlscsgFar.Output)
 
 	status.UpstreamESCount = interpretStatusIntValue(pmlscsgFarValues, "nES", 1)
 	status.DownstreamESCount = interpretStatusIntValue(pmlscsgNearValues, "nES", 1)
 }
 
-func parseStatusReTxStatistics(status *models.Status, rtsgNear, rtsgFar string) {
-	rtsgNearValues := parseValues(rtsgNear)
-	rtsgFarValues := parseValues(rtsgFar)
+func parseStatusReTxStatistics(status *models.Status, rtsgNear, rtsgFar dataItem) {
+	rtsgNearValues := parseValues(rtsgNear.Output)
+	rtsgFarValues := parseValues(rtsgFar.Output)
 
 	status.UpstreamRTXTXCount = interpretStatusIntValue(rtsgFarValues, "nTxRetransmitted", 1)
 	status.DownstreamRTXTXCount = interpretStatusIntValue(rtsgNearValues, "nTxRetransmitted", 1)

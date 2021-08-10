@@ -10,39 +10,44 @@ import (
 	"strings"
 )
 
+type dataItem struct {
+	Command string
+	Output  string
+}
+
 type data struct {
-	LineState                    string `command:"lsg" commandLegacy:"lsg 0"`
-	G997_XTUSystemEnablingStatus string `command:"g997xtusesg" commandLegacy:"g997atusecg 0"`
-	BandPlanSTatus               string `command:"bpstg" commandLegacy:"bpcg 0"`
-	VersionInformation           string `command:"vig" commandLegacy:"vig"`
-	G997_LineInventory_Far       string `command:"g997lig 1" commandLegacy:"g997lig 0 1"`
+	LineState                    dataItem `command:"lsg" commandLegacy:"lsg 0"`
+	G997_XTUSystemEnablingStatus dataItem `command:"g997xtusesg" commandLegacy:"g997atusecg 0"`
+	BandPlanSTatus               dataItem `command:"bpstg" commandLegacy:"bpcg 0"`
+	VersionInformation           dataItem `command:"vig" commandLegacy:"vig"`
+	G997_LineInventory_Far       dataItem `command:"g997lig 1" commandLegacy:"g997lig 0 1"`
 
-	G997_ChannelStatus_US string `command:"g997csg 0 0" commandLegacy:"g997csg 0 0 0"`
-	G997_ChannelStatus_DS string `command:"g997csg 0 1" commandLegacy:"g997csg 0 0 1"`
-	G997_LineStatus_US    string `command:"g997lsg 0 1" commandLegacy:"g997lsg 0 0"`
-	G997_LineStatus_DS    string `command:"g997lsg 1 1" commandLegacy:"g997lsg 0 1"`
-	LineFeatureStatus_US  string `command:"lfsg 0"`
-	LineFeatureStatus_DS  string `command:"lfsg 1"`
+	G997_ChannelStatus_US dataItem `command:"g997csg 0 0" commandLegacy:"g997csg 0 0 0"`
+	G997_ChannelStatus_DS dataItem `command:"g997csg 0 1" commandLegacy:"g997csg 0 0 1"`
+	G997_LineStatus_US    dataItem `command:"g997lsg 0 1" commandLegacy:"g997lsg 0 0"`
+	G997_LineStatus_DS    dataItem `command:"g997lsg 1 1" commandLegacy:"g997lsg 0 1"`
+	LineFeatureStatus_US  dataItem `command:"lfsg 0"`
+	LineFeatureStatus_DS  dataItem `command:"lfsg 1"`
 
-	PM_ChannelCountersShowtime_Near string `command:"pmccsg 0 0 0,pmcctg 0 0" commandLegacy:"pmcctg 0 0 0"`
-	PM_ChannelCountersShowtime_Far  string `command:"pmccsg 0 1 0,pmcctg 0 1" commandLegacy:"pmcctg 0 0 1"`
-	PM_LineSecCountersShowtime_Near string `command:"pmlscsg 0 0,pmlscsg 0" commandLegacy:"pmlsctg 0 0"`
-	PM_LineSecCountersShowtime_Far  string `command:"pmlscsg 1 0,pmlscsg 1" commandLegacy:"pmlsctg 0 1"`
-	ReTxStatistics_Near             string `command:"rtsg 0"`
-	ReTxStatistics_Far              string `command:"rtsg 1"`
+	PM_ChannelCountersShowtime_Near dataItem `command:"pmccsg 0 0 0,pmcctg 0 0" commandLegacy:"pmcctg 0 0 0"`
+	PM_ChannelCountersShowtime_Far  dataItem `command:"pmccsg 0 1 0,pmcctg 0 1" commandLegacy:"pmcctg 0 0 1"`
+	PM_LineSecCountersShowtime_Near dataItem `command:"pmlscsg 0 0,pmlscsg 0" commandLegacy:"pmlsctg 0 0"`
+	PM_LineSecCountersShowtime_Far  dataItem `command:"pmlscsg 1 0,pmlscsg 1" commandLegacy:"pmlsctg 0 1"`
+	ReTxStatistics_Near             dataItem `command:"rtsg 0"`
+	ReTxStatistics_Far              dataItem `command:"rtsg 1"`
 
-	BandBorderStatus_US           string `command:"bbsg 0"`
-	BandBorderStatus_DS           string `command:"bbsg 1"`
-	G997_BitAllocationNscShort_US string `command:"g997bansg 0" commandLegacy:"g997banscsg 0 0"`
-	G997_BitAllocationNscShort_DS string `command:"g997bansg 1" commandLegacy:"g997banscsg 0 1"`
-	G997_SnrAllocationNscShort_US string `command:"g997sansg 0" commandLegacy:"g997snrnscsg 0 0"`
-	G997_SnrAllocationNscShort_DS string `command:"g997sansg 1" commandLegacy:"g997snrnscsg 0 1"`
-	G997_DeltSNR_US               string `command:"g997dsnrg 0 1" commandLegacy:"g997dsnrg 0 0"`
-	G997_DeltSNR_DS               string `command:"g997dsnrg 1 1" commandLegacy:"g997dsnrg 0 1"`
-	G997_DeltQLN_US               string `command:"g997dqlng 0 1" commandLegacy:"g997dqlng 0 0"`
-	G997_DeltQLN_DS               string `command:"g997dqlng 1 1" commandLegacy:"g997dqlng 0 1"`
-	G997_DeltHLOG_US              string `command:"g997dhlogg 0 1" commandLegacy:"g997dhlogg 0 0"`
-	G997_DeltHLOG_DS              string `command:"g997dhlogg 1 1" commandLegacy:"g997dhlogg 0 1"`
+	BandBorderStatus_US           dataItem `command:"bbsg 0"`
+	BandBorderStatus_DS           dataItem `command:"bbsg 1"`
+	G997_BitAllocationNscShort_US dataItem `command:"g997bansg 0" commandLegacy:"g997banscsg 0 0"`
+	G997_BitAllocationNscShort_DS dataItem `command:"g997bansg 1" commandLegacy:"g997banscsg 0 1"`
+	G997_SnrAllocationNscShort_US dataItem `command:"g997sansg 0" commandLegacy:"g997snrnscsg 0 0"`
+	G997_SnrAllocationNscShort_DS dataItem `command:"g997sansg 1" commandLegacy:"g997snrnscsg 0 1"`
+	G997_DeltSNR_US               dataItem `command:"g997dsnrg 0 1" commandLegacy:"g997dsnrg 0 0"`
+	G997_DeltSNR_DS               dataItem `command:"g997dsnrg 1 1" commandLegacy:"g997dsnrg 0 1"`
+	G997_DeltQLN_US               dataItem `command:"g997dqlng 0 1" commandLegacy:"g997dqlng 0 0"`
+	G997_DeltQLN_DS               dataItem `command:"g997dqlng 1 1" commandLegacy:"g997dqlng 0 1"`
+	G997_DeltHLOG_US              dataItem `command:"g997dhlogg 0 1" commandLegacy:"g997dhlogg 0 0"`
+	G997_DeltHLOG_DS              dataItem `command:"g997dhlogg 1 1" commandLegacy:"g997dhlogg 0 1"`
 }
 
 func (d *data) LoadData(e executor, command string) (err error) {
@@ -62,13 +67,19 @@ func (d *data) LoadData(e executor, command string) (err error) {
 		field := t.Field(i)
 
 		if commands, ok := field.Tag.Lookup(tagName); ok {
-			var out string
+			var fullCommand, out string
 			var err error
+
+			if commands == "" {
+				continue
+			}
 
 			commandsSplit := strings.Split(commands, ",")
 			for _, cmd := range commandsSplit {
+				fullCommand = command + " " + cmd
+
 				if cmd != "vig" {
-					out, err = e.Execute(command + " " + cmd)
+					out, err = e.Execute(fullCommand)
 					if err != nil {
 						return err
 					}
@@ -86,7 +97,12 @@ func (d *data) LoadData(e executor, command string) (err error) {
 			}
 
 			val := v.Elem().FieldByName(field.Name)
-			val.SetString(out)
+
+			valCommand := val.FieldByName("Command")
+			valCommand.SetString(fullCommand)
+
+			valOutput := val.FieldByName("Output")
+			valOutput.SetString(out)
 		}
 	}
 
@@ -101,15 +117,13 @@ func (d *data) RawData() []byte {
 	for i := 0; i < t.NumField(); i++ {
 		field := t.Field(i)
 
-		if cmd, ok := field.Tag.Lookup("command"); ok {
-			if separator := strings.IndexRune(cmd, ','); separator != -1 {
-				cmd = cmd[:separator]
-			}
+		val := v.Elem().FieldByName(field.Name)
+		command := val.FieldByName("Command").String()
+		output := val.FieldByName("Output").String()
 
-			fmt.Fprintf(&b, "# dsl_pipe %s # %s\n", cmd, field.Name)
-
-			val := v.Elem().FieldByName(field.Name)
-			fmt.Fprintln(&b, val.String())
+		if command != "" {
+			fmt.Fprintf(&b, "# %s # %s\n", command, field.Name)
+			fmt.Fprintln(&b, output)
 		}
 	}
 

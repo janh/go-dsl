@@ -44,8 +44,8 @@ func parseBins(status *models.Status, data *data) models.Bins {
 	return bins
 }
 
-func parseBandBorders(bands *[]models.Band, data string) {
-	v := parseValues(data)
+func parseBandBorders(bands *[]models.Band, data dataItem) {
+	v := parseValues(data.Output)
 	items := strings.Fields(v["nData"])
 
 	for _, item := range items {
@@ -89,8 +89,8 @@ func parseBinsShort(data string) (rawItems []string) {
 	return
 }
 
-func parseBitAllocation(out *models.BinsBits, data string) {
-	rawValues := parseBinsShort(data)
+func parseBitAllocation(out *models.BinsBits, data dataItem) {
+	rawValues := parseBinsShort(data.Output)
 
 	out.Data = make([]int8, len(rawValues))
 
@@ -102,8 +102,8 @@ func parseBitAllocation(out *models.BinsBits, data string) {
 	}
 }
 
-func parseSNRAllocation(out *models.BinsFloat, data string) {
-	rawValues := parseBinsShort(data)
+func parseSNRAllocation(out *models.BinsFloat, data dataItem) {
+	rawValues := parseBinsShort(data.Output)
 
 	out.GroupSize = 1
 	out.Data = make([]float64, len(rawValues))
@@ -161,8 +161,8 @@ func parseBinsDELT(data string, bands []models.Band) (rawItems []string, groupSi
 	return
 }
 
-func parseDELTSNR(out *models.BinsFloat, bands []models.Band, data string) {
-	rawValues, groupSize := parseBinsDELT(data, bands)
+func parseDELTSNR(out *models.BinsFloat, bands []models.Band, data dataItem) {
+	rawValues, groupSize := parseBinsDELT(data.Output, bands)
 
 	out.GroupSize = groupSize
 	out.Data = make([]float64, len(rawValues))
@@ -176,8 +176,8 @@ func parseDELTSNR(out *models.BinsFloat, bands []models.Band, data string) {
 	}
 }
 
-func parseDELTQLN(out *models.BinsFloat, bands []models.Band, data string) {
-	rawValues, groupSize := parseBinsDELT(data, bands)
+func parseDELTQLN(out *models.BinsFloat, bands []models.Band, data dataItem) {
+	rawValues, groupSize := parseBinsDELT(data.Output, bands)
 
 	out.GroupSize = groupSize
 	out.Data = make([]float64, len(rawValues))
@@ -191,8 +191,8 @@ func parseDELTQLN(out *models.BinsFloat, bands []models.Band, data string) {
 	}
 }
 
-func parseDELTHlog(out *models.BinsFloat, bands []models.Band, data string) {
-	rawValues, groupSize := parseBinsDELT(data, bands)
+func parseDELTHlog(out *models.BinsFloat, bands []models.Band, data dataItem) {
+	rawValues, groupSize := parseBinsDELT(data.Output, bands)
 
 	out.GroupSize = groupSize
 	out.Data = make([]float64, len(rawValues))
