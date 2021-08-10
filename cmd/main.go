@@ -76,11 +76,11 @@ func main() {
 
 	var options optionsFlag
 
-	device := flagSet.String("d", "", wordWrap(64, "device type (valid options: "+deviceTypeOptions+")"))
-	user := flagSet.String("u", "", wordWrap(64, "user name (optional depending on device type)"))
-	flagSet.Var(&options, "o", wordWrap(64, "device-specific option, in format `Key=Value`"))
-	privateKey := flagSet.String("private-key", defaultPrivateKey, wordWrap(64, "private key file for SSH authentication"))
-	knownHosts := flagSet.String("known-hosts", defaultKnownHosts, wordWrap(64, "known hosts file for SSH host key validation, validation is skipped if set to \"IGNORE\""))
+	device := flagSet.String("d", "", "device type (valid options: "+deviceTypeOptions+")")
+	user := flagSet.String("u", "", "user name (optional depending on device type)")
+	flagSet.Var(&options, "o", "device-specific option, in format Key=Value")
+	privateKey := flagSet.String("private-key", defaultPrivateKey, "private key file for SSH authentication")
+	knownHosts := flagSet.String("known-hosts", defaultKnownHosts, "known hosts file for SSH host key validation, validation is skipped if set to \"IGNORE\"")
 	flagSet.Parse(os.Args[1:])
 
 	clientType := dsl.ClientType(*device)
@@ -190,12 +190,26 @@ func wordWrap(maxLength int, str string) string {
 	return b.String()
 }
 
+func indentAndWordWrap(str string) string {
+	wordWrappedStr := wordWrap(64, str)
+	return "\t" + strings.ReplaceAll(wordWrappedStr, "\n", "\n\t")
+}
+
 func printUsage(flagSet *flag.FlagSet) {
 	fmt.Println("\nUsage:")
 	fmt.Printf("  %s -d device [options] hostname\n\n", flagSet.Name())
 
 	fmt.Println("List of options:")
-	flagSet.PrintDefaults()
+
+	flagSet.VisitAll(func (flag *flag.Flag) {
+		fmt.Println("  -" + flag.Name)
+
+		fmt.Println(indentAndWordWrap(flag.Usage))
+		if flag.DefValue != "" {
+			fmt.Println(indentAndWordWrap("(default: " + flag.DefValue + ")"))
+		}
+	})
+
 	fmt.Println()
 
 	fmt.Println("Device-specific options:")
@@ -212,7 +226,7 @@ func printUsage(flagSet *flag.FlagSet) {
 
 		for key, desc := range clientDesc.OptionDescriptions {
 			fmt.Println("    " + key)
-			fmt.Println("\t" + strings.ReplaceAll(wordWrap(64, desc), "\n", "\n\t"))
+			fmt.Println(indentAndWordWrap(desc))
 		}
 
 		fmt.Println()
