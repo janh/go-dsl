@@ -5,6 +5,7 @@
 package lantiq
 
 import (
+	"errors"
 	"fmt"
 	"reflect"
 	"strings"
@@ -16,6 +17,8 @@ type dataItem struct {
 }
 
 type data struct {
+	APIVersion string
+
 	LineState                    dataItem `command:"lsg" commandLegacy:"lsg 0"`
 	G997_XTUSystemEnablingStatus dataItem `command:"g997xtusesg" commandLegacy:"g997atusecg 0"`
 	BandPlanSTatus               dataItem `command:"bpstg" commandLegacy:"bpcg 0"`
@@ -57,7 +60,17 @@ func (d *data) LoadData(e executor, command string) (err error) {
 	if err != nil {
 		return err
 	}
-	if strings.Contains(vig, "DSL_APILibraryVersion=2") {
+	vigData := parseValues(vig)
+
+	if version, ok := vigData["DSL_DriverVersionApi"]; ok {
+		d.APIVersion = version
+	} else if version, ok := vigData["DSL_APILibraryVersion"]; ok {
+		d.APIVersion = version
+	} else {
+		return errors.New("failed to read Lantiq API version")
+	}
+
+	if strings.HasPrefix(d.APIVersion, "2") {
 		tagName = "commandLegacy"
 	}
 
@@ -116,14 +129,13 @@ func (d *data) RawData() []byte {
 	v := reflect.ValueOf(d)
 	for i := 0; i < t.NumField(); i++ {
 		field := t.Field(i)
-
 		val := v.Elem().FieldByName(field.Name)
-		command := val.FieldByName("Command").String()
-		output := val.FieldByName("Output").String()
 
-		if command != "" {
-			fmt.Fprintf(&b, "# %s # %s\n", command, field.Name)
-			fmt.Fprintln(&b, output)
+		if item, ok := val.Interface().(dataItem); ok {
+			if item.Command != "" {
+				fmt.Fprintf(&b, "# %s # %s\n", item.Command, field.Name)
+				fmt.Fprintln(&b, item.Output)
+			}
 		}
 	}
 
