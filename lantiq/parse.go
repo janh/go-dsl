@@ -15,7 +15,7 @@ func parseValues(data string) (values map[string]string) {
 	for {
 		separatorIndex := strings.IndexRune(data, '=')
 		if separatorIndex == -1 {
-			return
+			break
 		}
 
 		key := strings.TrimSpace(data[0:separatorIndex])
@@ -54,6 +54,10 @@ func parseValues(data string) (values map[string]string) {
 		values[key] = value
 
 		data = data[nextIndex:]
+	}
+
+	if nReturn, ok := values["nReturn"]; !ok || nReturn != "0" {
+		return nil
 	}
 
 	return
