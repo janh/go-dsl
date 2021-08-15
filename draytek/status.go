@@ -305,6 +305,7 @@ func interpretNearFarInterleavingDelay(values map[string][2]string) (near, far m
 
 func interpretCounts(status *models.Status, values map[string][2]string) {
 	status.DownstreamFECCount, status.UpstreamFECCount = interpretNearFarIntValue(values, "FEC")
+	status.DownstreamSESCount, status.UpstreamSESCount = interpretNearFarIntValue(values, "SES")
 }
 
 func interpretMore(status *models.Status, values map[string][2]string) {

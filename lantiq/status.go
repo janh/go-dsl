@@ -338,6 +338,9 @@ func parseStatusLineSecCounters(status *models.Status, pmlscsgNear, pmlscsgFar d
 
 	status.UpstreamESCount = interpretStatusIntValue(pmlscsgFarValues, "nES", 1)
 	status.DownstreamESCount = interpretStatusIntValue(pmlscsgNearValues, "nES", 1)
+
+	status.UpstreamSESCount = interpretStatusIntValue(pmlscsgFarValues, "nSES", 1)
+	status.DownstreamSESCount = interpretStatusIntValue(pmlscsgNearValues, "nSES", 1)
 }
 
 func parseStatusReTxStatistics(status *models.Status, rtsgNear, rtsgFar dataItem) {

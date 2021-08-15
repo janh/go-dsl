@@ -54,6 +54,9 @@ type Status struct {
 	DownstreamESCount IntValue
 	UpstreamESCount   IntValue
 
+	DownstreamSESCount IntValue
+	UpstreamSESCount   IntValue
+
 	FarEndInventory  Inventory
 	NearEndInventory Inventory
 }
@@ -89,6 +92,7 @@ func (s Status) Summary() string {
 	printValues(&b, "RTX UC Count", s.DownstreamRTXUCCount, s.UpstreamRTXUCCount)
 	printValues(&b, "CRC Count", s.DownstreamCRCCount, s.UpstreamCRCCount)
 	printValues(&b, "ES Count", s.DownstreamESCount, s.UpstreamESCount)
+	printValues(&b, "SES Count", s.DownstreamSESCount, s.UpstreamSESCount)
 
 	return b.String()
 }

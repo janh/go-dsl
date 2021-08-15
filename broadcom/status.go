@@ -195,6 +195,7 @@ func interpretExtendedStats(status *models.Status, values map[string][2]string) 
 
 	status.DownstreamCRCCount, status.UpstreamCRCCount = interpretExtendedStatsIntValue(values, "crc")
 	status.DownstreamESCount, status.UpstreamESCount = interpretExtendedStatsIntValue(values, "es")
+	status.DownstreamSESCount, status.UpstreamSESCount = interpretExtendedStatsIntValue(values, "ses")
 }
 
 func interpretExtendedStatsIntValue(values map[string][2]string, key string) (downstream, upstream models.IntValue) {
