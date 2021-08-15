@@ -6,7 +6,6 @@ package broadcom
 
 import (
 	"bufio"
-	"fmt"
 	"regexp"
 	"strconv"
 	"strings"
@@ -295,9 +294,7 @@ func parseVendor(status *models.Status, vendor string) {
 		} else if strings.HasPrefix(lineLower, "chipset versionnumber:") {
 			version := strings.TrimSpace(strings.Split(line, ":")[1])
 			versionByte := helpers.ParseHexadecimal(version)
-			if len(versionByte) == 2 {
-				status.FarEndInventory.Version = fmt.Sprintf("%d.%d", versionByte[0], versionByte[1])
-			}
+			status.FarEndInventory.Version = helpers.FormatVersion(status.FarEndInventory.Vendor, versionByte)
 		}
 	}
 }

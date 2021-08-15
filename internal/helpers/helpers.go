@@ -6,6 +6,7 @@ package helpers
 
 import (
 	"encoding/hex"
+	"fmt"
 	"strings"
 )
 
@@ -39,6 +40,26 @@ func FormatVendor(vendor string) string {
 	}
 
 	return vendor
+}
+
+func FormatVersion(vendor string, version []byte) string {
+	if len(version) != 2 {
+		return ""
+	}
+
+	if vendor == "Infineon" {
+		if version[0]&0xf0 == 0x90 {
+			return fmt.Sprintf("%d.%d.%d.%d (%d.%d)",
+				version[0]>>4, version[0]&0xf<<1+version[1]>>7, version[1]>>4&0x7, version[1]&0xf,
+				version[0], version[1])
+		} else {
+			return fmt.Sprintf("%d.%d.%d.%d (%d.%d)",
+				version[0]>>4, version[0]&0xf, version[1]>>4, version[1]&0xf,
+				version[0], version[1])
+		}
+	}
+
+	return fmt.Sprintf("%d.%d", version[0], version[1])
 }
 
 func ParseHexadecimal(str string) []byte {

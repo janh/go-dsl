@@ -5,7 +5,6 @@
 package lantiq
 
 import (
-	"fmt"
 	"strconv"
 	"strings"
 	"time"
@@ -240,7 +239,7 @@ func parseStatusInventory(status *models.Status, vig, g997ligFar dataItem) {
 	vendorID := interpretStatusBytes(g997ligFarValues, "G994VendorID")
 	if len(vendorID) == 8 {
 		status.FarEndInventory.Vendor = helpers.FormatVendor(string(vendorID[2:6]))
-		status.FarEndInventory.Version = fmt.Sprintf("%d.%d", vendorID[6], vendorID[7])
+		status.FarEndInventory.Version = helpers.FormatVersion(status.FarEndInventory.Vendor, vendorID[6:8])
 	}
 }
 

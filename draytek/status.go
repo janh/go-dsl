@@ -6,7 +6,6 @@ package draytek
 
 import (
 	"bufio"
-	"fmt"
 	"regexp"
 	"strconv"
 	"strings"
@@ -136,7 +135,7 @@ func interpretStatus(status *models.Status, values map[string]string) {
 	status.UpstreamESCount = interpretStatusIntValue(values, "FEESCount")
 
 	status.FarEndInventory.Vendor = interpretStatusVendor(values, "COITUVersion0", "COITUVersion1")
-	status.FarEndInventory.Version = interpretStatusCOVersion(values, "COITUVersion1")
+	status.FarEndInventory.Version = interpretStatusCOVersion(values, "COITUVersion1", status.FarEndInventory.Vendor)
 
 	status.NearEndInventory.Vendor = interpretStatusVendor(values, "ITUVersion0", "ITUVersion1")
 	status.NearEndInventory.Version = interpretStatusModemVersion(values, "ADSLFirmwareVersion", "VDSLFirmwareVersion")
@@ -202,10 +201,10 @@ func interpretStatusVendor(values map[string]string, key0, key1 string) string {
 	return ""
 }
 
-func interpretStatusCOVersion(values map[string]string, key string) string {
+func interpretStatusCOVersion(values map[string]string, key string, vendor string) string {
 	v1 := helpers.ParseHexadecimal(interpretStatusString(values, key))
 	if len(v1) == 4 {
-		return fmt.Sprintf("%d.%d", v1[2], v1[3])
+		return helpers.FormatVersion(vendor, v1[2:4])
 	}
 	return ""
 }
