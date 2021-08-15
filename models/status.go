@@ -102,5 +102,5 @@ func (s Status) Summary() string {
 }
 
 func printValues(w io.Writer, label string, valDown, valUp Value) {
-	fmt.Fprintf(w, "%16s:    %8s %-6s  %8s %-6s\n", label, valDown.Value(), valDown.Unit(), valUp.Value(), valUp.Unit())
+	fmt.Fprintf(w, "%16s:    %8s %-7s  %8s %-7s\n", label, valDown.Value(), valDown.Unit(), valUp.Value(), valUp.Unit())
 }
