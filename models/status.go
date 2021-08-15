@@ -11,8 +11,9 @@ import (
 )
 
 type Status struct {
-	State State
-	Mode  Mode
+	State  State
+	Mode   Mode
+	Uptime Duration
 
 	DownstreamActualRate ValueBandwidth
 	UpstreamActualRate   ValueBandwidth
@@ -62,6 +63,9 @@ func (s Status) Summary() string {
 
 	fmt.Fprintf(&b, "           State:    %s\n", s.State)
 	fmt.Fprintf(&b, "            Mode:    %s\n", s.Mode)
+	fmt.Fprintf(&b, "          Uptime:    %s\n", s.Uptime)
+	fmt.Fprintln(&b)
+
 	fmt.Fprintf(&b, "          Remote:    %s\n", s.FarEndInventory)
 	fmt.Fprintf(&b, "           Modem:    %s\n", s.NearEndInventory)
 	fmt.Fprintln(&b)

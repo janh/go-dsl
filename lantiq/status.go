@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"strconv"
 	"strings"
+	"time"
 
 	"3e8.eu/go/dsl/internal/helpers"
 	"3e8.eu/go/dsl/models"
@@ -119,6 +120,15 @@ func interpretStatusByte(values map[string]string, key string) byte {
 	valStr := values[key]
 	valInt, _ := strconv.ParseUint(valStr, 10, 8)
 	return byte(valInt)
+}
+
+func interpretStatusDuration(values map[string]string, key string) (out models.Duration) {
+	if val, ok := values[key]; ok {
+		if valInt, err := strconv.ParseInt(val, 10, 64); err == nil {
+			out.Duration = time.Duration(valInt) * time.Second
+		}
+	}
+	return
 }
 
 func parseStatusState(status *models.Status, lsg dataItem) {
@@ -309,6 +319,11 @@ func parseStatusLineFeatures(status *models.Status, lfsgUS, lfsgDS dataItem) {
 func parseStatusChannelCounters(status *models.Status, pmccsgNear, pmccsgFar dataItem) {
 	pmccsgNearValues := parseValues(pmccsgNear.Output)
 	pmccsgFarValues := parseValues(pmccsgFar.Output)
+
+	// elapsed time is only meaningful for showtime stats, not for total stats
+	if strings.Contains(pmccsgNear.Command, "pmccsg") {
+		status.Uptime = interpretStatusDuration(pmccsgNearValues, "nElapsedTime")
+	}
 
 	status.UpstreamFECCount = interpretStatusIntValue(pmccsgFarValues, "nFEC", 1)
 	status.DownstreamFECCount = interpretStatusIntValue(pmccsgNearValues, "nFEC", 1)

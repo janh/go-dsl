@@ -10,6 +10,7 @@ import (
 	"regexp"
 	"strconv"
 	"strings"
+	"time"
 
 	"3e8.eu/go/dsl/internal/helpers"
 	"3e8.eu/go/dsl/models"
@@ -31,8 +32,9 @@ func parseStats(status *models.Status, stats string) {
 	basicStats := parseBasicStats(stats)
 	interpretBasicStats(status, basicStats)
 
-	extendedStats := parseExtendedStats(stats)
+	extendedStats, linkTime := parseExtendedStats(stats)
 	interpretExtendedStats(status, extendedStats)
+	interpretLinkTime(status, linkTime)
 }
 
 func parseBasicStats(stats string) map[string]string {
@@ -129,8 +131,8 @@ func interpretBasicStatsRateNumber(item string) (out models.IntValue) {
 	return
 }
 
-func parseExtendedStats(stats string) map[string][2]string {
-	values := make(map[string][2]string)
+func parseExtendedStats(stats string) (values map[string][2]string, linkTime string) {
+	values = make(map[string][2]string)
 
 	scanner := bufio.NewScanner(strings.NewReader(stats))
 	ignore := true
@@ -142,8 +144,17 @@ func parseExtendedStats(stats string) map[string][2]string {
 			lineLower := strings.ToLower(line)
 			if strings.Contains(lineLower, "bearer") && !strings.Contains(lineLower, "bearer 0") {
 				ignore = true
-			} else if strings.Contains(lineLower, " time") && !strings.Contains(lineLower, "link time") {
-				ignore = true
+			} else if strings.Contains(lineLower, " time") {
+				if strings.Contains(lineLower, "link time") {
+					ignore = false
+
+					split := strings.SplitN(line, "=", 2)
+					if len(split) == 2 {
+						linkTime = strings.TrimSpace(split[1])
+					}
+				} else {
+					ignore = true
+				}
 			} else {
 				ignore = false
 			}
@@ -165,7 +176,7 @@ func parseExtendedStats(stats string) map[string][2]string {
 		}
 	}
 
-	return values
+	return
 }
 
 func interpretExtendedStats(status *models.Status, values map[string][2]string) {
@@ -226,6 +237,43 @@ func interpretExtendedStatsBoolValueNonZero(values map[string][2]string, key str
 		}
 	}
 	return
+}
+
+func interpretLinkTime(status *models.Status, linkTime string) {
+	split := strings.Fields(linkTime)
+	if len(split)%2 != 0 || len(split) > 8 {
+		return
+	}
+
+	var duration time.Duration
+
+	for i := 0; i < len(split); i += 2 {
+		valStr := split[i]
+		unit := strings.ToLower(split[i+1])
+
+		var factor time.Duration
+		switch {
+		case strings.HasPrefix(unit, "sec"):
+			factor = time.Second
+		case strings.HasPrefix(unit, "min"):
+			factor = time.Minute
+		case strings.HasPrefix(unit, "hour"):
+			factor = time.Hour
+		case strings.HasPrefix(unit, "day"):
+			factor = 24 * time.Hour
+		default:
+			return
+		}
+
+		val, err := strconv.ParseInt(valStr, 10, 64)
+		if err != nil {
+			return
+		}
+
+		duration += time.Duration(val) * factor
+	}
+
+	status.Uptime.Duration = duration
 }
 
 func parseVendor(status *models.Status, vendor string) {
