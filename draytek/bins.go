@@ -216,7 +216,9 @@ func readStatusBin(line string, bins *models.BinsFloat, handler func(float64, bo
 			val, err := strconv.ParseFloat(valStr, 64)
 			ok := err == nil
 
-			bins.Data[num] = handler(val, ok)
+			if num < len(bins.Data) {
+				bins.Data[num] = handler(val, ok)
+			}
 		}
 	}
 }
