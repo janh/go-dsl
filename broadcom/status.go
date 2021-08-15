@@ -181,6 +181,8 @@ func parseExtendedStats(stats string) (values map[string][2]string, linkTime str
 
 func interpretExtendedStats(status *models.Status, values map[string][2]string) {
 	status.DownstreamInterleavingDelay.FloatValue, status.UpstreamInterleavingDelay.FloatValue = interpretExtendedStatsFloatValue(values, "delay")
+	status.DownstreamImpulseNoiseProtection.FloatValue, status.UpstreamImpulseNoiseProtection.FloatValue =
+		interpretExtendedStatsFloatValue(values, "inp")
 	status.DownstreamRetransmissionEnabled, status.UpstreamRetransmissionEnabled = interpretExtendedStatsBoolValueNonZero(values, "q")
 
 	status.DownstreamAttenuation.FloatValue, status.UpstreamAttenuation.FloatValue = interpretExtendedStatsFloatValue(values, "attndb")

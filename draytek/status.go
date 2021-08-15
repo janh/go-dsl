@@ -282,6 +282,20 @@ func interpretNearFarBoolValue(values map[string][2]string, key string) (near, f
 	return
 }
 
+func interpretNearFarFloatValueFactor(values map[string][2]string, key string, factor float64) (near, far models.FloatValue) {
+	if val, ok := values[key]; ok {
+		if n, err := strconv.ParseFloat(val[0], 64); err == nil {
+			near.Float = n / factor
+			near.Valid = true
+		}
+		if f, err := strconv.ParseFloat(val[1], 64); err == nil {
+			far.Float = f / factor
+			far.Valid = true
+		}
+	}
+	return
+}
+
 func interpretNearFarInterleavingDelay(values map[string][2]string) (near, far models.FloatValue) {
 	val, ok := values["InterleaveDelay"]
 	if !ok {
@@ -312,4 +326,12 @@ func interpretMore(status *models.Status, values map[string][2]string) {
 	status.UpstreamInterleavingDelay.FloatValue, status.DownstreamInterleavingDelay.FloatValue = interpretNearFarInterleavingDelay(values)
 
 	status.UpstreamRetransmissionEnabled, status.DownstreamRetransmissionEnabled = interpretNearFarBoolValue(values, "ReTxEnable")
+
+	// Dividing by 5 seems to give the correct value. According to the xDSL
+	// specifications, this value is provided in 0.1 symbols granularity. However,
+	// for old versions of the Lantiq API, it seems to have been provided with
+	// 0.5 symbols granularity. Maybe Draytek then implemented a division by 2 and
+	// never updated this.
+	status.UpstreamImpulseNoiseProtection.FloatValue, status.DownstreamImpulseNoiseProtection.FloatValue =
+		interpretNearFarFloatValueFactor(values, "INP", 5)
 }

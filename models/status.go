@@ -24,6 +24,9 @@ type Status struct {
 	DownstreamInterleavingDelay ValueMilliseconds
 	UpstreamInterleavingDelay   ValueMilliseconds
 
+	DownstreamImpulseNoiseProtection ValueSymbols
+	UpstreamImpulseNoiseProtection   ValueSymbols
+
 	DownstreamRetransmissionEnabled BoolValue
 	UpstreamRetransmissionEnabled   BoolValue
 
@@ -78,6 +81,7 @@ func (s Status) Summary() string {
 	fmt.Fprintln(&b)
 
 	printValues(&b, "Interleaving", s.DownstreamInterleavingDelay, s.UpstreamInterleavingDelay)
+	printValues(&b, "INP", s.DownstreamImpulseNoiseProtection, s.UpstreamImpulseNoiseProtection)
 	printValues(&b, "Retransmission", s.DownstreamRetransmissionEnabled, s.UpstreamRetransmissionEnabled)
 	fmt.Fprintln(&b)
 

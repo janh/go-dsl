@@ -25,7 +25,7 @@ func parseBasicStatus(data *data) models.Status {
 }
 
 func parseExtendedStatus(status *models.Status, bins *models.Bins, data *data) {
-	parseStatusChannelStatus(status, data.G997_ChannelStatus_US, data.G997_ChannelStatus_DS)
+	parseStatusChannelStatus(status, data.G997_ChannelStatus_US, data.G997_ChannelStatus_DS, data.APIVersion)
 	parseStatusLineStatus(status, bins, data.G997_LineStatus_US, data.G997_LineStatus_DS)
 	parseStatusLineFeatures(status, data.LineFeatureStatus_US, data.LineFeatureStatus_DS)
 
@@ -233,7 +233,7 @@ func parseStatusInventory(status *models.Status, vig, g997ligFar dataItem) {
 	}
 }
 
-func parseStatusChannelStatus(status *models.Status, g997csgUS, g997csgDS dataItem) {
+func parseStatusChannelStatus(status *models.Status, g997csgUS, g997csgDS dataItem, apiVersion string) {
 	g997csgUSValues := parseValues(g997csgUS.Output)
 	g997csgDSValues := parseValues(g997csgDS.Output)
 
@@ -248,6 +248,15 @@ func parseStatusChannelStatus(status *models.Status, g997csgUS, g997csgDS dataIt
 
 	status.UpstreamInterleavingDelay.FloatValue = interpretStatusFloatValue(g997csgUSValues, "ActualInterleaveDelay", 100)
 	status.DownstreamInterleavingDelay.FloatValue = interpretStatusFloatValue(g997csgDSValues, "ActualInterleaveDelay", 100)
+
+	// Per the standard, this value should be provided in 0.1 symbol granularity.
+	// It seems that for Vinax (API version 2), the value is given with 0.5 symbol granularity instead.
+	status.UpstreamImpulseNoiseProtection.FloatValue = interpretStatusFloatValue(g997csgUSValues, "ActualImpulseNoiseProtection", 10)
+	status.DownstreamImpulseNoiseProtection.FloatValue = interpretStatusFloatValue(g997csgDSValues, "ActualImpulseNoiseProtection", 10)
+	if strings.HasPrefix(apiVersion, "2") {
+		status.UpstreamImpulseNoiseProtection.FloatValue.Float *= 5
+		status.DownstreamImpulseNoiseProtection.FloatValue.Float *= 5
+	}
 }
 
 func getBandWeights(bands []models.Band) []float64 {

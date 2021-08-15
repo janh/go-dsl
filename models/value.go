@@ -136,3 +136,15 @@ func (v ValueMilliseconds) Value() string {
 func (v ValueMilliseconds) Unit() string {
 	return "ms"
 }
+
+type ValueSymbols struct {
+	FloatValue
+}
+
+func (v ValueSymbols) String() string {
+	return v.FloatValue.String() + " " + v.Unit()
+}
+
+func (v ValueSymbols) Unit() string {
+	return "symbols"
+}
