@@ -31,6 +31,7 @@ func parseExtendedStatus(status *models.Status, bins *models.Bins, data *data) {
 
 	parseStatusChannelCounters(status, data.PM_ChannelCountersShowtime_Near, data.PM_ChannelCountersShowtime_Far)
 	parseStatusLineSecCounters(status, data.PM_LineSecCountersShowtime_Near, data.PM_LineSecCountersShowtime_Far)
+	parseStatusReTxCounters(status, data.PM_ReTxCountersShowtimeGet_Near, data.PM_ReTxCountersShowtimeGet_Far)
 	parseStatusReTxStatistics(status, data.ReTxStatistics_Near, data.ReTxStatistics_Far)
 }
 
@@ -126,6 +127,16 @@ func interpretStatusDuration(values map[string]string, key string) (out models.D
 	if val, ok := values[key]; ok {
 		if valInt, err := strconv.ParseInt(val, 10, 64); err == nil {
 			out.Duration = time.Duration(valInt) * time.Second
+		}
+	}
+	return
+}
+
+func interpretStatusEFTRMin(values map[string]string, key string) (out models.IntValue) {
+	if val, ok := values[key]; ok {
+		if valInt, err := strconv.ParseInt(val, 10, 64); err == nil && valInt > 0 && valInt != 4294967295 {
+			out.Int = valInt / 1000
+			out.Valid = true
 		}
 	}
 	return
@@ -350,6 +361,14 @@ func parseStatusLineSecCounters(status *models.Status, pmlscsgNear, pmlscsgFar d
 
 	status.UpstreamSESCount = interpretStatusIntValue(pmlscsgFarValues, "nSES", 1)
 	status.DownstreamSESCount = interpretStatusIntValue(pmlscsgNearValues, "nSES", 1)
+}
+
+func parseStatusReTxCounters(status *models.Status, pmrtcsgNear, pmrtcsgFar dataItem) {
+	pmrtcsgNearValues := parseValues(pmrtcsgNear.Output)
+	pmrtcsgFarValues := parseValues(pmrtcsgFar.Output)
+
+	status.UpstreamMinimumErrorFreeThroughput.IntValue = interpretStatusEFTRMin(pmrtcsgFarValues, "nEftrMin")
+	status.DownstreamMinimumErrorFreeThroughput.IntValue = interpretStatusEFTRMin(pmrtcsgNearValues, "nEftrMin")
 }
 
 func parseStatusReTxStatistics(status *models.Status, rtsgNear, rtsgFar dataItem) {

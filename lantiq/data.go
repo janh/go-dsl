@@ -36,6 +36,8 @@ type data struct {
 	PM_ChannelCountersShowtime_Far  dataItem `command:"pmccsg 0 1 0,pmcctg 0 1" commandLegacy:"pmcctg 0 0 1"`
 	PM_LineSecCountersShowtime_Near dataItem `command:"pmlscsg 0 0,pmlscsg 0" commandLegacy:"pmlsctg 0 0"`
 	PM_LineSecCountersShowtime_Far  dataItem `command:"pmlscsg 1 0,pmlscsg 1" commandLegacy:"pmlsctg 0 1"`
+	PM_ReTxCountersShowtimeGet_Near dataItem `command:"pmrtcsg 0 0,pmrtctg 0"`
+	PM_ReTxCountersShowtimeGet_Far  dataItem `command:"pmrtcsg 1 0,pmrtctg 1"`
 	ReTxStatistics_Near             dataItem `command:"rtsg 0"`
 	ReTxStatistics_Far              dataItem `command:"rtsg 1"`
 

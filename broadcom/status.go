@@ -195,6 +195,9 @@ func interpretExtendedStats(status *models.Status, values map[string][2]string) 
 	status.DownstreamRTXCCount, status.UpstreamRTXCCount = interpretExtendedStatsIntValue(values, "rtxc")
 	status.DownstreamRTXUCCount, status.UpstreamRTXUCCount = interpretExtendedStatsIntValue(values, "rtxuc")
 
+	status.DownstreamMinimumErrorFreeThroughput.IntValue, status.UpstreamMinimumErrorFreeThroughput.IntValue =
+		interpretExtendedStatsIntValue(values, "mineftr")
+
 	status.DownstreamCRCCount, status.UpstreamCRCCount = interpretExtendedStatsIntValue(values, "crc")
 	status.DownstreamESCount, status.UpstreamESCount = interpretExtendedStatsIntValue(values, "es")
 	status.DownstreamSESCount, status.UpstreamSESCount = interpretExtendedStatsIntValue(values, "ses")
