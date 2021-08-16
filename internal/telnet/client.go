@@ -85,6 +85,11 @@ func (c *Client) connect(host, username string, passwordCallback dsl.PasswordCal
 			var password string
 			if passwordCallback != nil {
 				password = passwordCallback()
+
+				err = c.conn.SetReadDeadline(time.Now().Add(10 * time.Second))
+				if err != nil {
+					return err
+				}
 			}
 
 			c.conn.Write([]byte(password + "\r\n"))
