@@ -20,7 +20,7 @@ var regexpFilterCharacters = regexp.MustCompile(`[^a-zA-Z0-9]+`)
 var regexpBrokenFloat = regexp.MustCompile(`^(-?)(\d+)\.(-?)\s*(\d+)$`)
 var regexpModemVersion = regexp.MustCompile(`^0([0-9A-F])-0([0-9A-F])-0([0-9A-F])-0([0-9A-F])-0([0-9A-F])-0([0-9A-F])$`)
 
-func parseStatus(statusStr, counts, more string) models.Status {
+func parseStatus(statusStr, counts, more, olr string) models.Status {
 	var status models.Status
 
 	values := readStatus(statusStr)
@@ -31,6 +31,9 @@ func parseStatus(statusStr, counts, more string) models.Status {
 
 	valuesMore := readNearFar(more)
 	interpretMore(&status, valuesMore)
+
+	valuesOLR := readNearFar(olr)
+	interpretOLR(&status, valuesOLR)
 
 	return status
 }
@@ -233,7 +236,7 @@ func readNearFar(nearFar string) map[string][2]string {
 	for scanner.Scan() {
 		line := scanner.Text()
 
-		if strings.Contains(line, "[") && !strings.Contains(line, "Showtime") {
+		if strings.Contains(line, "[") && !strings.Contains(line, "Showtime") && !strings.Contains(line, "OLR") {
 			break
 		}
 
@@ -275,6 +278,20 @@ func interpretNearFarBoolValue(values map[string][2]string, key string) (near, f
 		}
 		if f, err := strconv.ParseBool(val[1]); err == nil {
 			far.Bool = f
+			far.Valid = true
+		}
+	}
+	return
+}
+
+func interpretNearFarBoolValueGreaterThanZero(values map[string][2]string, key string) (near, far models.BoolValue) {
+	if val, ok := values[key]; ok {
+		if n, err := strconv.ParseInt(val[0], 10, 64); err == nil {
+			near.Bool = n > 0
+			near.Valid = true
+		}
+		if f, err := strconv.ParseInt(val[1], 10, 64); err == nil {
+			far.Bool = f > 0
 			far.Valid = true
 		}
 	}
@@ -333,4 +350,9 @@ func interpretMore(status *models.Status, values map[string][2]string) {
 	// never updated this.
 	status.UpstreamImpulseNoiseProtection.FloatValue, status.DownstreamImpulseNoiseProtection.FloatValue =
 		interpretNearFarFloatValueFactor(values, "INP", 5)
+}
+
+func interpretOLR(status *models.Status, values map[string][2]string) {
+	status.UpstreamBitswapEnabled, status.DownstreamBitswapEnabled = interpretNearFarBoolValueGreaterThanZero(values, "BitswapExecuted")
+	status.UpstreamSeamlessRateAdaption, status.DownstreamSeamlessRateAdaption = interpretNearFarBoolValueGreaterThanZero(values, "SraExecuted")
 }

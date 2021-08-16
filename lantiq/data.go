@@ -31,6 +31,8 @@ type data struct {
 	G997_LineStatus_DS    dataItem `command:"g997lsg 1 1" commandLegacy:"g997lsg 0 1"`
 	LineFeatureStatus_US  dataItem `command:"lfsg 0"`
 	LineFeatureStatus_DS  dataItem `command:"lfsg 1"`
+	OlrStatistics_US      dataItem `command:"osg 0" commandLegacy:"ostg 0 0"`
+	OlrStatistics_DS      dataItem `command:"osg 1" commandLegacy:"ostg 0 1"`
 
 	PM_ChannelCountersShowtime_Near dataItem `command:"pmccsg 0 0 0,pmcctg 0 0" commandLegacy:"pmcctg 0 0 0"`
 	PM_ChannelCountersShowtime_Far  dataItem `command:"pmccsg 0 1 0,pmcctg 0 1" commandLegacy:"pmcctg 0 0 1"`

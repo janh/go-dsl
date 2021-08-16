@@ -27,6 +27,7 @@ func parseExtendedStatus(status *models.Status, bins *models.Bins, data *data) {
 	parseStatusChannelStatus(status, data.G997_ChannelStatus_US, data.G997_ChannelStatus_DS, data.APIVersion)
 	parseStatusLineStatus(status, bins, data.G997_LineStatus_US, data.G997_LineStatus_DS)
 	parseStatusLineFeatures(status, data.LineFeatureStatus_US, data.LineFeatureStatus_DS)
+	parseStatusOlrStatistics(status, data.OlrStatistics_US, data.OlrStatistics_DS)
 
 	parseStatusChannelCounters(status, data.PM_ChannelCountersShowtime_Near, data.PM_ChannelCountersShowtime_Far)
 	parseStatusLineSecCounters(status, data.PM_LineSecCountersShowtime_Near, data.PM_LineSecCountersShowtime_Far)
@@ -38,6 +39,16 @@ func interpretStatusBoolValue(values map[string]string, key string) (out models.
 	if val, ok := values[key]; ok {
 		if valInt, err := strconv.Atoi(val); err == nil && (valInt == 0 || valInt == 1) {
 			out.Bool = valInt == 1
+			out.Valid = true
+		}
+	}
+	return
+}
+
+func interpretStatusBoolValueGreaterThanZero(values map[string]string, key string) (out models.BoolValue) {
+	if val, ok := values[key]; ok {
+		if valInt, err := strconv.ParseInt(val, 10, 64); err == nil {
+			out.Bool = valInt > 0
 			out.Valid = true
 		}
 	}
@@ -333,6 +344,17 @@ func parseStatusLineFeatures(status *models.Status, lfsgUS, lfsgDS dataItem) {
 
 	status.UpstreamRetransmissionEnabled = interpretStatusBoolValue(lfsgUSValues, "bReTxEnable")
 	status.DownstreamRetransmissionEnabled = interpretStatusBoolValue(lfsgDSValues, "bReTxEnable")
+}
+
+func parseStatusOlrStatistics(status *models.Status, osgUS, osgDS dataItem) {
+	osgUSValues := parseValues(osgUS.Output)
+	osgDSValues := parseValues(osgDS.Output)
+
+	status.UpstreamBitswapEnabled = interpretStatusBoolValueGreaterThanZero(osgUSValues, "nBitswapExecuted")
+	status.DownstreamBitswapEnabled = interpretStatusBoolValueGreaterThanZero(osgDSValues, "nBitswapExecuted")
+
+	status.UpstreamSeamlessRateAdaption = interpretStatusBoolValueGreaterThanZero(osgUSValues, "nSraExecuted")
+	status.DownstreamSeamlessRateAdaption = interpretStatusBoolValueGreaterThanZero(osgDSValues, "nSraExecuted")
 }
 
 func parseStatusChannelCounters(status *models.Status, pmccsgNear, pmccsgFar dataItem) {
