@@ -74,7 +74,10 @@ func (c *Client) connect(host, username string, passwordCallback dsl.PasswordCal
 			}
 			triedUsername = true
 
-			c.conn.Write([]byte(username + "\r\n"))
+			_, err = c.conn.Write([]byte(username + "\r\n"))
+			if err != nil {
+				return err
+			}
 
 		case c.config.PromptPassword:
 			if triedPassword {
@@ -92,7 +95,10 @@ func (c *Client) connect(host, username string, passwordCallback dsl.PasswordCal
 				}
 			}
 
-			c.conn.Write([]byte(password + "\r\n"))
+			_, err = c.conn.Write([]byte(password + "\r\n"))
+			if err != nil {
+				return err
+			}
 
 		case c.config.PromptCommand:
 			return nil
@@ -102,9 +108,12 @@ func (c *Client) connect(host, username string, passwordCallback dsl.PasswordCal
 }
 
 func (c *Client) Execute(command string) (string, error) {
-	c.conn.Write([]byte(command + "\r\n"))
+	_, err := c.conn.Write([]byte(command + "\r\n"))
+	if err != nil {
+		return "", err
+	}
 
-	err := c.conn.SetReadDeadline(time.Now().Add(10 * time.Second))
+	err = c.conn.SetReadDeadline(time.Now().Add(10 * time.Second))
 	if err != nil {
 		return "", err
 	}
