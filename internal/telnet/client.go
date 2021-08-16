@@ -50,7 +50,7 @@ func (c *Client) connect(host, username string, passwordCallback dsl.PasswordCal
 	triedUsername := false
 	triedPassword := false
 
-	err = c.conn.SetReadDeadline(time.Now().Add(10 * time.Second))
+	err = c.conn.SetDeadline(time.Now().Add(10 * time.Second))
 	if err != nil {
 		return err
 	}
@@ -89,7 +89,7 @@ func (c *Client) connect(host, username string, passwordCallback dsl.PasswordCal
 			if passwordCallback != nil {
 				password = passwordCallback()
 
-				err = c.conn.SetReadDeadline(time.Now().Add(10 * time.Second))
+				err = c.conn.SetDeadline(time.Now().Add(10 * time.Second))
 				if err != nil {
 					return err
 				}
@@ -113,7 +113,7 @@ func (c *Client) Execute(command string) (string, error) {
 		return "", err
 	}
 
-	err = c.conn.SetReadDeadline(time.Now().Add(10 * time.Second))
+	err = c.conn.SetDeadline(time.Now().Add(10 * time.Second))
 	if err != nil {
 		return "", err
 	}
