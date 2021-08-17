@@ -21,6 +21,7 @@ type baseModel struct {
 	ColorNeutralStroke Color
 	ColorUpstream      Color
 	ColorDownstream    Color
+	ColorPilotTones    Color
 
 	PathLegend path
 	PathGrid   path
@@ -46,9 +47,11 @@ type label struct {
 
 type bitsModel struct {
 	baseModel
-	Transform      transform
-	PathUpstream   path
-	PathDownstream path
+	Transform             transform
+	StrokeWidthPilotTones float64
+	PathPilotTones        path
+	PathUpstream          path
+	PathDownstream        path
 }
 
 type snrModel struct {

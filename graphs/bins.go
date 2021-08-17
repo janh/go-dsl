@@ -16,6 +16,7 @@ import (
 var (
 	colorUpstream   = Color{96, 192, 0, .75}
 	colorDownstream = Color{0, 127, 255, .75}
+	colorPilotTones = Color{204, 94, 82, .75}
 )
 
 func getGraphColors(background, foreground Color) (colorGraph, colorGrid, colorNeutralFill, colorNeutralStroke Color) {
@@ -79,6 +80,8 @@ func getBaseModel(spec graphSpec) baseModel {
 
 	m.ColorUpstream = colorUpstream
 	m.ColorDownstream = colorDownstream
+
+	m.ColorPilotTones = colorPilotTones
 
 	textOffset := 3.5
 
@@ -236,6 +239,15 @@ func getLegendX(mode models.Mode) (bins int, step int, freq float64) {
 	return
 }
 
+func buildPilotTonesPath(p *path, tones []int, height float64) {
+	for _, tone := range tones {
+		pos := float64(tone) + 0.5
+
+		p.MoveTo(pos, 0)
+		p.LineTo(pos, height)
+	}
+}
+
 func buildBitsPath(p *path, bins models.BinsBits, scaleY float64) {
 	var lastValid bool
 	var lastBits int8
@@ -308,6 +320,12 @@ func DrawBitsGraph(out io.Writer, data models.Bins, params GraphParams) error {
 	scaleY := h / spec.LegendYTop
 
 	setBandsData(&m.baseModel, data, false)
+
+	m.StrokeWidthPilotTones = 1
+	if scaleX < 1.5 {
+		m.StrokeWidthPilotTones = 1.5 / scaleX
+	}
+	buildPilotTonesPath(&m.PathPilotTones, data.PilotTones, h)
 
 	buildBitsPath(&m.PathDownstream, data.Bits.Downstream, scaleY)
 	buildBitsPath(&m.PathUpstream, data.Bits.Upstream, scaleY)
