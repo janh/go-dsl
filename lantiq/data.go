@@ -44,6 +44,7 @@ type data struct {
 	ReTxStatistics_Near             dataItem `command:"rtsg 0"`
 	ReTxStatistics_Far              dataItem `command:"rtsg 1"`
 
+	PilotTonesStatus              dataItem `command:"ptsg"`
 	BandBorderStatus_US           dataItem `command:"bbsg 0"`
 	BandBorderStatus_DS           dataItem `command:"bbsg 1"`
 	G997_BitAllocationNscShort_US dataItem `command:"g997bansg 0" commandLegacy:"g997banscsg 0 0"`

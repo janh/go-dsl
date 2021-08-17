@@ -17,6 +17,8 @@ func parseBins(status *models.Status, data *data) models.Bins {
 
 	bins.Mode = status.Mode
 
+	parsePilotTones(&bins.PilotTones, data.PilotTonesStatus)
+
 	parseBandBorders(&bins.Bands.Upstream, data.BandBorderStatus_US)
 	parseBandBorders(&bins.Bands.Downstream, data.BandBorderStatus_DS)
 
@@ -42,6 +44,27 @@ func parseBins(status *models.Status, data *data) models.Bins {
 	parseDELTHlog(&bins.Hlog.Downstream, bins.Bands.Downstream, data.G997_DeltHLOG_DS)
 
 	return bins
+}
+
+func parsePilotTones(tones *[]int, data dataItem) {
+	v := parseValues(data.Output)
+	items := strings.Fields(v["nData"])
+
+	for _, item := range items {
+		itemSplit := strings.Split(item, ",")
+		if len(itemSplit) != 2 {
+			continue
+		}
+
+		index := itemSplit[1]
+		if len(index) < 2 || index[len(index)-1] != ')' {
+			continue
+		}
+
+		if valInt, err := strconv.Atoi(index[:len(index)-1]); err == nil {
+			*tones = append(*tones, valInt)
+		}
+	}
 }
 
 func parseBandBorders(bands *[]models.Band, data dataItem) {

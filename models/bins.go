@@ -9,6 +9,9 @@ type Bins struct {
 
 	Bands BandsDownUp
 
+	// PilotTones contains the bin indexes of all pilot tones
+	PilotTones []int
+
 	// Bits is the number of bits modulated onto the subcarrier, valid range: 0 to 15
 	Bits BinsBitsDownUp
 
