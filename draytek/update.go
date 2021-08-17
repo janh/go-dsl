@@ -61,7 +61,12 @@ func updateData(e executor) (statusData models.Status, bins models.Bins, rawData
 		return
 	}
 
-	statusData = parseStatus(status, counts, more, olr)
+	basic, err := e.Execute("wan vdsl show basic")
+	if err != nil {
+		return
+	}
+
+	statusData = parseStatus(status, counts, more, olr, basic)
 	bins = parseBins(statusData, bandinfo, downstream, upstream, qln, hlog)
 
 	var b strings.Builder
@@ -83,6 +88,8 @@ func updateData(e executor) (statusData models.Status, bins models.Bins, rawData
 	fmt.Fprintln(&b, qln)
 	fmt.Fprintln(&b, "# adsl status hlog")
 	fmt.Fprintln(&b, hlog)
+	fmt.Fprintln(&b, "# wan vdsl show basic")
+	fmt.Fprintln(&b, basic)
 	fmt.Fprintln(&b)
 	rawData = []byte(b.String())
 

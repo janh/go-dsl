@@ -28,6 +28,7 @@ func parseExtendedStatus(status *models.Status, bins *models.Bins, data *data) {
 	parseStatusLineStatus(status, bins, data.G997_LineStatus_US, data.G997_LineStatus_DS)
 	parseStatusLineFeatures(status, data.LineFeatureStatus_US, data.LineFeatureStatus_DS)
 	parseStatusOlrStatistics(status, data.OlrStatistics_US, data.OlrStatistics_DS)
+	parseStatusDSMStatus(status, data.DSM_Status)
 
 	parseStatusChannelCounters(status, data.PM_ChannelCountersShowtime_Near, data.PM_ChannelCountersShowtime_Far)
 	parseStatusLineSecCounters(status, data.PM_LineSecCountersShowtime_Near, data.PM_LineSecCountersShowtime_Far)
@@ -149,6 +150,31 @@ func interpretStatusEFTRMin(values map[string]string, key string) (out models.In
 			out.Valid = true
 		}
 	}
+	return
+}
+
+func interpretVectoringState(values map[string]string) (downstream, upstream models.VectoringValue) {
+	vectorStatus := interpretStatusIntValue(values, "eVectorStatus", 1)
+	vectorFriendlyStatus := interpretStatusIntValue(values, "eVectorFriendlyStatus", 1)
+
+	if vectorStatus.Valid && vectorFriendlyStatus.Valid {
+		downstream.Valid = true
+		upstream.Valid = true
+
+		switch {
+		case vectorStatus.Int == 2:
+			downstream.State = models.VectoringStateFull
+			upstream.State = models.VectoringStateFull
+		case vectorStatus.Int == 1:
+			downstream.State = models.VectoringStateFull
+		case vectorFriendlyStatus.Int == 2:
+			downstream.State = models.VectoringStateFriendly
+			upstream.State = models.VectoringStateFriendly
+		case vectorFriendlyStatus.Int == 1:
+			downstream.State = models.VectoringStateFriendly
+		}
+	}
+
 	return
 }
 
@@ -355,6 +381,12 @@ func parseStatusOlrStatistics(status *models.Status, osgUS, osgDS dataItem) {
 
 	status.UpstreamSeamlessRateAdaption = interpretStatusBoolValueGreaterThanZero(osgUSValues, "nSraExecuted")
 	status.DownstreamSeamlessRateAdaption = interpretStatusBoolValueGreaterThanZero(osgDSValues, "nSraExecuted")
+}
+
+func parseStatusDSMStatus(status *models.Status, dsmsg dataItem) {
+	dsmsgValues := parseValues(dsmsg.Output)
+
+	status.DownstreamVectoringState, status.UpstreamVectoringState = interpretVectoringState(dsmsgValues)
 }
 
 func parseStatusChannelCounters(status *models.Status, pmccsgNear, pmccsgFar dataItem) {

@@ -39,6 +39,9 @@ type Status struct {
 	DownstreamRetransmissionEnabled BoolValue
 	UpstreamRetransmissionEnabled   BoolValue
 
+	DownstreamVectoringState VectoringValue
+	UpstreamVectoringState   VectoringValue
+
 	DownstreamAttenuation ValueDecibel
 	UpstreamAttenuation   ValueDecibel
 
@@ -97,6 +100,9 @@ func (s Status) Summary() string {
 	printValues(&b, "Interleaving", s.DownstreamInterleavingDelay, s.UpstreamInterleavingDelay)
 	printValues(&b, "INP", s.DownstreamImpulseNoiseProtection, s.UpstreamImpulseNoiseProtection)
 	printValues(&b, "Retransmission", s.DownstreamRetransmissionEnabled, s.UpstreamRetransmissionEnabled)
+	fmt.Fprintln(&b)
+
+	printValues(&b, "Vectoring", s.DownstreamVectoringState, s.UpstreamVectoringState)
 	fmt.Fprintln(&b)
 
 	printValues(&b, "Attenuation", s.DownstreamAttenuation, s.UpstreamAttenuation)

@@ -33,6 +33,7 @@ type data struct {
 	LineFeatureStatus_DS  dataItem `command:"lfsg 1"`
 	OlrStatistics_US      dataItem `command:"osg 0" commandLegacy:"ostg 0 0"`
 	OlrStatistics_DS      dataItem `command:"osg 1" commandLegacy:"ostg 0 1"`
+	DSM_Status            dataItem `command:"dsmsg"`
 
 	PM_ChannelCountersShowtime_Near dataItem `command:"pmccsg 0 0 0,pmcctg 0 0" commandLegacy:"pmcctg 0 0 0"`
 	PM_ChannelCountersShowtime_Far  dataItem `command:"pmccsg 0 1 0,pmcctg 0 1" commandLegacy:"pmcctg 0 0 1"`

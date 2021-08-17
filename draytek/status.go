@@ -20,7 +20,7 @@ var regexpFilterCharacters = regexp.MustCompile(`[^a-zA-Z0-9]+`)
 var regexpBrokenFloat = regexp.MustCompile(`^(-?)(\d+)\.(-?)\s*(\d+)$`)
 var regexpModemVersion = regexp.MustCompile(`^0([0-9A-F])-0([0-9A-F])-0([0-9A-F])-0([0-9A-F])-0([0-9A-F])-0([0-9A-F])$`)
 
-func parseStatus(statusStr, counts, more, olr string) models.Status {
+func parseStatus(statusStr, counts, more, olr, basic string) models.Status {
 	var status models.Status
 
 	values := readStatus(statusStr)
@@ -34,6 +34,9 @@ func parseStatus(statusStr, counts, more, olr string) models.Status {
 
 	valuesOLR := readNearFar(olr)
 	interpretOLR(&status, valuesOLR)
+
+	valuesBasic := readBasic(basic)
+	interpretBasic(&status, valuesBasic)
 
 	return status
 }
@@ -355,4 +358,47 @@ func interpretMore(status *models.Status, values map[string][2]string) {
 func interpretOLR(status *models.Status, values map[string][2]string) {
 	status.UpstreamBitswapEnabled, status.DownstreamBitswapEnabled = interpretNearFarBoolValueGreaterThanZero(values, "BitswapExecuted")
 	status.UpstreamSeamlessRateAdaption, status.DownstreamSeamlessRateAdaption = interpretNearFarBoolValueGreaterThanZero(values, "SraExecuted")
+}
+
+func readBasic(basic string) map[string]string {
+	values := make(map[string]string)
+
+	scanner := bufio.NewScanner(strings.NewReader(basic))
+
+	for scanner.Scan() {
+		line := scanner.Text()
+		split := strings.SplitN(line, ":", 2)
+
+		if len(split) == 2 {
+			key := regexpFilterCharacters.ReplaceAllString(split[0], "")
+			val := strings.TrimSpace(split[1])
+
+			values[key] = val
+		}
+	}
+
+	return values
+}
+
+func interpretBasicVectoringState(values map[string]string, key string) (downstream, upstream models.VectoringValue) {
+	if val, ok := values[key]; ok {
+		val = strings.ToLower(val)
+
+		if strings.HasPrefix(val, "on") {
+			downstream.Valid = true
+			downstream.State = models.VectoringStateFull
+			upstream.Valid = true
+			if strings.Contains(val, "bidi") {
+				upstream.State = models.VectoringStateFull
+			}
+		} else if strings.HasPrefix(val, "off") {
+			downstream.Valid = true
+			upstream.Valid = true
+		}
+	}
+	return
+}
+
+func interpretBasic(status *models.Status, values map[string]string) {
+	status.DownstreamVectoringState, status.UpstreamVectoringState = interpretBasicVectoringState(values, "GVectoringStatus")
 }

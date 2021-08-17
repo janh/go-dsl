@@ -17,10 +17,11 @@ import (
 
 var regexpFilterCharacters = regexp.MustCompile(`[^a-zA-Z0-9]+`)
 
-func parseStatus(stats, vendor, version string) models.Status {
+func parseStatus(stats, vectoring, vendor, version string) models.Status {
 	var status models.Status
 
 	parseStats(&status, stats)
+	parseVectoring(&status, vectoring)
 	parseVendor(&status, vendor)
 	parseVersion(&status, version)
 
@@ -301,6 +302,25 @@ func interpretLinkTime(status *models.Status, linkTime string) {
 	}
 
 	status.Uptime.Duration = duration
+}
+
+func parseVectoring(status *models.Status, vectoring string) {
+	scanner := bufio.NewScanner(strings.NewReader(vectoring))
+
+	for scanner.Scan() {
+		line := scanner.Text()
+
+		if strings.HasPrefix(strings.ToLower(line), "vectoring state:") {
+			state := strings.TrimSpace(strings.Split(line, ":")[1])
+
+			if state == "1" || state == "3" {
+				status.DownstreamVectoringState.State = models.VectoringStateFull
+				status.DownstreamVectoringState.Valid = true
+			}
+
+			break
+		}
+	}
 }
 
 func parseVendor(status *models.Status, vendor string) {

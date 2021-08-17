@@ -25,6 +25,11 @@ func updateData(e executor, command string) (status models.Status, bins models.B
 		return
 	}
 
+	vectoring, err := e.Execute(command + " info --vectoring")
+	if err != nil {
+		return
+	}
+
 	vendor, err := e.Execute(command + " info --vendor")
 	if err != nil {
 		return
@@ -60,12 +65,14 @@ func updateData(e executor, command string) (status models.Status, bins models.B
 		return
 	}
 
-	status = parseStatus(stats, vendor, version)
+	status = parseStatus(stats, vectoring, vendor, version)
 	bins = parseBins(status, pbParams, bits, snr, qln, hlog)
 
 	var b strings.Builder
 	fmt.Fprintln(&b, "# xdslctl info --stats")
 	fmt.Fprintln(&b, stats)
+	fmt.Fprintln(&b, "# xdslctl info --vectoring")
+	fmt.Fprintln(&b, vectoring)
 	fmt.Fprintln(&b, "# xdslctl info --vendor")
 	fmt.Fprintln(&b, vendor)
 	fmt.Fprintln(&b, "# xdslctl --version")

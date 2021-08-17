@@ -148,3 +148,23 @@ func (v ValueSymbols) String() string {
 func (v ValueSymbols) Unit() string {
 	return "symbols"
 }
+
+type VectoringValue struct {
+	Valid bool
+	State VectoringState
+}
+
+func (v VectoringValue) String() string {
+	return v.Value()
+}
+
+func (v VectoringValue) Value() string {
+	if v.Valid {
+		return v.State.String()
+	}
+	return "-"
+}
+
+func (v VectoringValue) Unit() string {
+	return ""
+}
