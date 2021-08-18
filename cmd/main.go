@@ -25,6 +25,7 @@ import (
 
 	_ "3e8.eu/go/dsl/broadcom"
 	_ "3e8.eu/go/dsl/draytek"
+	_ "3e8.eu/go/dsl/fritzbox"
 	_ "3e8.eu/go/dsl/lantiq"
 )
 
