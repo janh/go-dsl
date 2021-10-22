@@ -59,6 +59,12 @@ func FormatVersion(vendor string, version []byte) string {
 		}
 	}
 
+	if vendor == "Broadcom" {
+		return fmt.Sprintf("%d.%d.%d (%d.%d)",
+			version[0]>>4, version[0]&0xf<<1+version[1]>>7, version[1]&0x7f,
+			version[0], version[1])
+	}
+
 	return fmt.Sprintf("%d.%d", version[0], version[1])
 }
 
