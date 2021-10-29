@@ -24,6 +24,7 @@ var vendorMapping = map[string]string{
 	"META": "Metanoia",
 	"MTIA": "Metanoia",
 	"STMI": "STMicro",
+	"TCCN": "TrendChip",
 	"TCTN": "TrendChip",
 	"TMMB": "Thomson",
 	"TSTC": "Texas Instruments",
