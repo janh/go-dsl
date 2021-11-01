@@ -6,6 +6,7 @@ package models
 
 import (
 	"strings"
+	"unicode"
 )
 
 type ModeType int
@@ -159,13 +160,18 @@ func (m Mode) CarrierSpacing() float64 {
 }
 
 func ParseMode(str string) Mode {
-	str = strings.ToLower(strings.TrimSpace(str))
+	str = strings.Map(func(r rune) rune {
+		if unicode.IsSpace(r) || r == '_' {
+			return -1
+		}
+		return unicode.ToLower(r)
+	}, str)
 
 	var mode Mode
 
 	switch {
 
-	case strings.Contains(str, "adsl"):
+	case strings.Contains(str, "adsl"), strings.Contains(str, "g.dmt"), strings.Contains(str, "g.992"):
 		if strings.Contains(str, "adsl2+") || strings.Contains(str, "adsl2p") {
 			mode.Type = ModeTypeADSL2Plus
 		} else if strings.Contains(str, "adsl2") {
@@ -232,7 +238,7 @@ func ParseMode(str string) Mode {
 		mode.Type = ModeTypeVDSL2
 		mode.Subtype = ModeSubtypeProfile35b
 
-	case strings.Contains(str, "vdsl2"):
+	case strings.Contains(str, "vdsl2"), strings.Contains(str, "g.993.2"), strings.Contains(str, "g.993.5"):
 		mode.Type = ModeTypeVDSL2
 
 	}
