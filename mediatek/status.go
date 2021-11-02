@@ -126,20 +126,33 @@ func interpretFloatValue(values map[string]string, suffix string, keys ...string
 				val = val[:len(val)-len(suffix)]
 			}
 
-			if strings.HasPrefix(val, "0x") {
-				if valUint, err := strconv.ParseUint(val[2:], 16, 32); err == nil {
-					out.Float = float64(math.Float32frombits(uint32(valUint)))
-					out.Valid = true
-				}
-			} else {
-				if valFloat, err := strconv.ParseFloat(val, 64); err == nil {
-					out.Float = valFloat
-					out.Valid = true
-				}
+			if valFloat, err := strconv.ParseFloat(val, 64); err == nil {
+				out.Float = valFloat
+				out.Valid = true
 			}
 
 			if out.Valid && out.Float != 0 {
 				break
+			}
+		}
+	}
+
+	return
+}
+
+func interpretFloatValueINP(values map[string]string, key string) (out models.FloatValue) {
+	if val, ok := values[key]; ok {
+		if strings.HasPrefix(val, "0x") {
+			// the value seems to actually be a 64-bit floating point number truncated to 32 bits, encoded in hex
+			// (this was verified using the output from "wan vdsl2 show pms_pmd" and the data from the other end)
+			if valUint, err := strconv.ParseUint(val[2:], 16, 32); err == nil {
+				out.Float = float64(math.Float64frombits(valUint << 32))
+				out.Valid = true
+			}
+		} else {
+			if valFloat, err := strconv.ParseFloat(val, 64); err == nil {
+				out.Float = valFloat
+				out.Valid = true
 			}
 		}
 	}
@@ -195,8 +208,8 @@ func parseStatusINP(status *models.Status, values map[string]string) {
 		status.UpstreamInterleavingDelay.FloatValue.Valid = true
 	}
 
-	status.DownstreamImpulseNoiseProtection.FloatValue = interpretFloatValue(values, "", "inpdsnormal")
-	status.UpstreamImpulseNoiseProtection.FloatValue = interpretFloatValue(values, "", "inpusnormal")
+	status.DownstreamImpulseNoiseProtection.FloatValue = interpretFloatValueINP(values, "inpdsnormal")
+	status.UpstreamImpulseNoiseProtection.FloatValue = interpretFloatValueINP(values, "inpusnormal")
 
 	opmode := interpretString(values, "opmode")
 	opmode = strings.ToLower(regexpFilterCharacters.ReplaceAllString(opmode, ""))
