@@ -85,7 +85,7 @@ func parseSNR(bins *models.Bins, data string) {
 			if bandDecider.IsDownstream(num) {
 				bins.SNR.Downstream.Data[num] = float64(valFloat)
 			} else {
-				bins.SNR.Downstream.Data[num] = float64(valFloat)
+				bins.SNR.Upstream.Data[num] = float64(valFloat)
 			}
 		}
 	}
