@@ -19,10 +19,12 @@ import (
 var regexpFilterCharacters = regexp.MustCompile(`[^a-zA-Z0-9]+`)
 var regexpNumber = regexp.MustCompile("[0-9]+")
 
-func parseStatus(adslStats, vdslInterfaceConfig, adslFwVer string) models.Status {
+func parseStatus(adslStats, vdslInterfaceConfig, adslFwVer,
+	wanVdsl2Mgcnt, wanVdsl2PmsPmdRx, wanVdsl2PmsPmdTx string) models.Status {
+
 	var status models.Status
 
-	values := parseKeyValue(adslStats, vdslInterfaceConfig)
+	values := parseKeyValue(":", adslStats, vdslInterfaceConfig)
 
 	parseStatusBasic(&status, values)
 
@@ -38,10 +40,18 @@ func parseStatus(adslStats, vdslInterfaceConfig, adslFwVer string) models.Status
 	parseFarVersion(&status, values)
 	parseFirmwareVersion(&status, adslFwVer)
 
+	valuesMgcnt := parseKeyValue(":", wanVdsl2Mgcnt)
+	valuesPmsPmdRx := parseKeyValue("=", wanVdsl2PmsPmdRx)
+	valuesPmsPmdTx := parseKeyValue("=", wanVdsl2PmsPmdTx)
+
+	parseExtendedStatusCounters(&status, valuesMgcnt)
+	parseExtendedStatusRetransmission(&status, valuesMgcnt)
+	parseExtendedStatusINPDelay(&status, valuesMgcnt, valuesPmsPmdRx, valuesPmsPmdTx)
+
 	return status
 }
 
-func parseKeyValue(data ...string) map[string]string {
+func parseKeyValue(separator string, data ...string) map[string]string {
 	values := make(map[string]string)
 
 	for _, item := range data {
@@ -49,7 +59,7 @@ func parseKeyValue(data ...string) map[string]string {
 
 		for scanner.Scan() {
 			line := scanner.Text()
-			split := strings.SplitN(line, ":", 2)
+			split := strings.SplitN(line, separator, 2)
 
 			if len(split) == 2 {
 				key := strings.ToLower(regexpFilterCharacters.ReplaceAllString(split[0], ""))
@@ -119,6 +129,27 @@ func interpretIntValue(values map[string]string, suffix string, keys ...string) 
 	return
 }
 
+func interpretIntValueError(values map[string]string, keys ...string) (out models.IntValue) {
+	for _, key := range keys {
+		if val, ok := values[key]; ok {
+			if bracketIndex := strings.IndexByte(val, '('); bracketIndex != -1 {
+				val = strings.TrimSpace(val[:bracketIndex])
+			}
+
+			if valInt, err := strconv.ParseInt(val, 10, 64); err == nil {
+				out.Int = valInt
+				out.Valid = true
+
+				if valInt != 0 {
+					return
+				}
+			}
+		}
+	}
+
+	return
+}
+
 func interpretFloatValue(values map[string]string, suffix string, keys ...string) (out models.FloatValue) {
 	for _, key := range keys {
 		if val, ok := values[key]; ok {
@@ -160,6 +191,30 @@ func interpretFloatValueINP(values map[string]string, key string) (out models.Fl
 	return
 }
 
+func interpretFloatValueINPSumProc(values map[string]string, keyNormal, keySHINE, keyREIN string) (out models.FloatValue) {
+	inpNormal := interpretFloatValueINP(values, keyNormal)
+	inpSHINE := interpretFloatValue(values, "", keySHINE)
+	inpREIN := interpretFloatValue(values, "", keyREIN)
+
+	out.Float = inpNormal.Float + inpSHINE.Float + inpREIN.Float
+	out.Valid = inpNormal.Valid || inpSHINE.Valid || inpREIN.Valid
+
+	return
+}
+
+func interpretFloatValueINPSumWAN(valuesPmsPmd, valuesMgcnt map[string]string,
+	keyNormal, keySHINE, keyREIN string) (out models.FloatValue) {
+
+	inpNormal := interpretFloatValue(valuesPmsPmd, " (symbols)", keyNormal)
+	inpSHINE := interpretFloatValue(valuesMgcnt, "", keySHINE)
+	inpREIN := interpretFloatValue(valuesMgcnt, "", keyREIN)
+
+	out.Float = inpNormal.Float + 0.1*inpSHINE.Float + 0.1*inpREIN.Float
+	out.Valid = inpNormal.Valid || inpSHINE.Valid || inpREIN.Valid
+
+	return
+}
+
 func parseStatusBasic(status *models.Status, values map[string]string) {
 
 	status.State = models.ParseState(interpretString(values, "adsllinkstatus"))
@@ -197,6 +252,7 @@ func parseStatusLine(status *models.Status, values map[string]string) {
 
 func parseStatusINP(status *models.Status, values map[string]string) {
 
+	// Non-Asus devices seem to only report a single "Interleave Depth" value instead
 	interleavingDepthDown := interpretIntValue(values, "", "interleavedepthdownstream")
 	if interleavingDepthDown.Valid && interleavingDepthDown.Int == 1 {
 		status.DownstreamInterleavingDelay.FloatValue.Float = 0
@@ -208,9 +264,13 @@ func parseStatusINP(status *models.Status, values map[string]string) {
 		status.UpstreamInterleavingDelay.FloatValue.Valid = true
 	}
 
-	status.DownstreamImpulseNoiseProtection.FloatValue = interpretFloatValueINP(values, "inpdsnormal")
-	status.UpstreamImpulseNoiseProtection.FloatValue = interpretFloatValueINP(values, "inpusnormal")
+	// These seem to be Asus-specific values
+	status.DownstreamImpulseNoiseProtection.FloatValue = interpretFloatValueINPSumProc(values,
+		"inpdsnormal", "inpdsginpshine", "inpdsginprein")
+	status.UpstreamImpulseNoiseProtection.FloatValue = interpretFloatValueINPSumProc(values,
+		"inpusnormal", "inpusginpshine", "inpusginprein")
 
+	// The "G.INP, Upstream only" and "G.INP, Downstream only" information seems to be Asus-specific
 	opmode := interpretString(values, "opmode")
 	opmode = strings.ToLower(regexpFilterCharacters.ReplaceAllString(opmode, ""))
 	status.DownstreamRetransmissionEnabled.Bool = strings.Contains(opmode, "ginp") && !strings.Contains(opmode, "ginpu")
@@ -264,4 +324,54 @@ func parseFirmwareVersion(status *models.Status, fwVer string) {
 
 		status.NearEndInventory.Version = fwVer
 	}
+}
+
+func parseExtendedStatusCounters(status *models.Status, values map[string]string) {
+	status.DownstreamFECCount = interpretIntValueError(values, "nearendpath1fec", "nearendpath0fec")
+	status.UpstreamFECCount = interpretIntValueError(values, "farendpath1fec", "farendpath0fec")
+
+	status.DownstreamCRCCount = interpretIntValueError(values, "nearendpath1crc", "nearendpath0crc")
+	status.UpstreamCRCCount = interpretIntValueError(values, "farendpath1crc", "farendpath0crc")
+
+	status.DownstreamESCount = interpretIntValueError(values, "nearenderrsec")
+	status.UpstreamESCount = interpretIntValueError(values, "farenderrsec")
+
+	status.DownstreamSESCount = interpretIntValueError(values, "nearendsessec")
+	status.UpstreamSESCount = interpretIntValueError(values, "farendsessec")
+}
+
+func parseExtendedStatusRetransmission(status *models.Status, values map[string]string) {
+	// The retransmission status is only set to false here, as some driver versions don't print these values, i.e.
+	// absence does not necessarily mean that retransmission is enabled. Checking for the presence of counter values
+	// also doesn't work, as those are always printed for both near and far end, or not at all. However, both status
+	// values should already be set to true if the opmode contains "G.INP".
+	if _, ok := values["dsretxdisable"]; ok {
+		status.DownstreamRetransmissionEnabled.Bool = false
+	}
+	if _, ok := values["usretxdisable"]; ok {
+		status.UpstreamRetransmissionEnabled.Bool = false
+	}
+
+	// This actually needs to be swapped to give correct results
+	status.DownstreamRTXTXCount = interpretIntValue(values, "", "farendtxdtucounter")
+	status.UpstreamRTXTXCount = interpretIntValue(values, "", "nearendtxdtucounter")
+
+	status.DownstreamRTXCCount = interpretIntValue(values, "", "nearendcorrectdtucounter")
+	status.UpstreamRTXCCount = interpretIntValue(values, "", "farendcorrectdtucounter")
+
+	status.DownstreamRTXUCCount = interpretIntValue(values, "", "nearenderrdtucounter")
+	status.UpstreamRTXUCCount = interpretIntValue(values, "", "farenderrdtucounter")
+
+	status.DownstreamMinimumErrorFreeThroughput.IntValue = interpretIntValue(values, "", "nearendminerrorfreethroughputrate")
+	status.UpstreamMinimumErrorFreeThroughput.IntValue = interpretIntValue(values, "", "farendminerrorfreethroughputrate")
+}
+
+func parseExtendedStatusINPDelay(status *models.Status, valuesMgcnt, valuesPmsPmdRx, valuesPmsPmdTx map[string]string) {
+	status.DownstreamImpulseNoiseProtection.FloatValue = interpretFloatValueINPSumWAN(
+		valuesPmsPmdRx, valuesMgcnt, "inp", "nearendactshinevalue", "nearendactreinvalue")
+	status.UpstreamImpulseNoiseProtection.FloatValue = interpretFloatValueINPSumWAN(
+		valuesPmsPmdTx, valuesMgcnt, "inp", "farendactshinevalue", "farendactreinvalue")
+
+	status.DownstreamInterleavingDelay.FloatValue = interpretFloatValue(valuesPmsPmdRx, " (ms)", "delay")
+	status.UpstreamInterleavingDelay.FloatValue = interpretFloatValue(valuesPmsPmdTx, " (ms)", "delay")
 }
