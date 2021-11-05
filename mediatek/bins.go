@@ -178,6 +178,10 @@ func parseLineSeparatedBinList(str string) []string {
 
 func parseQLN(bins *models.Bins, data string) {
 	values := parseLineSeparatedBinList(data)
+	if len(values) == 0 {
+		return
+	}
+
 	groupSize := bins.Mode.BinCount() / len(values)
 
 	bins.QLN.Downstream.GroupSize = groupSize
@@ -207,6 +211,10 @@ func parseQLN(bins *models.Bins, data string) {
 
 func parseHlog(bins *models.Bins, data string) {
 	values := parseLineSeparatedBinList(data)
+	if len(values) == 0 {
+		return
+	}
+
 	groupSize := bins.Mode.BinCount() / len(values)
 
 	bins.Hlog.Downstream.GroupSize = groupSize
