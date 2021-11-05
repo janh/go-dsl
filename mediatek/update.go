@@ -81,14 +81,18 @@ func updateData(e executor) (status models.Status, bins models.Bins, rawData []b
 		return
 	}
 
-	wanVdsl2Qln, err := e.Execute(`wan vdsl2 show pmdtestparam qln; dmesg | sed -n 'H;/Qln:/h;${g;p}'`)
-	if err != nil {
-		return
-	}
+	var wanVdsl2Qln, wanVdsl2Hlog string
 
-	wanVdsl2Hlog, err := e.Execute(`wan vdsl2 show pmdtestparam hlog; dmesg | sed -n 'H;/Hlog:/h;${g;p}'`)
-	if err != nil {
-		return
+	if strings.Contains(adslStats, "up") {
+		wanVdsl2Qln, err = e.Execute(`wan vdsl2 show pmdtestparam qln; dmesg | sed -n 'H;/Qln:/h;${g;p}'`)
+		if err != nil {
+			return
+		}
+
+		wanVdsl2Hlog, err = e.Execute(`wan vdsl2 show pmdtestparam hlog; dmesg | sed -n 'H;/Hlog:/h;${g;p}'`)
+		if err != nil {
+			return
+		}
 	}
 
 	status = parseStatus(adslStats, vdslInterfaceConfig, adslFwVer,
