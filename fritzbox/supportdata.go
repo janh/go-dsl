@@ -42,17 +42,17 @@ func parseSupportData(status *models.Status, bins *models.Bins, supportData stri
 	}
 
 	if val, ok := values["HLOG Array"]; ok {
-		bins.Hlog = parseSupportDataBinsDownUp(val, bins.Bands, -96.3)
+		bins.Hlog = parseSupportDataBinsDownUp(val, bins.Mode.BinCount(), bins.Bands, -96.3)
 	} else {
-		bins.Hlog.Downstream = parseSupportDataBins(values["HLOG DS Array"], bins.Bands.Downstream)
-		bins.Hlog.Upstream = parseSupportDataBins(values["HLOG US Array"], bins.Bands.Upstream)
+		bins.Hlog.Downstream = parseSupportDataBins(values["HLOG DS Array"], bins.Mode.BinCount())
+		bins.Hlog.Upstream = parseSupportDataBins(values["HLOG US Array"], bins.Mode.BinCount())
 	}
 
 	if val, ok := values["QLN Array"]; ok {
-		bins.QLN = parseSupportDataBinsDownUp(val, bins.Bands, 0)
+		bins.QLN = parseSupportDataBinsDownUp(val, bins.Mode.BinCount(), bins.Bands, 0)
 	} else {
-		bins.QLN.Downstream = parseSupportDataBins(values["QLN DS Array"], bins.Bands.Downstream)
-		bins.QLN.Upstream = parseSupportDataBins(values["QLN US Array"], bins.Bands.Upstream)
+		bins.QLN.Downstream = parseSupportDataBins(values["QLN DS Array"], bins.Mode.BinCount())
+		bins.QLN.Upstream = parseSupportDataBins(values["QLN US Array"], bins.Mode.BinCount())
 	}
 }
 
@@ -104,23 +104,22 @@ func parseSupportDataBands(bands *[]models.Band, val string, groupSize int) {
 	}
 }
 
-func calculateSupportDataGroupSize(lastBin, dataLength int) int {
+func calculateSupportDataGroupSize(binCount, dataLength int) int {
 	groupSize := 1
-	for dataLength*groupSize < lastBin+1 {
+	for dataLength*groupSize < binCount {
 		groupSize *= 2
 	}
 	return groupSize
 }
 
-func parseSupportDataBins(data string, bands []models.Band) (out models.BinsFloat) {
+func parseSupportDataBins(data string, binCount int) (out models.BinsFloat) {
 	dataSplit := strings.Split(data, ",")
 
-	if len(dataSplit) <= 1 || len(bands) == 0 {
+	if len(dataSplit) <= 1 {
 		return
 	}
 
-	lastBin := bands[len(bands)-1].End
-	out.GroupSize = calculateSupportDataGroupSize(lastBin, len(dataSplit))
+	out.GroupSize = calculateSupportDataGroupSize(binCount, len(dataSplit))
 	out.Data = make([]float64, len(dataSplit))
 
 	for num, val := range dataSplit {
@@ -133,19 +132,19 @@ func parseSupportDataBins(data string, bands []models.Band) (out models.BinsFloa
 	return
 }
 
-func parseSupportDataBinsDownUp(data string, bands models.BandsDownUp, defaultValue float64) (out models.BinsFloatDownUp) {
+func parseSupportDataBinsDownUp(data string, binCount int, bands models.BandsDownUp, defaultValue float64) (out models.BinsFloatDownUp) {
 	dataSplit := strings.Split(data, ",")
 
 	if len(dataSplit) <= 1 || len(bands.Downstream) == 0 || len(bands.Upstream) == 0 {
 		return
 	}
 
-	downstreamLastBin := bands.Downstream[len(bands.Downstream)-1].End
-	out.Downstream.GroupSize = calculateSupportDataGroupSize(downstreamLastBin, len(dataSplit))
+	groupSize := calculateSupportDataGroupSize(binCount, len(dataSplit))
+
+	out.Downstream.GroupSize = groupSize
 	out.Downstream.Data = make([]float64, len(dataSplit))
 
-	upstreamLastBin := bands.Upstream[len(bands.Upstream)-1].End
-	out.Upstream.GroupSize = calculateSupportDataGroupSize(upstreamLastBin, len(dataSplit))
+	out.Upstream.GroupSize = groupSize
 	out.Upstream.Data = make([]float64, len(dataSplit))
 
 	if defaultValue != 0 {
@@ -165,7 +164,7 @@ func parseSupportDataBinsDownUp(data string, bands models.BandsDownUp, defaultVa
 	for num, val := range dataSplit {
 		valFloat, err := strconv.ParseFloat(val, 64)
 		if err == nil {
-			if bandDecider.IsDownstream(num) {
+			if bandDecider.IsDownstream(num * groupSize) {
 				out.Downstream.Data[num] = valFloat / 10
 			} else {
 				out.Upstream.Data[num] = valFloat / 10
