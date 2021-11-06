@@ -191,26 +191,24 @@ func interpretFloatValueINP(values map[string]string, key string) (out models.Fl
 	return
 }
 
-func interpretFloatValueINPSumProc(values map[string]string, keyNormal, keySHINE, keyREIN string) (out models.FloatValue) {
+func interpretFloatValueINPSumProc(values map[string]string, keyNormal, keySHINE string) (out models.FloatValue) {
 	inpNormal := interpretFloatValueINP(values, keyNormal)
 	inpSHINE := interpretFloatValue(values, "", keySHINE)
-	inpREIN := interpretFloatValue(values, "", keyREIN)
 
-	out.Float = inpNormal.Float + inpSHINE.Float + inpREIN.Float
-	out.Valid = inpNormal.Valid || inpSHINE.Valid || inpREIN.Valid
+	out.Float = inpNormal.Float + inpSHINE.Float
+	out.Valid = inpNormal.Valid || inpSHINE.Valid
 
 	return
 }
 
 func interpretFloatValueINPSumWAN(valuesPmsPmd, valuesMgcnt map[string]string,
-	keyNormal, keySHINE, keyREIN string) (out models.FloatValue) {
+	keyNormal, keySHINE string) (out models.FloatValue) {
 
 	inpNormal := interpretFloatValue(valuesPmsPmd, " (symbols)", keyNormal)
 	inpSHINE := interpretFloatValue(valuesMgcnt, "", keySHINE)
-	inpREIN := interpretFloatValue(valuesMgcnt, "", keyREIN)
 
-	out.Float = inpNormal.Float + 0.1*inpSHINE.Float + 0.1*inpREIN.Float
-	out.Valid = inpNormal.Valid || inpSHINE.Valid || inpREIN.Valid
+	out.Float = inpNormal.Float + 0.1*inpSHINE.Float
+	out.Valid = inpNormal.Valid || inpSHINE.Valid
 
 	return
 }
@@ -266,9 +264,9 @@ func parseStatusINP(status *models.Status, values map[string]string) {
 
 	// These seem to be Asus-specific values
 	status.DownstreamImpulseNoiseProtection.FloatValue = interpretFloatValueINPSumProc(values,
-		"inpdsnormal", "inpdsginpshine", "inpdsginprein")
+		"inpdsnormal", "inpdsginpshine")
 	status.UpstreamImpulseNoiseProtection.FloatValue = interpretFloatValueINPSumProc(values,
-		"inpusnormal", "inpusginpshine", "inpusginprein")
+		"inpusnormal", "inpusginpshine")
 
 	// The "G.INP, Upstream only" and "G.INP, Downstream only" information seems to be Asus-specific
 	opmode := interpretString(values, "opmode")
@@ -368,9 +366,9 @@ func parseExtendedStatusRetransmission(status *models.Status, values map[string]
 
 func parseExtendedStatusINPDelay(status *models.Status, valuesMgcnt, valuesPmsPmdRx, valuesPmsPmdTx map[string]string) {
 	status.DownstreamImpulseNoiseProtection.FloatValue = interpretFloatValueINPSumWAN(
-		valuesPmsPmdRx, valuesMgcnt, "inp", "nearendactshinevalue", "nearendactreinvalue")
+		valuesPmsPmdRx, valuesMgcnt, "inp", "nearendactshinevalue")
 	status.UpstreamImpulseNoiseProtection.FloatValue = interpretFloatValueINPSumWAN(
-		valuesPmsPmdTx, valuesMgcnt, "inp", "farendactshinevalue", "farendactreinvalue")
+		valuesPmsPmdTx, valuesMgcnt, "inp", "farendactshinevalue")
 
 	status.DownstreamInterleavingDelay.FloatValue = interpretFloatValue(valuesPmsPmdRx, " (ms)", "delay")
 	status.UpstreamInterleavingDelay.FloatValue = interpretFloatValue(valuesPmsPmdTx, " (ms)", "delay")
