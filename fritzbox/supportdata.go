@@ -21,13 +21,13 @@ func parseSupportData(status *models.Status, bins *models.Bins, supportData stri
 	values := parseSupportDataValues(supportData)
 
 	if status.DownstreamRetransmissionEnabled.Bool {
-		status.DownstreamRTXTXCount = interpretSupportDataIntValue(values, "DS RTX retransmitted DTUs")
+		status.DownstreamRTXTXCount = interpretSupportDataIntValue(values, "US RTX retransmitted DTUs")
 		status.DownstreamRTXCCount = interpretSupportDataIntValue(values, "DS RTX corrected DTUs")
 		status.DownstreamRTXUCCount = interpretSupportDataIntValue(values, "DS RTX uncorrected DTUs")
 	}
 
 	if status.UpstreamRetransmissionEnabled.Bool {
-		status.UpstreamRTXTXCount = interpretSupportDataIntValue(values, "US RTX retransmitted DTUs")
+		status.UpstreamRTXTXCount = interpretSupportDataIntValue(values, "DS RTX retransmitted DTUs")
 		status.UpstreamRTXCCount = interpretSupportDataIntValue(values, "US RTX corrected DTUs")
 		status.UpstreamRTXUCCount = interpretSupportDataIntValue(values, "US RTX uncorrected DTUs")
 	}
