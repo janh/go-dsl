@@ -336,12 +336,12 @@ func DrawBitsGraph(out io.Writer, data models.Bins, params GraphParams) error {
 	return writeTemplate(out, m, templateBase, templateBits)
 }
 
-func buildSNRQLNPath(p *path, bins models.BinsFloat, scaleX, scaleY, offsetY, maxY, minYValid, maxYValid float64) {
-	width := float64(bins.GroupSize) * scaleX
+func buildSNRQLNPath(p *path, bins models.BinsFloat, scaleY, offsetY, maxY, minYValid, maxYValid float64) {
+	width := float64(bins.GroupSize)
 
 	var lastValid, lastDrawn bool
 	var last float64 = offsetY
-	var lastBezierPosX, lastPosY float64
+	var lastPosY float64
 
 	count := len(bins.Data)
 	for i := 0; i < count; i++ {
@@ -361,15 +361,13 @@ func buildSNRQLNPath(p *path, bins models.BinsFloat, scaleX, scaleY, offsetY, ma
 		if !lastValid && valid {
 			p.MoveTo(posX-0.5*width, 0)
 			p.LineTo(posX-0.5*width, posY)
-			lastBezierPosX = posX - width
 		}
 		if valid && changed {
 			if lastValid {
 				if !lastDrawn {
-					p.BezierCurveTo(lastBezierPosX+0.5*width, lastPosY, posX-1.5*width, lastPosY, posX-width, lastPosY)
+					p.LineTo(posX-width, lastPosY)
 				}
-				p.BezierCurveTo(posX-0.5*width, lastPosY, posX-0.5*width, posY, posX, posY)
-				lastBezierPosX = posX
+				p.LineTo(posX, posY)
 				drawn = true
 			}
 			lastPosY = posY
@@ -422,10 +420,10 @@ func DrawSNRGraph(out io.Writer, data models.Bins, params GraphParams) error {
 
 	m.Path.SetPrecision(1)
 
-	buildSNRQLNPath(&m.Path, data.SNR.Downstream, 2, scaleY, 0, spec.LegendYTop, -32, 95)
-	buildSNRQLNPath(&m.Path, data.SNR.Upstream, 2, scaleY, 0, spec.LegendYTop, -32, 95)
+	buildSNRQLNPath(&m.Path, data.SNR.Downstream, scaleY, 0, spec.LegendYTop, -32, 95)
+	buildSNRQLNPath(&m.Path, data.SNR.Upstream, scaleY, 0, spec.LegendYTop, -32, 95)
 
-	m.Transform.Scale(scaleX/2, -1)
+	m.Transform.Scale(scaleX, -1)
 	m.Transform.Translate(x, y+h)
 
 	return writeTemplate(out, m, templateBase, templateSNR)
@@ -465,10 +463,10 @@ func DrawQLNGraph(out io.Writer, data models.Bins, params GraphParams) error {
 
 	m.Path.SetPrecision(1)
 
-	buildSNRQLNPath(&m.Path, data.QLN.Downstream, 2, scaleY, spec.LegendYBottom, spec.LegendYTop, -150, -23)
-	buildSNRQLNPath(&m.Path, data.QLN.Upstream, 2, scaleY, spec.LegendYBottom, spec.LegendYTop, -150, -23)
+	buildSNRQLNPath(&m.Path, data.QLN.Downstream, scaleY, spec.LegendYBottom, spec.LegendYTop, -150, -23)
+	buildSNRQLNPath(&m.Path, data.QLN.Upstream, scaleY, spec.LegendYBottom, spec.LegendYTop, -150, -23)
 
-	m.Transform.Scale(scaleX/2, -1)
+	m.Transform.Scale(scaleX, -1)
 	m.Transform.Translate(x, y+h)
 
 	return writeTemplate(out, m, templateBase, templateQLN)
