@@ -227,7 +227,18 @@ func interpretStatusModemVersion(values map[string]string, key, alternateKey str
 		version = strings.TrimSpace(version[:posBracket])
 	}
 
-	version = regexpModemVersion.ReplaceAllString(version, "$1.$2.$3.$4.$5.$6")
+	versionSubmatch := regexpModemVersion.FindStringSubmatch(version)
+	if versionSubmatch != nil {
+		version = ""
+		for i, item := range versionSubmatch[1:] {
+			if i != 0 {
+				version += "."
+			}
+			digit, _ := strconv.ParseUint(item, 16, 4)
+			version += strconv.FormatUint(digit, 10)
+		}
+	}
+
 	return version
 }
 
