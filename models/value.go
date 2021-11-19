@@ -7,6 +7,7 @@ package models
 import (
 	"fmt"
 	"math"
+	"strconv"
 )
 
 type Value interface {
@@ -35,6 +36,19 @@ func (v IntValue) Unit() string {
 	return ""
 }
 
+func (v *IntValue) UnmarshalJSON(data []byte) error {
+	val, err := strconv.ParseInt(string(data), 10, 64)
+	if err != nil {
+		v.Valid = false
+		return err
+	}
+
+	v.Int = val
+	v.Valid = true
+
+	return nil
+}
+
 type FloatValue struct {
 	Valid bool
 	Float float64
@@ -53,6 +67,19 @@ func (v FloatValue) Value() string {
 
 func (v FloatValue) Unit() string {
 	return ""
+}
+
+func (v *FloatValue) UnmarshalJSON(data []byte) error {
+	val, err := strconv.ParseFloat(string(data), 64)
+	if err != nil {
+		v.Valid = false
+		return err
+	}
+
+	v.Float = val
+	v.Valid = true
+
+	return nil
 }
 
 type BoolValue struct {
@@ -77,6 +104,19 @@ func (v BoolValue) Value() string {
 
 func (v BoolValue) Unit() string {
 	return ""
+}
+
+func (v *BoolValue) UnmarshalJSON(data []byte) error {
+	val, err := strconv.ParseBool(string(data))
+	if err != nil {
+		v.Valid = false
+		return err
+	}
+
+	v.Bool = val
+	v.Valid = true
+
+	return nil
 }
 
 type ValueBandwidth struct {
