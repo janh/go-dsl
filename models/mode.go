@@ -172,9 +172,9 @@ func ParseMode(str string) Mode {
 	switch {
 
 	case strings.Contains(str, "adsl"), strings.Contains(str, "g.dmt"), strings.Contains(str, "g.992"):
-		if strings.Contains(str, "adsl2+") || strings.Contains(str, "adsl2p") {
+		if strings.Contains(str, "adsl2+") || strings.Contains(str, "adsl2p") || strings.Contains(str, "g.992.5") {
 			mode.Type = ModeTypeADSL2Plus
-		} else if strings.Contains(str, "adsl2") {
+		} else if strings.Contains(str, "adsl2") || strings.Contains(str, "g.992.3") {
 			mode.Type = ModeTypeADSL2
 		} else {
 			mode.Type = ModeTypeADSL
