@@ -52,7 +52,7 @@ func ParseState(str string) State {
 	case strings.Contains(str, "train"), strings.Contains(str, "g.992"), strings.Contains(str, "g.993"),
 		strings.Contains(str, "full init"), strings.Contains(str, "discovery"),
 		strings.Contains(str, "analysis"), strings.Contains(str, "exchange"),
-		strings.Contains(str, "initializing"):
+		strings.Contains(str, "initializing"), strings.Contains(str, "establishinglink"):
 		return StateTraining
 
 	case strings.Contains(str, "showtime"), strings.Contains(str, "up"):
