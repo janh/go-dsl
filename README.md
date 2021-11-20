@@ -48,3 +48,9 @@ If no command is specified, `dsl_cpe_pipe` is used. Since the actual name varies
 
 	./dsl -d mediatek_ssh -u admin 192.168.1.1
 	./dsl -d mediatek_telnet -u admin 192.168.1.1
+
+### Sagemcom
+
+	./dsl -d sagemcom speedport.ip
+
+There tend to be data quality issues on at least some of the supported devices. For example, only the "Actual Data Rate" is reported instead of the "Actual Net Data Rate". This means that the reported data rate is not comparable with other devices when retransmission is active.
