@@ -10,6 +10,8 @@ Go needs to be installed. Run the following command to build the command line to
 
 	go build -o dsl cmd/main.go
 
+Note: If you are using Windows, use the option `-o dsl.exe` instead, and adjust the commands listed below as necessary.
+
 ## Usage
 
 A few usage examples for different modems are listed below.
