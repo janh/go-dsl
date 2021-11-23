@@ -63,6 +63,8 @@ type lineTestParams struct {
 	SNRGus   int    `json:"SNRGus"`
 	SNRpsds  string `json:"SNRpsds"`
 	SNRpsus  string `json:"SNRpsus"`
+	LATNds   string `json:"LATNds"`
+	LATNus   string `json:"LATNus"`
 }
 
 type channel struct {

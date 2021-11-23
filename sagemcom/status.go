@@ -6,6 +6,7 @@ package sagemcom
 
 import (
 	"regexp"
+	"strconv"
 	"strings"
 	"time"
 
@@ -111,9 +112,19 @@ func interpretStatusSignal(status *models.Status, data *dslObj) {
 	status.DownstreamAttenuation.FloatValue = convertFloatValue(data.Lines[0].DownstreamAttenuation, 0.1)
 
 	if data.Lines[0].ModemChip == "Lantiq" {
-		// these values seem to be swapped, at least on Speedport Pro with firmware 4.5
-		status.UpstreamAttenuation, status.DownstreamAttenuation =
-			status.DownstreamAttenuation, status.UpstreamAttenuation
+		// At least on Speedport Pro with firmware 4.5, the downstream and upstream
+		// attenuation values are swapped. In addition, it seems that the Attenuation
+		// and SignalAttenuation values are also swapped. However, the LATN values in
+		// the TestParams object seem to be correct (those should actually report the
+		// per-band attenuation, but the Lantiq FAPI reports total values instead).
+
+		upstreamLATN := parseIntValue(data.Lines[0].TestParams.LATNus)
+		downstreamLATN := parseIntValue(data.Lines[0].TestParams.LATNds)
+
+		if upstreamLATN.Valid && downstreamLATN.Valid {
+			status.UpstreamAttenuation.FloatValue = convertFloatValue(upstreamLATN, 0.1)
+			status.DownstreamAttenuation.FloatValue = convertFloatValue(downstreamLATN, 0.1)
+		}
 	}
 
 	status.UpstreamSNRMargin.FloatValue = convertFloatValue(data.Lines[0].UpstreamNoiseMargin, 0.1)
@@ -135,6 +146,14 @@ func interpretStatusCounters(status *models.Status, data *dslObj) {
 
 	status.UpstreamSESCount = data.Lines[0].Stats.Showtime.TxSeverelyErroredSecs
 	status.DownstreamSESCount = data.Lines[0].Stats.Showtime.SeverelyErroredSecs
+}
+
+func parseIntValue(data string) (out models.IntValue) {
+	if valInt, err := strconv.ParseInt(data, 10, 64); err == nil {
+		out.Int = valInt
+		out.Valid = true
+	}
+	return
 }
 
 func convertFloatValue(val models.IntValue, factor float64) (out models.FloatValue) {
