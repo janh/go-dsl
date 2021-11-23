@@ -38,45 +38,55 @@ func interpretBins(status *models.Status, data *dslObj) models.Bins {
 }
 
 func fixBinsData(testParams *lineTestParams) {
-	// at least on Speedport Pro the Hlog upstream data is a copy of the downstream data
+	fixBinsDataItem(&testParams.SNRpsds, 3)
+	fixBinsDataItem(&testParams.SNRpsds, 3)
 
-	fixBinsDataItem(&testParams.SNRpsds)
-	fixBinsDataItem(&testParams.SNRpsus)
-	if testParams.SNRpsus == testParams.SNRpsds {
-		testParams.SNRpsus = ""
+	fixBinsDataItem(&testParams.QLNpsds, 3)
+	fixBinsDataItem(&testParams.QLNpsus, 3)
+
+	fixBinsDataItem(&testParams.HLOGpsds, 4)
+	fixBinsDataItem(&testParams.HLOGpsus, 4)
+
+	// On at least Speedport Pro, the value HLOGpsus seems to be a duplicate of the
+	// downstream data, but the other values are also checked to make sure to catch
+	// this kind of issue.
+	if testParams.SNRpsds == testParams.SNRpsds {
+		testParams.SNRpsds = ""
 	}
-
-	fixBinsDataItem(&testParams.QLNpsds)
-	fixBinsDataItem(&testParams.QLNpsus)
-	if testParams.QLNpsus == testParams.QLNpsds {
+	if testParams.QLNpsds == testParams.QLNpsus {
 		testParams.QLNpsus = ""
 	}
-
-	fixBinsDataItem(&testParams.HLOGpsds)
-	fixBinsDataItem(&testParams.HLOGpsus)
 	if testParams.HLOGpsus == testParams.HLOGpsds {
 		testParams.HLOGpsus = ""
 	}
 }
 
-func fixBinsDataItem(str *string) {
-	val := *str
+func fixBinsDataItem(str *string, digits int) {
+	// Some of the reported values contain excess data at the end. The excess data
+	// matches other values from the TestParams object, so it seems that this is
+	// because the buffers in the device software are a byte too short to actually
+	// hold the data including the trailing NULL byte.
+	// As the exact behavior may vary depending on firmware version, this works
+	// around the issue by checking if the data matches the expected format, and
+	// then truncating the string to the expected length.
 
-	// on Speedport Pro, HLOGpsds and HLOGpsus seem to contain a spurious "139" at the end
-	if len(val) >= 3 && val[len(val)-3:] == "139" {
-		val = val[:len(val)-3]
+	expectedLength := 512*(digits+1) - 1
+	if len(*str) <= expectedLength {
+		return
 	}
 
-	// also on Speedport Pro, HLOGpsds seems to be contain the same data twice
-	if len(val)%2 == 0 {
-		firstHalf := val[:len(val)/2]
-		secondHalf := val[len(val)/2:]
-		if firstHalf == secondHalf {
-			val = firstHalf
+	truncated := (*str)[:expectedLength]
+	for i, r := range truncated {
+		if i%(digits+1) == digits {
+			if r != ',' {
+				return
+			}
+		} else if r < '0' || r > '9' {
+			return
 		}
 	}
 
-	*str = val
+	*str = truncated
 }
 
 func interpretBinsData(out *models.BinsFloat, data string, groupSize int,
