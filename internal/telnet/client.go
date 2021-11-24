@@ -61,13 +61,6 @@ func (c *Client) readUntilPromptRaw(prompts ...string) (data, prompt string, err
 	// ANSI escape sequences may interfere with parsing
 	dataBytes = regexpANSIEscapeSequence.ReplaceAll(dataBytes, nil)
 
-	// When it is not clear whether the prompt actually contains a trailing space,
-	// it may be omitted in the configuration. If the server sends one, it will be
-	// at the start of the read data.
-	if c.lastPromptLine != "" && c.lastPromptLine[len(c.lastPromptLine)-1] != ' ' && dataBytes[0] == ' ' {
-		dataBytes = dataBytes[1:]
-	}
-
 	prompt = prompts[index]
 	data = string(dataBytes)
 
@@ -80,11 +73,28 @@ func (c *Client) readUntilPrompt(prompts ...string) (data, prompt string, err er
 		return
 	}
 
+	// When it is not clear whether the prompt actually contains a trailing space,
+	// it may be omitted in the configuration. If the server sends one, it will be
+	// at the start of the read data.
+	if c.lastPromptLine != "" && c.lastPromptLine[len(c.lastPromptLine)-1] != ' ' && data[0] == ' ' {
+		data = data[1:]
+	}
+
 	// Sometimes the entire prompt may be resent by the server instead of just echoing the input
 	if c.lastPromptLine != "" && strings.HasPrefix(data, "\r"+c.lastPromptLine) {
-		data, prompt, err = c.readUntilPromptRaw(prompts...)
-		if err != nil {
-			return
+		data = data[len(c.lastPromptLine)+1:]
+
+		// We just read until the repeated prompt, continue until the actual prompt
+		if data == "" {
+			data, prompt, err = c.readUntilPromptRaw(prompts...)
+			if err != nil {
+				return
+			}
+		}
+
+		// Remove space as described above
+		if c.lastPromptLine[len(c.lastPromptLine)-1] != ' ' && data[0] == ' ' {
+			data = data[1:]
 		}
 	}
 
