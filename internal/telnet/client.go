@@ -81,8 +81,15 @@ func (c *Client) readUntilPrompt(prompts ...string) (data, prompt string, err er
 	}
 
 	// Sometimes the entire prompt may be resent by the server instead of just echoing the input
-	if c.lastPromptLine != "" && strings.HasPrefix(data, "\r"+c.lastPromptLine) {
-		data = data[len(c.lastPromptLine)+1:]
+	hasRepeatedPromptCR := strings.HasPrefix(data, "\r"+c.lastPromptLine)
+	hasRepeatedPromptCRLF := c.config.ExpectRepeatedPromptCRLF && strings.HasPrefix(data, "\r\n"+c.lastPromptLine)
+
+	if c.lastPromptLine != "" && (hasRepeatedPromptCR || hasRepeatedPromptCRLF) {
+		if hasRepeatedPromptCRLF {
+			data = data[len(c.lastPromptLine)+2:]
+		} else {
+			data = data[len(c.lastPromptLine)+1:]
+		}
 
 		// We just read until the repeated prompt, continue until the actual prompt
 		if data == "" {

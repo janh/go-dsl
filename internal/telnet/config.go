@@ -8,4 +8,6 @@ type ClientConfig struct {
 	PromptAccount  string
 	PromptPassword string
 	PromptCommand  string
+
+	ExpectRepeatedPromptCRLF bool
 }

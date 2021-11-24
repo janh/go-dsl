@@ -27,9 +27,10 @@ func NewTelnetClient(config TelnetConfig) (*TelnetClient, error) {
 	}
 
 	clientConfig := telnet.ClientConfig{
-		PromptAccount:  "Account:",
-		PromptPassword: "Password:",
-		PromptCommand:  "> ",
+		PromptAccount:            "Account:",
+		PromptPassword:           "Password:",
+		PromptCommand:            "> ",
+		ExpectRepeatedPromptCRLF: true,
 	}
 	c.client, err = telnet.NewClient(clientConfig, config.Host, user, config.Password)
 	if err != nil {
