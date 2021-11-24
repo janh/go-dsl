@@ -18,9 +18,14 @@ import (
 
 var regexpPort = regexp.MustCompile(`:[0-9]+$`)
 
+// see ECMA-48, sections 5.3 and 5.4
+var regexpANSIEscapeSequence = regexp.MustCompile("\x1b" + `(?:[@-Z\\-_]|\[[0-?]*[ -/]*[@-~])`)
+
 type Client struct {
-	config ClientConfig
-	conn   *telnet.Conn
+	config          ClientConfig
+	conn            *telnet.Conn
+	lastWrittenLine string
+	lastPromptLine  string
 }
 
 func NewClient(config ClientConfig, host, username string, password dsl.PasswordCallback) (*Client, error) {
@@ -34,6 +39,73 @@ func NewClient(config ClientConfig, host, username string, password dsl.Password
 	}
 
 	return &c, nil
+}
+
+func (c *Client) writeLine(data string, isSensitive bool) error {
+	if !isSensitive {
+		c.lastWrittenLine = data
+	} else {
+		c.lastWrittenLine = strings.Repeat("*", len(data))
+	}
+
+	_, err := c.conn.Write([]byte(data + "\r\n"))
+	return err
+}
+
+func (c *Client) readUntilPromptRaw(prompts ...string) (data, prompt string, err error) {
+	dataBytes, index, err := c.conn.ReadUntilIndex(prompts...)
+	if err != nil {
+		return
+	}
+
+	// ANSI escape sequences may interfere with parsing
+	dataBytes = regexpANSIEscapeSequence.ReplaceAll(dataBytes, nil)
+
+	// When it is not clear whether the prompt actually contains a trailing space,
+	// it may be omitted in the configuration. If the server sends one, it will be
+	// at the start of the read data.
+	if c.lastPromptLine != "" && c.lastPromptLine[len(c.lastPromptLine)-1] != ' ' && dataBytes[0] == ' ' {
+		dataBytes = dataBytes[1:]
+	}
+
+	prompt = prompts[index]
+	data = string(dataBytes)
+
+	return
+}
+
+func (c *Client) readUntilPrompt(prompts ...string) (data, prompt string, err error) {
+	data, prompt, err = c.readUntilPromptRaw(prompts...)
+	if err != nil {
+		return
+	}
+
+	// Sometimes the entire prompt may be resent by the server instead of just echoing the input
+	if c.lastPromptLine != "" && strings.HasPrefix(data, "\r"+c.lastPromptLine) {
+		data, prompt, err = c.readUntilPromptRaw(prompts...)
+		if err != nil {
+			return
+		}
+	}
+
+	// Remove echo of previously written line
+	data = strings.TrimPrefix(data, c.lastWrittenLine+"\r\n")
+
+	// The last received line is assumed to be the prompt
+	index := strings.LastIndexAny(data, "\r\n")
+	c.lastPromptLine = data[index+1:]
+
+	// Remove prompt (last received line)
+	if index != -1 {
+		for index >= 1 && (data[index-1] == '\r' || data[index-1] == '\n') {
+			index -= 1
+		}
+		data = data[0:index]
+	} else {
+		data = ""
+	}
+
+	return
 }
 
 func (c *Client) connect(host, username string, passwordCallback dsl.PasswordCallback) error {
@@ -57,14 +129,13 @@ func (c *Client) connect(host, username string, passwordCallback dsl.PasswordCal
 
 	for {
 		prompts := []string{c.config.PromptAccount, c.config.PromptPassword, c.config.PromptCommand}
-		index, err := c.conn.SkipUntilIndex(prompts...)
+		_, prompt, err := c.readUntilPrompt(prompts...)
 		if err != nil {
 			if errors.Is(err, os.ErrDeadlineExceeded) {
 				return errors.New("no prompt detected")
 			}
 			return err
 		}
-		prompt := prompts[index]
 
 		switch prompt {
 
@@ -74,7 +145,7 @@ func (c *Client) connect(host, username string, passwordCallback dsl.PasswordCal
 			}
 			triedUsername = true
 
-			_, err = c.conn.Write([]byte(username + "\r\n"))
+			err := c.writeLine(username, false)
 			if err != nil {
 				return err
 			}
@@ -95,7 +166,7 @@ func (c *Client) connect(host, username string, passwordCallback dsl.PasswordCal
 				}
 			}
 
-			_, err = c.conn.Write([]byte(password + "\r\n"))
+			err := c.writeLine(password, true)
 			if err != nil {
 				return err
 			}
@@ -108,7 +179,7 @@ func (c *Client) connect(host, username string, passwordCallback dsl.PasswordCal
 }
 
 func (c *Client) Execute(command string) (string, error) {
-	_, err := c.conn.Write([]byte(command + "\r\n"))
+	err := c.writeLine(command, false)
 	if err != nil {
 		return "", err
 	}
@@ -118,30 +189,12 @@ func (c *Client) Execute(command string) (string, error) {
 		return "", err
 	}
 
-	data, err := c.conn.ReadUntil(c.config.PromptCommand)
+	data, _, err := c.readUntilPrompt(c.config.PromptCommand)
 	if err != nil {
 		return "", err
 	}
-	if len(data) >= 2 && data[0] == '\r' && data[1] != '\n' {
-		// found carriage return: we likely read the same prompt again, continue reading
-		data, err = c.conn.ReadUntil(c.config.PromptCommand)
-		if err != nil {
-			return "", err
-		}
-	}
-	str := string(data)
 
-	if strings.HasPrefix(str, command+"\r\n") {
-		str = str[len(command)+2:]
-	}
-	if index := strings.LastIndexAny(str, "\r\n"); index >= 0 {
-		for index >= 1 && (str[index-1] == '\r' || str[index-1] == '\n') {
-			index -= 1
-		}
-		str = str[0:index]
-	}
-
-	return str, nil
+	return data, nil
 }
 
 func (c *Client) Close() error {
