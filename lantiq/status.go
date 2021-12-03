@@ -428,8 +428,8 @@ func parseStatusReTxStatistics(status *models.Status, rtsgNear, rtsgFar dataItem
 	rtsgNearValues := parseValues(rtsgNear.Output)
 	rtsgFarValues := parseValues(rtsgFar.Output)
 
-	status.UpstreamRTXTXCount = interpretStatusIntValue(rtsgFarValues, "nTxRetransmitted", 1)
-	status.DownstreamRTXTXCount = interpretStatusIntValue(rtsgNearValues, "nTxRetransmitted", 1)
+	status.UpstreamRTXTXCount = interpretStatusIntValue(rtsgNearValues, "nTxRetransmitted", 1)
+	status.DownstreamRTXTXCount = interpretStatusIntValue(rtsgFarValues, "nTxRetransmitted", 1)
 
 	status.UpstreamRTXCCount = interpretStatusIntValue(rtsgFarValues, "nRxCorrected", 1)
 	status.DownstreamRTXCCount = interpretStatusIntValue(rtsgNearValues, "nRxCorrected", 1)
