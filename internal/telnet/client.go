@@ -196,7 +196,7 @@ func (c *Client) connect(host, username string, passwordCallback dsl.PasswordCal
 }
 
 func (c *Client) Execute(command string) (string, error) {
-	err := c.conn.SetDeadline(time.Now().Add(10 * time.Second))
+	err := c.conn.SetDeadline(time.Now().Add(30 * time.Second))
 	if err != nil {
 		return "", err
 	}
