@@ -182,22 +182,22 @@ func ParseMode(str string) Mode {
 
 		switch {
 
-		case strings.Contains(str, "annex a"):
+		case strings.Contains(str, "annexa"):
 			mode.Subtype = ModeSubtypeAnnexA
 
-		case strings.Contains(str, "annex b"):
+		case strings.Contains(str, "annexb"):
 			mode.Subtype = ModeSubtypeAnnexB
 
-		case strings.Contains(str, "annex i"):
+		case strings.Contains(str, "annexi"):
 			mode.Subtype = ModeSubtypeAnnexI
 
-		case strings.Contains(str, "annex j"):
+		case strings.Contains(str, "annexj"):
 			mode.Subtype = ModeSubtypeAnnexJ
 
-		case strings.Contains(str, "annex l"):
+		case strings.Contains(str, "annexl"):
 			mode.Subtype = ModeSubtypeAnnexL
 
-		case strings.Contains(str, "annex m"):
+		case strings.Contains(str, "annexm"):
 			mode.Subtype = ModeSubtypeAnnexM
 
 		}
