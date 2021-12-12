@@ -48,6 +48,10 @@ func FormatVersion(vendor string, version []byte) string {
 		return ""
 	}
 
+	if version[0] == 0 && version[1] == 0 {
+		return ""
+	}
+
 	if vendor == "Infineon" {
 		if version[0]&0xf0 == 0x90 {
 			return fmt.Sprintf("%d.%d.%d.%d (%d.%d)",
