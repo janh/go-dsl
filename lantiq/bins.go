@@ -37,11 +37,17 @@ func parseBins(status *models.Status, data *data) models.Bins {
 		parseDELTSNR(&bins.SNR.Downstream, bins.Bands.Downstream, data.G997_DeltSNR_DS)
 	}
 
-	parseDELTQLN(&bins.QLN.Upstream, bins.Bands.Upstream, data.G997_DeltQLN_US)
-	parseDELTQLN(&bins.QLN.Downstream, bins.Bands.Downstream, data.G997_DeltQLN_DS)
+	// Sometimes all zeroes are reported (this happens at least on a Vinax-based
+	// ALL126AM2 CO modem depending on the connected device). As zero is a actually
+	// a valid value and this behavior hasn't been seen on more recent devices, it
+	// is only filtered on devices with an older API version.
+	rejectZeroValues := strings.HasPrefix(data.APIVersion, "2")
 
-	parseDELTHlog(&bins.Hlog.Upstream, bins.Bands.Upstream, data.G997_DeltHLOG_US)
-	parseDELTHlog(&bins.Hlog.Downstream, bins.Bands.Downstream, data.G997_DeltHLOG_DS)
+	parseDELTQLN(&bins.QLN.Upstream, bins.Bands.Upstream, data.G997_DeltQLN_US, rejectZeroValues)
+	parseDELTQLN(&bins.QLN.Downstream, bins.Bands.Downstream, data.G997_DeltQLN_DS, rejectZeroValues)
+
+	parseDELTHlog(&bins.Hlog.Upstream, bins.Bands.Upstream, data.G997_DeltHLOG_US, rejectZeroValues)
+	parseDELTHlog(&bins.Hlog.Downstream, bins.Bands.Downstream, data.G997_DeltHLOG_DS, rejectZeroValues)
 
 	return bins
 }
@@ -199,7 +205,7 @@ func parseDELTSNR(out *models.BinsFloat, bands []models.Band, data dataItem) {
 	}
 }
 
-func parseDELTQLN(out *models.BinsFloat, bands []models.Band, data dataItem) {
+func parseDELTQLN(out *models.BinsFloat, bands []models.Band, data dataItem, rejectZeroValues bool) {
 	rawValues, groupSize := parseBinsDELT(data.Output, bands)
 
 	out.GroupSize = groupSize
@@ -207,14 +213,14 @@ func parseDELTQLN(out *models.BinsFloat, bands []models.Band, data dataItem) {
 
 	for num, val := range rawValues {
 		valUint, err := strconv.ParseUint(val, 10, 8)
-		if err == nil && valUint != 255 {
+		if err == nil && valUint != 255 && (!rejectZeroValues || valUint != 0) {
 			valFloat := -23 - float64(valUint)/2
 			out.Data[num] = valFloat
 		}
 	}
 }
 
-func parseDELTHlog(out *models.BinsFloat, bands []models.Band, data dataItem) {
+func parseDELTHlog(out *models.BinsFloat, bands []models.Band, data dataItem, rejectZeroValues bool) {
 	rawValues, groupSize := parseBinsDELT(data.Output, bands)
 
 	out.GroupSize = groupSize
@@ -222,7 +228,7 @@ func parseDELTHlog(out *models.BinsFloat, bands []models.Band, data dataItem) {
 
 	for num, val := range rawValues {
 		valUint, err := strconv.ParseUint(val, 10, 10)
-		if err == nil && valUint != 1023 {
+		if err == nil && valUint != 1023 && (!rejectZeroValues || valUint != 0) {
 			valFloat := 6 - float64(valUint)/10
 			out.Data[num] = valFloat
 		} else {
