@@ -39,7 +39,7 @@ func interpretBins(status *models.Status, data *dslObj) models.Bins {
 
 func fixBinsData(testParams *lineTestParams) {
 	fixBinsDataItem(&testParams.SNRpsds, 3)
-	fixBinsDataItem(&testParams.SNRpsds, 3)
+	fixBinsDataItem(&testParams.SNRpsus, 3)
 
 	fixBinsDataItem(&testParams.QLNpsds, 3)
 	fixBinsDataItem(&testParams.QLNpsus, 3)
@@ -50,10 +50,10 @@ func fixBinsData(testParams *lineTestParams) {
 	// On at least Speedport Pro, the value HLOGpsus seems to be a duplicate of the
 	// downstream data, but the other values are also checked to make sure to catch
 	// this kind of issue.
-	if testParams.SNRpsds == testParams.SNRpsds {
-		testParams.SNRpsds = ""
+	if testParams.SNRpsus == testParams.SNRpsds {
+		testParams.SNRpsus = ""
 	}
-	if testParams.QLNpsds == testParams.QLNpsus {
+	if testParams.QLNpsus == testParams.QLNpsds {
 		testParams.QLNpsus = ""
 	}
 	if testParams.HLOGpsus == testParams.HLOGpsds {
