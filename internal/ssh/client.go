@@ -62,11 +62,11 @@ func (c *Client) connect(host, username string,
 
 					signer, err = ssh.ParsePrivateKeyWithPassphrase([]byte(key), []byte(passphrase))
 					if err != nil {
-						return nil, err
+						return nil, &dsl.AuthenticationError{Err: err}
 					}
 
 				} else if err != nil {
-					return nil, err
+					return nil, &dsl.AuthenticationError{Err: err}
 				}
 
 				signers = append(signers, signer)
@@ -127,18 +127,28 @@ func (c *Client) connect(host, username string,
 
 	var err error
 	c.client, err = ssh.Dial("tcp", host, config)
+
+	if err != nil && strings.Contains(err.Error(), "unable to authenticate") {
+		return &dsl.AuthenticationError{Err: err}
+	}
+
 	return err
 }
 
 func (c *Client) Execute(command string) (string, error) {
 	session, err := c.client.NewSession()
 	if err != nil {
-		return "", err
+		return "", &dsl.ConnectionError{Err: err}
 	}
 	defer session.Close()
 
 	output, err := session.CombinedOutput(command)
 	if err != nil {
+		var exitErr *ssh.ExitError
+		if !errors.As(err, &exitErr) {
+			return "", &dsl.ConnectionError{Err: err}
+		}
+
 		return "", err
 	}
 

@@ -94,7 +94,8 @@ func newSession(host, username string, passwordCallback dsl.PasswordCallback, tl
 
 	// check if login is blocked at the moment
 	if info.BlockTime > 0 {
-		return nil, fmt.Errorf("login blocked for %d seconds", info.BlockTime)
+		err := fmt.Errorf("login blocked for %d seconds", info.BlockTime)
+		return nil, &dsl.AuthenticationError{Err: err, WaitTime: time.Duration(info.BlockTime) * time.Second}
 	}
 
 	// support login without username on firmware >= 7.25
@@ -116,7 +117,8 @@ func newSession(host, username string, passwordCallback dsl.PasswordCallback, tl
 		s.password = passwordCallback()
 	}
 	if enforceAuthentication && s.password == "" {
-		return nil, errors.New("password authentication is required when TLS is used")
+		err := errors.New("password authentication is required when TLS is used")
+		return nil, &dsl.AuthenticationError{Err: err}
 	}
 
 	// calculate challenge response and try to get session
@@ -138,7 +140,8 @@ func newSession(host, username string, passwordCallback dsl.PasswordCallback, tl
 
 	// check if session is valid
 	if info.SID == "0000000000000000" {
-		return nil, errors.New("authentication failed")
+		err := errors.New("authentication failed")
+		return nil, &dsl.AuthenticationError{Err: err}
 	}
 
 	s.sid = info.SID
@@ -153,10 +156,16 @@ func (s *session) createHTTPClient(tlsSkipVerify bool) {
 	s.client = &http.Client{
 		Timeout:   10 * time.Second,
 		Transport: transport,
+		CheckRedirect: func(req *http.Request, via []*http.Request) error {
+			return http.ErrUseLastResponse
+		},
 	}
 	s.clientSupport = &http.Client{
 		Timeout:   60 * time.Second,
 		Transport: transport,
+		CheckRedirect: func(req *http.Request, via []*http.Request) error {
+			return http.ErrUseLastResponse
+		},
 	}
 }
 
@@ -215,7 +224,12 @@ func (s *session) get(path string) ([]byte, error) {
 	defer resp.Body.Close()
 
 	if resp.StatusCode != 200 {
-		return nil, fmt.Errorf("request for %s failed with status %d", path, resp.StatusCode)
+		err = fmt.Errorf("request for %s failed with status %d", path, resp.StatusCode)
+
+		if resp.StatusCode == 303 {
+			return nil, &dsl.ConnectionError{Err: err}
+		}
+		return nil, err
 	}
 
 	body, err := io.ReadAll(resp.Body)
@@ -230,7 +244,12 @@ func (s *session) postForm(path string, data url.Values) ([]byte, error) {
 	defer resp.Body.Close()
 
 	if resp.StatusCode != 200 {
-		return nil, fmt.Errorf("request for %s failed with status %d", path, resp.StatusCode)
+		err = fmt.Errorf("request for %s failed with status %d", path, resp.StatusCode)
+
+		if resp.StatusCode == 303 {
+			return nil, &dsl.ConnectionError{Err: err}
+		}
+		return nil, err
 	}
 
 	body, err := io.ReadAll(resp.Body)
@@ -271,7 +290,12 @@ func (s *session) loadSupportData() (string, error) {
 	defer resp.Body.Close()
 
 	if resp.StatusCode != 200 {
-		return "", fmt.Errorf("request for support data failed with status %d", resp.StatusCode)
+		err = fmt.Errorf("request for support data failed with status %d", resp.StatusCode)
+
+		if resp.StatusCode == 303 {
+			return "", &dsl.ConnectionError{Err: err}
+		}
+		return "", err
 	}
 
 	var b strings.Builder
@@ -372,7 +396,12 @@ func (s *session) loadTR064(path, serviceType, action string) (string, error) {
 	}
 
 	if resp.StatusCode != 200 {
-		return "", fmt.Errorf("request for %s failed with status %d", soapAction, resp.StatusCode)
+		err = fmt.Errorf("request for %s failed with status %d", soapAction, resp.StatusCode)
+
+		if resp.StatusCode == 401 {
+			return "", &dsl.ConnectionError{Err: err}
+		}
+		return "", err
 	}
 
 	body, err := io.ReadAll(resp.Body)

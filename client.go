@@ -7,9 +7,35 @@ package dsl // import "3e8.eu/go/dsl"
 import (
 	"errors"
 	"sort"
+	"time"
 
 	"3e8.eu/go/dsl/models"
 )
+
+type AuthenticationError struct {
+	Err      error
+	WaitTime time.Duration
+}
+
+func (e *AuthenticationError) Error() string {
+	return e.Err.Error()
+}
+
+func (e *AuthenticationError) Unwrap() error {
+	return e.Err
+}
+
+type ConnectionError struct {
+	Err error
+}
+
+func (e *ConnectionError) Error() string {
+	return e.Err.Error()
+}
+
+func (e *ConnectionError) Unwrap() error {
+	return e.Err
+}
 
 type Client interface {
 	RawData() []byte

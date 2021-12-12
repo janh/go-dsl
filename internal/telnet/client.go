@@ -158,7 +158,7 @@ func (c *Client) connect(host, username string, passwordCallback dsl.PasswordCal
 
 		case c.config.PromptAccount:
 			if triedUsername {
-				return errors.New("invalid username/password")
+				return &dsl.AuthenticationError{Err: errors.New("invalid username/password")}
 			}
 			triedUsername = true
 
@@ -169,7 +169,7 @@ func (c *Client) connect(host, username string, passwordCallback dsl.PasswordCal
 
 		case c.config.PromptPassword:
 			if triedPassword {
-				return errors.New("invalid username/password")
+				return &dsl.AuthenticationError{Err: errors.New("invalid username/password")}
 			}
 			triedPassword = true
 
@@ -198,17 +198,17 @@ func (c *Client) connect(host, username string, passwordCallback dsl.PasswordCal
 func (c *Client) Execute(command string) (string, error) {
 	err := c.conn.SetDeadline(time.Now().Add(30 * time.Second))
 	if err != nil {
-		return "", err
+		return "", &dsl.ConnectionError{Err: err}
 	}
 
 	err = c.writeLine(command, false)
 	if err != nil {
-		return "", err
+		return "", &dsl.ConnectionError{Err: err}
 	}
 
 	data, _, err := c.readUntilPrompt(c.config.PromptCommand)
 	if err != nil {
-		return "", err
+		return "", &dsl.ConnectionError{Err: err}
 	}
 
 	return data, nil
