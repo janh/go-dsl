@@ -8,20 +8,15 @@ import (
 	"errors"
 	"flag"
 	"fmt"
-	"io"
 	"os"
 	"path/filepath"
 	"sort"
 	"strings"
-	"syscall"
-	"time"
 	"unicode"
 
-	"golang.org/x/term"
-
 	"3e8.eu/go/dsl"
-	"3e8.eu/go/dsl/graphs"
-	"3e8.eu/go/dsl/models"
+
+	"3e8.eu/go/dsl/cmd/cli"
 
 	_ "3e8.eu/go/dsl/broadcom"
 	_ "3e8.eu/go/dsl/draytek"
@@ -127,7 +122,9 @@ func main() {
 		}
 	}
 
-	loadData(clientType, flagSet.Arg(0), *user, *privateKey, *knownHosts, options)
+	config := buildClientConfig(clientType, flagSet.Arg(0), *user, *privateKey, *knownHosts, options)
+
+	cli.LoadData(config)
 }
 
 func wordWrap(maxLength int, str string) string {
@@ -322,18 +319,7 @@ func loadPrivateKeys(file string) ([]string, error) {
 	return []string{string(data)}, nil
 }
 
-func readPassword(prompt string) string {
-	fmt.Print(prompt)
-	passwordBytes, err := term.ReadPassword(int(syscall.Stdin))
-	if err != nil {
-		panic(err)
-	}
-	fmt.Println()
-
-	return string(passwordBytes)
-}
-
-func loadData(clientType dsl.ClientType, host, user, privateKey, knownHosts string, options map[string]string) {
+func buildClientConfig(clientType dsl.ClientType, host, user, privateKey, knownHosts string, options map[string]string) dsl.Config {
 	clientDesc := clientType.ClientDesc()
 
 	if clientDesc.RequiresKnownHosts {
@@ -349,19 +335,6 @@ func loadData(clientType dsl.ClientType, host, user, privateKey, knownHosts stri
 		}
 	}
 
-	fmt.Println()
-	fmt.Print("Connecting…")
-
-	var passwordCallback dsl.PasswordCallback
-	if clientDesc.SupportedAuthTypes&dsl.AuthTypePassword != 0 {
-		passwordCallback = func() string {
-			fmt.Println(" password required")
-			password := readPassword("Password: ")
-			fmt.Print("Authenticating…")
-			return password
-		}
-	}
-
 	var privateKeysCallback dsl.PrivateKeysCallback
 	if clientDesc.SupportedAuthTypes&dsl.AuthTypePrivateKeys != 0 {
 		privateKeysCallback.Keys = func() []string {
@@ -372,85 +345,16 @@ func loadData(clientType dsl.ClientType, host, user, privateKey, knownHosts stri
 			}
 			return keys
 		}
-
-		privateKeysCallback.Passphrase = func(fingerprint string) string {
-			fmt.Println(" passphrase required")
-			fmt.Println("Fingerprint: " + fingerprint)
-			passphrase := readPassword("Passphrase: ")
-			fmt.Print("Authenticating…")
-			return passphrase
-		}
 	}
 
 	config := dsl.Config{
 		Type:            clientType,
 		Host:            host,
 		User:            user,
-		AuthPassword:    passwordCallback,
 		AuthPrivateKeys: privateKeysCallback,
 		KnownHosts:      knownHosts,
 		Options:         options,
 	}
 
-	client, err := dsl.NewClient(config)
-	if err != nil {
-		fmt.Println(" failed:", err)
-		os.Exit(1)
-	}
-	defer client.Close()
-
-	fmt.Println(" done")
-	fmt.Print("Loading data…")
-
-	err = client.UpdateData()
-	if err != nil {
-		fmt.Println(" failed:", err)
-		os.Exit(1)
-	}
-
-	fmt.Println(" done")
-	fmt.Println()
-
-	fmt.Println(client.Status().Summary())
-
-	filenameBase := time.Now().Format("dsl_20060102_150405_")
-
-	writeFile(filenameBase+"summary.txt", []byte(client.Status().Summary()))
-	writeFile(filenameBase+"raw.txt", client.RawData())
-
-	writeGraph(filenameBase+"bits.svg", client.Bins(), graphs.DrawBitsGraph)
-	writeGraph(filenameBase+"snr.svg", client.Bins(), graphs.DrawSNRGraph)
-	writeGraph(filenameBase+"qln.svg", client.Bins(), graphs.DrawQLNGraph)
-	writeGraph(filenameBase+"hlog.svg", client.Bins(), graphs.DrawHlogGraph)
-}
-
-func createFile(filename string) *os.File {
-	f, err := os.Create(filename)
-	if err != nil {
-		fmt.Println("failed to create file:", err)
-		os.Exit(1)
-	}
-	return f
-}
-
-func writeFile(filename string, data []byte) {
-	f := createFile(filename)
-	defer f.Close()
-
-	_, err := f.Write(data)
-	if err != nil {
-		fmt.Println("failed to write file:", err)
-		os.Exit(1)
-	}
-}
-
-func writeGraph(filename string, bins models.Bins, graphFunc func(out io.Writer, data models.Bins, params graphs.GraphParams) error) {
-	f := createFile(filename)
-	defer f.Close()
-
-	err := graphFunc(f, bins, graphs.DefaultGraphParams)
-	if err != nil {
-		fmt.Println("failed to write graph:", err)
-		os.Exit(1)
-	}
+	return config
 }
