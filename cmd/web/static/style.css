@@ -1,0 +1,76 @@
+html, body {
+	font: 11pt sans-serif;
+	background: #fff;
+	color: #000;
+	min-height: 100%;
+	margin: 0;
+}
+body {
+	margin: 0 1em;
+}
+
+#content {
+	max-width: 554px;
+	margin: 2em auto;
+}
+h1 {
+	font-size: 124%;
+	font-weight: normal;
+}
+h2 {
+	font-size: 112%;
+	font-weight: normal;
+}
+pre {
+	font: 10pt monospace;
+}
+img {
+	max-width: 100%;
+	height: auto;
+}
+#graphs {
+	margin: 1.5em 0;
+}
+#graphs h2 {
+	margin-bottom: 0;
+}
+#graphs p {
+	margin-top: .5em;
+}
+
+#overlay {
+	display: none;
+	position: fixed;
+	top: 0;
+	left: 0;
+	right: 0;
+	bottom: 0;
+	background: rgba(200,200,200,.9);
+}
+#overlay.visible {
+	display: grid;
+	align-items: center;
+	justify-content: center;
+}
+#overlaycontent {
+	background: #fff;
+	padding: 1em;
+	max-width: 20em;
+}
+#overlaycontent > * {
+	display: none;
+}
+#overlaycontent > .visible {
+	display: block;
+}
+form {
+	width: 20em;
+}
+label {
+	display: block;
+	margin: 0 0 .5em 0;
+}
+input {
+	box-sizing: border-box;
+	width: 100%;
+}

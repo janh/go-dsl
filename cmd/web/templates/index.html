@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<title>xDSL stats</title>
+		<meta name="viewport" content="width=device-width, initial-scale=1" />
+		<link rel="stylesheet" type="text/css" href="static/style.css" />
+		<script type="text/javascript" src="static/script.js"></script>
+	</head>
+	<body>
+
+		<div id="content">
+
+			<h1>xDSL stats</h1>
+
+			<pre id="summary"></pre>
+
+			<div id="graphs">
+
+				<h2>Bitloading (bits):</h2>
+				<p>
+					<img id="graph_bits" width="554" height="114" />
+				</p>
+
+				<h2>Signal to noise ratio (dB):</h2>
+				<p>
+					<img id="graph_snr" width="554" height="114" />
+				</p>
+
+				<h2>Quiet line noise (dBm/Hz):</h2>
+				<p>
+					<img id="graph_qln" width="554" height="114" />
+				</p>
+
+				<h2>Channel characteristic (dB):</h2>
+				<p>
+					<img id="graph_hlog" width="554" height="114" />
+				</p>
+
+			</div>
+
+		</div>
+
+		<div id="overlay">
+			<div id="overlaycontent">
+
+				<form id="overlay-password" action="password" method="POST">
+					<label for="password">The device requests a password:</label>
+					<input type="password" id="password" name="data" />
+				</form>
+
+				<form id="overlay-passphrase" action="passphrase" method="POST">
+					<label for="passphrase">
+						A passphrase is needed to unlock the private key
+						<span id="fingerprint"></span>:
+					</label>
+					<input type="password" id="passphrase" name="data" />
+				</form>
+
+				<div id="overlay-error"></div>
+
+				<div id="overlay-loading">Loading…</div>
+
+			</div>
+		</div>
+
+	</body>
+</html>

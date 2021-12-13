@@ -17,6 +17,7 @@ import (
 	"3e8.eu/go/dsl"
 
 	"3e8.eu/go/dsl/cmd/cli"
+	"3e8.eu/go/dsl/cmd/web"
 
 	_ "3e8.eu/go/dsl/broadcom"
 	_ "3e8.eu/go/dsl/draytek"
@@ -80,6 +81,7 @@ func main() {
 	flagSet.Var(&options, "o", "device-specific option, in format Key=Value")
 	privateKey := flagSet.String("private-key", defaultPrivateKey, "private key file for SSH authentication")
 	knownHosts := flagSet.String("known-hosts", defaultKnownHosts, "known hosts file for SSH host key validation, validation is skipped if set to \"IGNORE\"")
+	startWebServer := flagSet.Bool("web", false, "start web server instead of printing result")
 
 	err := flagSet.Parse(os.Args[1:])
 	if err != nil {
@@ -124,7 +126,11 @@ func main() {
 
 	config := buildClientConfig(clientType, flagSet.Arg(0), *user, *privateKey, *knownHosts, options)
 
-	cli.LoadData(config)
+	if *startWebServer {
+		web.Start(config)
+	} else {
+		cli.LoadData(config)
+	}
 }
 
 func wordWrap(maxLength int, str string) string {
