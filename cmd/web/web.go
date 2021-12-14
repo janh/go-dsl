@@ -120,8 +120,10 @@ func handleEvents(w http.ResponseWriter, req *http.Request) {
 
 	receiver := make(chan stateChange, 10)
 	c.RegisterReceiver(receiver)
+
 	defer func() {
 		c.UnregisterReceiver(receiver)
+		writer.Close()
 	}()
 
 	for {
