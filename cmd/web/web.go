@@ -11,6 +11,7 @@ import (
 	"embed"
 	"encoding/json"
 	"fmt"
+	"html/template"
 	"io"
 	"net"
 	"net/http"
@@ -98,6 +99,15 @@ func handleRoot(w http.ResponseWriter, req *http.Request) {
 	w.Write(data)
 }
 
+func getSummaryString(status models.Status) string {
+	buf := new(bytes.Buffer)
+
+	tpl := template.Must(template.ParseFS(files, "templates/summary.html"))
+	tpl.Execute(buf, status)
+
+	return buf.String()
+}
+
 func getGraphString(bins models.Bins, graphFunc func(out io.Writer, data models.Bins, params graphs.GraphParams) error) string {
 	buf := new(bytes.Buffer)
 
@@ -139,7 +149,7 @@ func handleEvents(w http.ResponseWriter, req *http.Request) {
 
 			case StateReady:
 				msg.Data = data{
-					Summary:   change.Status.Summary(),
+					Summary:   getSummaryString(change.Status),
 					GraphBits: getGraphString(change.Bins, graphs.DrawBitsGraph),
 					GraphSNR:  getGraphString(change.Bins, graphs.DrawSNRGraph),
 					GraphQLN:  getGraphString(change.Bins, graphs.DrawQLNGraph),

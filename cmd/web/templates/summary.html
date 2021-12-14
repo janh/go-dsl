@@ -1,0 +1,182 @@
+<div id="state">
+	<p class="connection">
+		<strong>
+			{{- if .State -}}
+				{{- .State -}}
+			{{- else -}}
+				Unknown State
+			{{- end -}}
+		</strong>
+
+		{{ if .Mode.Type -}}
+			<br />
+			{{- .Mode -}}
+		{{- end }}
+
+		{{ if .Uptime -}}
+			<br />
+			{{- .Uptime -}}
+		{{- end }}
+	</p>
+
+	<p class="remote">
+		<span>Remote:</span><br />
+
+		{{ if .FarEndInventory.Vendor -}}
+			{{- .FarEndInventory.Vendor -}}
+		{{- else -}}
+			Unknown
+		{{- end -}}
+
+		{{ if .FarEndInventory.Version -}}
+			<br />
+			{{- .FarEndInventory.Version -}}
+		{{- end }}
+	</p>
+
+	<p class="modem">
+		<span>Modem:</span><br />
+
+		{{ if .NearEndInventory.Vendor -}}
+			{{- .NearEndInventory.Vendor -}}
+		{{- else -}}
+			Unknown
+		{{- end }}
+
+		{{ if .NearEndInventory.Version -}}
+			<br />
+			{{- .NearEndInventory.Version -}}
+		{{- end }}
+	</p>
+</div>
+
+{{ define "value" -}}
+	<dd><span class="value">{{ .Value }}</span></dd>
+{{- end }}
+
+{{ define "value_unit" -}}
+	<dd><span class="value">{{ .Value }}</span> <span class="unit">{{ .Unit }}</span></dd>
+{{- end }}
+
+<h2>Connection parameters</h2>
+
+<dl>
+	<div>
+		<dt>Actual net data rate</dt>
+		{{ template "value_unit" .DownstreamActualRate }}
+		{{ template "value_unit" .UpstreamActualRate }}
+	</div>
+	<div>
+		<dt>Attainable net data rate</dt>
+		{{ template "value_unit" .DownstreamAttainableRate }}
+		{{ template "value_unit" .UpstreamAttainableRate }}
+	</div>
+	<div>
+		<dt>Minimum error-free throughput</dt>
+		{{ template "value_unit" .DownstreamMinimumErrorFreeThroughput }}
+		{{ template "value_unit" .UpstreamMinimumErrorFreeThroughput }}
+	</div>
+</dl>
+
+<dl>
+	<div>
+		<dt>Bitswap</dt>
+		{{ template "value_unit" .DownstreamBitswapEnabled }}
+		{{ template "value_unit" .UpstreamBitswapEnabled }}
+	</div>
+	<div>
+		<dt>Seamless rate adaption</dt>
+		{{ template "value_unit" .DownstreamSeamlessRateAdaption }}
+		{{ template "value_unit" .UpstreamSeamlessRateAdaption }}
+	</div>
+</dl>
+
+<dl>
+	<div>
+		<dt>Interleaving delay</dt>
+		{{ template "value_unit" .DownstreamInterleavingDelay }}
+		{{ template "value_unit" .UpstreamInterleavingDelay }}
+	</div>
+	<div>
+		<dt>Impulse noise protection</dt>
+		{{ template "value_unit" .DownstreamImpulseNoiseProtection }}
+		{{ template "value_unit" .UpstreamImpulseNoiseProtection }}
+	</div>
+	<div>
+		<dt>Retransmission</dt>
+		{{ template "value_unit" .DownstreamRetransmissionEnabled }}
+		{{ template "value_unit" .UpstreamRetransmissionEnabled }}
+	</div>
+</dl>
+
+<dl>
+	<div>
+		<dt>Vectoring</dt>
+		{{ template "value_unit" .DownstreamVectoringState }}
+		{{ template "value_unit" .UpstreamVectoringState }}
+	</div>
+</dl>
+
+<dl>
+	<div>
+		<dt>Line attenuation</dt>
+		{{ template "value_unit" .DownstreamAttenuation }}
+		{{ template "value_unit" .UpstreamAttenuation }}
+	</div>
+	<div>
+		<dt>Signal-to-noise ratio margin</dt>
+		{{ template "value_unit" .DownstreamSNRMargin }}
+		{{ template "value_unit" .UpstreamSNRMargin }}
+	</div>
+	<div>
+		<dt>Transmit power</dt>
+		{{ template "value_unit" .DownstreamPower }}
+		{{ template "value_unit" .UpstreamPower }}
+	</div>
+</dl>
+
+<h2>Error counters</h2>
+
+<dl>
+	<div>
+		<dt>Retransmissions (rtx-tx)</dt>
+		{{ template "value" .DownstreamRTXTXCount }}
+		{{ template "value" .UpstreamRTXTXCount }}
+	</div>
+	<div>
+		<dt>Corrected (rtx-c)</dt>
+		{{ template "value" .DownstreamRTXCCount }}
+		{{ template "value" .UpstreamRTXCCount }}
+	</div>
+	<div>
+		<dt>Uncorrected (rtx-uc)</dt>
+		{{ template "value" .DownstreamRTXUCCount }}
+		{{ template "value" .UpstreamRTXUCCount }}
+	</div>
+</dl>
+
+<dl>
+	<div>
+		<dt>Forward error correction (FEC)</dt>
+		{{ template "value" .DownstreamFECCount }}
+		{{ template "value" .UpstreamFECCount }}
+	</div>
+	<div>
+		<dt>Cyclic redundancy check (CRC)</dt>
+		{{ template "value" .DownstreamCRCCount }}
+		{{ template "value" .UpstreamCRCCount }}
+	</div>
+</dl>
+
+<dl>
+	<div>
+		<dt>Errored seconds (ES)</dt>
+		{{ template "value" .DownstreamESCount }}
+		{{ template "value" .UpstreamESCount }}
+	</div>
+	<div>
+		<dt>Severely errored seconds (SES)</dt>
+		{{ template "value" .DownstreamSESCount }}
+		{{ template "value" .UpstreamSESCount }}
+	</div>
+</dl>

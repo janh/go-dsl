@@ -25,7 +25,7 @@ function updateState(newState, data) {
 				break;
 
 			case STATE_READY:
-				summary.innerText = data["summary"];
+				summary.innerHTML = data["summary"];
 				graphBits.src = "data:image/svg+xml," + encodeURIComponent(data["graph_bits"]);
 				graphSNR.src = "data:image/svg+xml," + encodeURIComponent(data["graph_snr"]);
 				graphQLN.src = "data:image/svg+xml," + encodeURIComponent(data["graph_qln"]);
