@@ -25,6 +25,7 @@ const (
 type stateChange struct {
 	State State
 
+	Time    time.Time
 	RawData []byte
 	Status  models.Status
 	Bins    models.Bins
@@ -218,6 +219,7 @@ mainloop:
 
 				c.changeState <- stateChange{
 					State:   StateReady,
+					Time:    time.Now(),
 					RawData: c.client.RawData(),
 					Status:  c.client.Status(),
 					Bins:    c.client.Bins(),

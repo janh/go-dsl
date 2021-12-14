@@ -5,6 +5,7 @@
 package web
 
 import (
+	"archive/zip"
 	"bytes"
 	"context"
 	"embed"
@@ -35,6 +36,8 @@ func Start(config dsl.Config) {
 	http.Handle("/static/", fs)
 
 	http.HandleFunc("/events", handleEvents)
+
+	http.HandleFunc("/download", handleDownload)
 
 	http.HandleFunc("/password", handlePassword)
 	http.HandleFunc("/passphrase", handlePassphrase)
@@ -166,6 +169,47 @@ func handleEvents(w http.ResponseWriter, req *http.Request) {
 
 		}
 	}
+}
+
+func handleDownload(w http.ResponseWriter, req *http.Request) {
+	if req.Method != http.MethodGet {
+		http.Error(w, "405 method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+
+	state := c.State()
+	if state.State != StateReady {
+		http.Error(w, "404 not found", http.StatusNotFound)
+		return
+	}
+
+	filenameBase := state.Time.Format("dsl_20060102_150405")
+
+	w.Header().Set("Content-Type", "application/zip")
+	w.Header().Set("Content-Disposition", `attachment; filename="`+filenameBase+`.zip"`)
+	w.Header().Set("Cache-Control", "no-cache")
+
+	archive := zip.NewWriter(w)
+
+	fileWriter, _ := archive.Create(filenameBase + "_summary.txt")
+	io.WriteString(fileWriter, state.Status.Summary())
+
+	fileWriter, _ = archive.Create(filenameBase + "_raw.txt")
+	fileWriter.Write(state.RawData)
+
+	fileWriter, _ = archive.Create(filenameBase + "_bits.svg")
+	graphs.DrawBitsGraph(fileWriter, state.Bins, graphs.DefaultGraphParams)
+
+	fileWriter, _ = archive.Create(filenameBase + "_snr.svg")
+	graphs.DrawSNRGraph(fileWriter, state.Bins, graphs.DefaultGraphParams)
+
+	fileWriter, _ = archive.Create(filenameBase + "_qln.svg")
+	graphs.DrawQLNGraph(fileWriter, state.Bins, graphs.DefaultGraphParams)
+
+	fileWriter, _ = archive.Create(filenameBase + "_hlog.svg")
+	graphs.DrawHlogGraph(fileWriter, state.Bins, graphs.DefaultGraphParams)
+
+	archive.Close()
 }
 
 func handlePassword(w http.ResponseWriter, req *http.Request) {

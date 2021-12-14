@@ -1,5 +1,6 @@
 html, body {
 	font: 11pt sans-serif;
+	line-height: 1.25;
 	background: #fff;
 	color: #000;
 	min-height: 100%;
@@ -13,9 +14,27 @@ body {
 	max-width: 554px;
 	margin: 2em auto;
 }
-h1 {
+header {
+	margin: .8em 0;
+	display: flex;
+}
+header h1 {
+	flex-grow: 1;
 	font-size: 124%;
 	font-weight: normal;
+	margin: 0;
+}
+header a {
+	line-height: 1.55;
+	color: #007fff;
+	text-decoration: underline;
+	user-select: none;
+}
+header a:hover {
+	color: #39f;
+}
+header a:active {
+	color: #06c;
 }
 h2 {
 	font-size: 112%;
@@ -73,4 +92,8 @@ label {
 input {
 	box-sizing: border-box;
 	width: 100%;
+}
+
+iframe {
+	display: none;
 }
