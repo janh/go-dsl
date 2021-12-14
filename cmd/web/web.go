@@ -112,15 +112,11 @@ func handleEvents(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	flusher, ok := w.(http.Flusher)
-	if !ok {
+	writer, err := newEventStreamWriter(w, req)
+	if err != nil {
 		http.Error(w, "500 internal server error", http.StatusInternalServerError)
 		return
 	}
-
-	w.Header().Set("Content-Type", "text/event-stream")
-	w.Header().Set("Cache-Control", "no-cache")
-	w.Header().Set("Connection", "keep-alive")
 
 	receiver := make(chan stateChange, 10)
 	c.RegisterReceiver(receiver)
@@ -158,11 +154,10 @@ func handleEvents(w http.ResponseWriter, req *http.Request) {
 				dataBytes = []byte(`{"state":"error","data":"encoding error"}`)
 			}
 
-			_, err = io.WriteString(w, "data: "+string(dataBytes)+"\n\n")
+			err = writer.WriteMessage(string(dataBytes))
 			if err != nil {
 				return
 			}
-			flusher.Flush()
 
 		case <-req.Context().Done():
 			return
