@@ -5,11 +5,12 @@
 package broadcom
 
 import (
+	"3e8.eu/go/dsl"
 	"3e8.eu/go/dsl/internal/telnet"
 	"3e8.eu/go/dsl/models"
 )
 
-type TelnetClient struct {
+type telnetClient struct {
 	command string
 	client  *telnet.Client
 	rawData []byte
@@ -17,8 +18,8 @@ type TelnetClient struct {
 	bins    models.Bins
 }
 
-func NewTelnetClient(config TelnetConfig) (*TelnetClient, error) {
-	c := TelnetClient{}
+func NewTelnetClient(config TelnetConfig) (dsl.Client, error) {
+	c := telnetClient{}
 	c.command = config.Command
 
 	var err error
@@ -41,23 +42,23 @@ func NewTelnetClient(config TelnetConfig) (*TelnetClient, error) {
 	return &c, nil
 }
 
-func (c *TelnetClient) RawData() []byte {
+func (c *telnetClient) RawData() []byte {
 	return c.rawData
 }
 
-func (c *TelnetClient) Status() models.Status {
+func (c *telnetClient) Status() models.Status {
 	return c.status
 }
 
-func (c *TelnetClient) Bins() models.Bins {
+func (c *telnetClient) Bins() models.Bins {
 	return c.bins
 }
 
-func (c *TelnetClient) UpdateData() (err error) {
+func (c *telnetClient) UpdateData() (err error) {
 	c.status, c.bins, c.rawData, err = updateData(c.client, c.command)
 	return
 }
 
-func (c *TelnetClient) Close() {
+func (c *telnetClient) Close() {
 	c.client.Close()
 }

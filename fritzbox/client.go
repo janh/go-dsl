@@ -9,10 +9,11 @@ import (
 	"net/url"
 	"strings"
 
+	"3e8.eu/go/dsl"
 	"3e8.eu/go/dsl/models"
 )
 
-type Client struct {
+type client struct {
 	loadSupportData bool
 	session         *session
 	rawData         []byte
@@ -20,8 +21,8 @@ type Client struct {
 	bins            models.Bins
 }
 
-func NewClient(config Config) (*Client, error) {
-	c := Client{}
+func NewClient(config Config) (dsl.Client, error) {
+	c := client{}
 	c.loadSupportData = config.LoadSupportData
 
 	var err error
@@ -34,19 +35,19 @@ func NewClient(config Config) (*Client, error) {
 	return &c, nil
 }
 
-func (c *Client) RawData() []byte {
+func (c *client) RawData() []byte {
 	return c.rawData
 }
 
-func (c *Client) Status() models.Status {
+func (c *client) Status() models.Status {
 	return c.status
 }
 
-func (c *Client) Bins() models.Bins {
+func (c *client) Bins() models.Bins {
 	return c.bins
 }
 
-func (c *Client) UpdateData() (err error) {
+func (c *client) UpdateData() (err error) {
 	// contains HTML for version < 7.19, JSON for version >= 7.19
 	data := url.Values{}
 	data.Add("lang", "de")
@@ -143,6 +144,6 @@ func (c *Client) UpdateData() (err error) {
 	return
 }
 
-func (c *Client) Close() {
+func (c *client) Close() {
 	c.session.close()
 }

@@ -8,18 +8,19 @@ import (
 	"encoding/json"
 	"fmt"
 
+	"3e8.eu/go/dsl"
 	"3e8.eu/go/dsl/models"
 )
 
-type Client struct {
+type client struct {
 	session *session
 	rawData []byte
 	status  models.Status
 	bins    models.Bins
 }
 
-func NewClient(config Config) (*Client, error) {
-	c := Client{}
+func NewClient(config Config) (dsl.Client, error) {
+	c := client{}
 
 	var err error
 
@@ -36,19 +37,19 @@ func NewClient(config Config) (*Client, error) {
 	return &c, nil
 }
 
-func (c *Client) RawData() []byte {
+func (c *client) RawData() []byte {
 	return c.rawData
 }
 
-func (c *Client) Status() models.Status {
+func (c *client) Status() models.Status {
 	return c.status
 }
 
-func (c *Client) Bins() models.Bins {
+func (c *client) Bins() models.Bins {
 	return c.bins
 }
 
-func (c *Client) UpdateData() (err error) {
+func (c *client) UpdateData() (err error) {
 	c.rawData, err = c.session.loadValue("Device/DSL")
 	if err != nil {
 		return
@@ -71,6 +72,6 @@ func (c *Client) UpdateData() (err error) {
 	return
 }
 
-func (c *Client) Close() {
+func (c *client) Close() {
 	c.session.close()
 }

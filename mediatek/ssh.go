@@ -5,19 +5,20 @@
 package mediatek
 
 import (
+	"3e8.eu/go/dsl"
 	"3e8.eu/go/dsl/internal/ssh"
 	"3e8.eu/go/dsl/models"
 )
 
-type SSHClient struct {
+type sshClient struct {
 	client  *ssh.Client
 	rawData []byte
 	status  models.Status
 	bins    models.Bins
 }
 
-func NewSSHClient(config SSHConfig) (*SSHClient, error) {
-	c := SSHClient{}
+func NewSSHClient(config SSHConfig) (dsl.Client, error) {
+	c := sshClient{}
 
 	var err error
 
@@ -29,23 +30,23 @@ func NewSSHClient(config SSHConfig) (*SSHClient, error) {
 	return &c, nil
 }
 
-func (c *SSHClient) RawData() []byte {
+func (c *sshClient) RawData() []byte {
 	return c.rawData
 }
 
-func (c *SSHClient) Status() models.Status {
+func (c *sshClient) Status() models.Status {
 	return c.status
 }
 
-func (c *SSHClient) Bins() models.Bins {
+func (c *sshClient) Bins() models.Bins {
 	return c.bins
 }
 
-func (c *SSHClient) UpdateData() (err error) {
+func (c *sshClient) UpdateData() (err error) {
 	c.status, c.bins, c.rawData, err = updateData(c.client)
 	return
 }
 
-func (c *SSHClient) Close() {
+func (c *sshClient) Close() {
 	c.client.Close()
 }
