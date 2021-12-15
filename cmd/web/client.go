@@ -47,8 +47,9 @@ type client struct {
 
 	client dsl.Client
 
-	cancel chan bool
-	done   chan bool
+	canceled bool
+	cancel   chan bool
+	done     chan bool
 
 	errCount int
 
@@ -141,7 +142,7 @@ func (c *client) distribute() {
 	}
 }
 
-func (c *client) connect() (canceled bool) {
+func (c *client) connect() {
 	var err error
 	var interval = 2 * time.Second
 
@@ -149,6 +150,9 @@ func (c *client) connect() (canceled bool) {
 		c.client, err = dsl.NewClient(c.config)
 		if err == nil {
 			c.errCount = 0
+			return
+		}
+		if c.canceled {
 			return
 		}
 
@@ -166,7 +170,7 @@ func (c *client) connect() (canceled bool) {
 
 		select {
 		case <-c.cancel:
-			canceled = true
+			c.canceled = true
 			return
 		case <-time.After(interval):
 		}
@@ -185,9 +189,18 @@ func (c *client) update() {
 		c.config.AuthPassword = func() string {
 			if c.password == "" {
 				c.changeState <- stateChange{State: StatePasswordRequired}
-				c.password = <-c.setPassword
+
+				select {
+				case <-c.cancel:
+					c.canceled = true
+					return ""
+				case password := <-c.setPassword:
+					c.password = password
+				}
+
 				c.changeState <- stateChange{State: StateLoading}
 			}
+
 			return c.password
 		}
 	}
@@ -196,9 +209,18 @@ func (c *client) update() {
 		c.config.AuthPrivateKeys.Passphrase = func(fingerprint string) string {
 			if c.passphrase[fingerprint] == "" {
 				c.changeState <- stateChange{State: StatePasswordRequired, Fingerprint: fingerprint}
-				c.passphrase[fingerprint] = <-c.setPassphrase
+
+				select {
+				case <-c.cancel:
+					c.canceled = true
+					return ""
+				case passphrase := <-c.setPassphrase:
+					c.passphrase[fingerprint] = passphrase
+				}
+
 				c.changeState <- stateChange{State: StateLoading}
 			}
+
 			return c.passphrase[fingerprint]
 		}
 	}
@@ -207,8 +229,8 @@ mainloop:
 	for {
 		for i := 0; i < 2; i++ {
 			if c.client == nil {
-				canceled := c.connect()
-				if canceled {
+				c.connect()
+				if c.canceled {
 					break mainloop
 				}
 			}
