@@ -42,7 +42,7 @@ func (c *Client) Status() models.Status {
 	return c.status
 }
 
-func (c Client) Bins() models.Bins {
+func (c *Client) Bins() models.Bins {
 	return c.bins
 }
 
