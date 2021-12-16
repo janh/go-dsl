@@ -56,3 +56,9 @@ If no command is specified, `dsl_cpe_pipe` is used. Since the actual name varies
 	./dsl -d sagemcom speedport.ip
 
 There tend to be data quality issues on at least some of the supported devices. For example, only the "Actual Data Rate" is reported instead of the "Actual Net Data Rate". This means that the reported data rate is not comparable with other devices when retransmission is active.
+
+### Speedport
+
+	./dsl -d speedport speedport.ip
+
+This is known to work with a Speedport Smart 2, other devices may or may not work. For Speedport Pro, use the Sagemcom client.
