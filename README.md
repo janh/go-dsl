@@ -18,6 +18,8 @@ A few usage examples for different modems are listed below.
 
 In general, if the device requires a username, you need to specify it on the command line using the `-u` option. When connecting using SSH, your OpenSSH private key and `known_hosts` file are tried by default, but it is possible to override this. Otherwise, if the device uses password authentication, you will be asked for it.
 
+By default, the output contains a summary of the loaded data, and additional data including graphs is written to files. Alternatively, a web interface can be started using the `-web` option, and a link to access it is shown. The data on the web interface is automatically refreshed.
+
 To get more detailed usage information, see `./dsl -help`.
 
 ### Broadcom
