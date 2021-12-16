@@ -25,6 +25,7 @@ import (
 	_ "3e8.eu/go/dsl/lantiq"
 	_ "3e8.eu/go/dsl/mediatek"
 	_ "3e8.eu/go/dsl/sagemcom"
+	_ "3e8.eu/go/dsl/speedport"
 )
 
 var (
