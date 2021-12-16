@@ -61,4 +61,4 @@ There tend to be data quality issues on at least some of the supported devices. 
 
 	./dsl -d speedport speedport.ip
 
-This is known to work with a Speedport Smart 2, other devices may or may not work. For Speedport Pro, use the Sagemcom client.
+Only a limited set of data is available on these devices. This is known to work with a Speedport Smart 2, but it may also work for other devices. For Speedport Pro, use the Sagemcom client.
