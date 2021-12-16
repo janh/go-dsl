@@ -12,6 +12,7 @@ import (
 
 	"golang.org/x/net/html"
 
+	"3e8.eu/go/dsl/internal/helpers"
 	"3e8.eu/go/dsl/internal/htmlutil"
 	"3e8.eu/go/dsl/models"
 )
@@ -103,7 +104,7 @@ func parseOverviewJSON(status *models.Status, dslOverview string) {
 
 	if len(data.Lines) > 0 {
 		status.State = interpretOverviewState(data.Lines[0].State)
-		status.Mode = models.ParseMode(data.Lines[0].Mode)
+		status.Mode = helpers.ParseMode(data.Lines[0].Mode)
 
 		if status.State == models.StateShowtime {
 			status.Uptime.Duration = interpretOverviewTime(data.Lines[0].Time)
@@ -166,7 +167,7 @@ func parseOverviewDataLegacy(status *models.Status, dslOverviewData string) {
 
 	if len(data.Lines) > 0 {
 		status.State = interpretOverviewState(data.Lines[0].State)
-		status.Mode = models.ParseMode(data.Lines[0].Mode)
+		status.Mode = helpers.ParseMode(data.Lines[0].Mode)
 
 		if status.State == models.StateShowtime {
 			status.Uptime.Duration = interpretOverviewTime(data.Lines[0].Time)

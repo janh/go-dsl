@@ -65,9 +65,31 @@ func parseBasicStats(stats string) map[string]string {
 	return values
 }
 
+func parseState(str string) models.State {
+	str = strings.ToLower(str)
+
+	switch {
+
+	case str == "idle":
+		return models.StateIdle
+
+	case strings.HasPrefix(str, "g.994"):
+		return models.StateHandshake
+
+	case strings.HasPrefix(str, "g.992"), strings.HasPrefix(str, "g.993"):
+		return models.StateTraining
+
+	case str == "showtime":
+		return models.StateShowtime
+
+	}
+
+	return models.StateUnknown
+}
+
 func interpretBasicStats(status *models.Status, values map[string]string) {
 	state := interpretBasicStatsString(values, "status")
-	status.State = models.ParseState(state)
+	status.State = parseState(state)
 
 	mode := interpretBasicStatsString(values, "mode")
 	if strings.HasPrefix(strings.ToUpper(mode), "VDSL2") {
@@ -75,9 +97,9 @@ func interpretBasicStats(status *models.Status, values map[string]string) {
 		if strings.HasSuffix(strings.ToLower(profile), "brcmpriv1") {
 			profile = "35b"
 		}
-		status.Mode = models.ParseMode("VDSL2 " + profile)
+		status.Mode = helpers.ParseMode("VDSL2 " + profile)
 	} else {
-		status.Mode = models.ParseMode(mode)
+		status.Mode = helpers.ParseMode(mode)
 	}
 
 	if status.Mode.Type == models.ModeTypeUnknown {

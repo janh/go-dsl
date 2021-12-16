@@ -36,17 +36,13 @@ func interpretStatus(data *dslObj) models.Status {
 
 func interpretStatusState(status *models.Status, data *dslObj) {
 	linkStatus := data.Lines[0].LinkStatus
-	if linkStatus == "initializing" {
-		status.State = models.StateIdle
-	} else {
-		status.State = models.ParseState(linkStatus)
-	}
+	status.State = helpers.ParseStateTR06X(linkStatus)
 }
 
 func interpretStatusMode(status *models.Status, data *dslObj) {
 	mode := data.Lines[0].StandardUsed
 	mode = regexpMode.ReplaceAllString(mode, regexpModeReplacement)
-	status.Mode = models.ParseMode(mode)
+	status.Mode = helpers.ParseMode(mode)
 }
 
 func interpretStatusUptime(status *models.Status, data *dslObj) {

@@ -185,41 +185,13 @@ func parseStatusState(status *models.Status, lsg dataItem) {
 	if strings.HasPrefix(lineStateStr, "0x") {
 		lineStateStr = lineStateStr[2:]
 	}
+
 	lineState, err := strconv.ParseUint(lineStateStr, 16, 64)
 	if err != nil {
 		return
 	}
 
-	lineStateMap := map[uint64]string{
-		0x0:   "not initialized",
-		0x1:   "exception",
-		0x10:  "not updated",
-		0xff:  "idle request",
-		0x100: "idle",
-		0x1ff: "silent request",
-		0x200: "silent",
-		0x300: "handshake",
-		0x310: "bonding clr",
-		0x380: "full init",
-		0x3c0: "short init",
-		0x400: "discovery",
-		0x500: "training",
-		0x600: "analysis",
-		0x700: "exchange",
-		0x800: "showtime no sync",
-		0x801: "showtime tc sync",
-		0x900: "fastretrain",
-		0xa00: "lowpower l2",
-		0xb00: "loopdiagnostic active",
-		0xb10: "loopdiagnostic data exchange",
-		0xb20: "loopdiagnostic data request",
-		0xc00: "loopdiagnostic complete",
-		0xd00: "resync",
-	}
-
-	if lineStateString, ok := lineStateMap[lineState]; ok {
-		status.State = models.ParseState(lineStateString)
-	}
+	status.State = parseLineState(lineState)
 }
 
 func parseStatusMode(status *models.Status, g997xtusesg, bpstg dataItem) {

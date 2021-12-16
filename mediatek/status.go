@@ -215,12 +215,22 @@ func interpretFloatValueINPSumWAN(valuesPmsPmd, valuesMgcnt map[string]string,
 
 func parseStatusBasic(status *models.Status, values map[string]string) {
 
-	status.State = models.ParseState(interpretString(values, "adsllinkstatus"))
+	state := strings.ToLower(interpretString(values, "adsllinkstatus"))
+	switch state {
+	case "down":
+		status.State = models.StateIdle
+	case "wait for init":
+		status.State = models.StateHandshake
+	case "initializing":
+		status.State = models.StateTraining
+	case "up":
+		status.State = models.StateShowtime
+	}
 
 	opmode := interpretString(values, "opmode")
 	annex := interpretString(values, "adsltype")
 	profile := interpretString(values, "currentprofiles")
-	status.Mode = models.ParseMode(opmode + " " + annex + " " + profile)
+	status.Mode = helpers.ParseMode(opmode + " " + annex + " " + profile)
 
 	status.Uptime = interpretDuration(values, "adsluptime")
 }

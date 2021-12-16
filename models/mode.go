@@ -4,11 +4,6 @@
 
 package models
 
-import (
-	"strings"
-	"unicode"
-)
-
 type ModeType int
 
 const (
@@ -157,91 +152,4 @@ func (m Mode) CarrierSpacing() float64 {
 		return 8.625
 	}
 	return 4.3125
-}
-
-func ParseMode(str string) Mode {
-	str = strings.Map(func(r rune) rune {
-		if unicode.IsSpace(r) || r == '_' {
-			return -1
-		}
-		return unicode.ToLower(r)
-	}, str)
-
-	var mode Mode
-
-	switch {
-
-	case strings.Contains(str, "adsl"), strings.Contains(str, "g.dmt"), strings.Contains(str, "g.992"):
-		if strings.Contains(str, "adsl2+") || strings.Contains(str, "adsl2p") || strings.Contains(str, "g.992.5") {
-			mode.Type = ModeTypeADSL2Plus
-		} else if strings.Contains(str, "adsl2") || strings.Contains(str, "g.992.3") {
-			mode.Type = ModeTypeADSL2
-		} else {
-			mode.Type = ModeTypeADSL
-		}
-
-		switch {
-
-		case strings.Contains(str, "annexa"):
-			mode.Subtype = ModeSubtypeAnnexA
-
-		case strings.Contains(str, "annexb"):
-			mode.Subtype = ModeSubtypeAnnexB
-
-		case strings.Contains(str, "annexi"):
-			mode.Subtype = ModeSubtypeAnnexI
-
-		case strings.Contains(str, "annexj"):
-			mode.Subtype = ModeSubtypeAnnexJ
-
-		case strings.Contains(str, "annexl"):
-			mode.Subtype = ModeSubtypeAnnexL
-
-		case strings.Contains(str, "annexm"):
-			mode.Subtype = ModeSubtypeAnnexM
-
-		}
-
-	case strings.Contains(str, "8a"):
-		mode.Type = ModeTypeVDSL2
-		mode.Subtype = ModeSubtypeProfile8a
-
-	case strings.Contains(str, "8b"):
-		mode.Type = ModeTypeVDSL2
-		mode.Subtype = ModeSubtypeProfile8b
-
-	case strings.Contains(str, "8c"):
-		mode.Type = ModeTypeVDSL2
-		mode.Subtype = ModeSubtypeProfile8c
-
-	case strings.Contains(str, "8d"):
-		mode.Type = ModeTypeVDSL2
-		mode.Subtype = ModeSubtypeProfile8d
-
-	case strings.Contains(str, "12a"):
-		mode.Type = ModeTypeVDSL2
-		mode.Subtype = ModeSubtypeProfile12a
-
-	case strings.Contains(str, "12b"):
-		mode.Type = ModeTypeVDSL2
-		mode.Subtype = ModeSubtypeProfile12b
-
-	case strings.Contains(str, "17a"):
-		mode.Type = ModeTypeVDSL2
-		mode.Subtype = ModeSubtypeProfile17a
-
-	case strings.Contains(str, "30a"):
-		mode.Type = ModeTypeVDSL2
-		mode.Subtype = ModeSubtypeProfile30a
-
-	case strings.Contains(str, "35b"):
-		mode.Type = ModeTypeVDSL2
-		mode.Subtype = ModeSubtypeProfile35b
-
-	case strings.Contains(str, "vdsl2"), strings.Contains(str, "g.993.2"), strings.Contains(str, "g.993.5"):
-		mode.Type = ModeTypeVDSL2
-
-	}
-
-	return mode
 }

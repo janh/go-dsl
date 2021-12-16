@@ -4,10 +4,6 @@
 
 package models
 
-import (
-	"strings"
-)
-
 type State int
 
 const (
@@ -33,32 +29,4 @@ func (s State) String() string {
 		return "Showtime"
 	}
 	return "Unknown"
-}
-
-func ParseState(str string) State {
-	str = strings.ToLower(strings.TrimSpace(str))
-
-	switch {
-
-	case strings.Contains(str, "idle"), strings.Contains(str, "ready"), strings.Contains(str, "down"):
-		return StateIdle
-
-	case strings.Contains(str, "silent"):
-		return StateSilent
-
-	case strings.Contains(str, "handshake"), strings.Contains(str, "g.994"), strings.Contains(str, "wait for init"):
-		return StateHandshake
-
-	case strings.Contains(str, "train"), strings.Contains(str, "g.992"), strings.Contains(str, "g.993"),
-		strings.Contains(str, "full init"), strings.Contains(str, "discovery"),
-		strings.Contains(str, "analysis"), strings.Contains(str, "exchange"),
-		strings.Contains(str, "initializing"), strings.Contains(str, "establishinglink"):
-		return StateTraining
-
-	case strings.Contains(str, "showtime"), strings.Contains(str, "up"):
-		return StateShowtime
-
-	}
-
-	return StateUnknown
 }

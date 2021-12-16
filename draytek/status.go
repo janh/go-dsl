@@ -103,12 +103,24 @@ func splitAtLongestWhitespace(str string) [2]string {
 	return [2]string{strA, strB}
 }
 
+func parseState(str string) models.State {
+	switch strings.ToUpper(str) {
+	case "READY":
+		return models.StateIdle
+	case "TRAINING":
+		return models.StateTraining
+	case "SHOWTIME":
+		return models.StateShowtime
+	}
+	return models.StateUnknown
+}
+
 func interpretStatus(status *models.Status, values map[string]string) {
 	state := interpretStatusString(values, "State")
-	status.State = models.ParseState(state)
+	status.State = parseState(state)
 
 	mode := interpretStatusString(values, "RunningMode")
-	status.Mode = models.ParseMode(mode)
+	status.Mode = helpers.ParseMode(mode)
 
 	status.DownstreamActualRate.IntValue = interpretStatusIntValueSuffixFactor(values, "DSActualRate", " bps", 1000)
 	status.UpstreamActualRate.IntValue = interpretStatusIntValueSuffixFactor(values, "USActualRate", " bps", 1000)
