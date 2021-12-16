@@ -13,6 +13,7 @@ const (
 	StateHandshake
 	StateTraining
 	StateShowtime
+	StateError
 )
 
 func (s State) String() string {
@@ -27,6 +28,8 @@ func (s State) String() string {
 		return "Training"
 	case StateShowtime:
 		return "Showtime"
+	case StateError:
+		return "Error"
 	}
 	return "Unknown"
 }

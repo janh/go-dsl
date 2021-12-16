@@ -25,7 +25,7 @@ func ParseStateTR06X(str string) models.State {
 		return models.StateShowtime
 
 	case "error":
-		return models.StateUnknown
+		return models.StateError
 
 	}
 

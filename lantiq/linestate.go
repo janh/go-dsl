@@ -53,6 +53,9 @@ func parseLineState(state uint64) models.State {
 	case lineStateShowtimeNoSync, lineStateShowtimeTCSync:
 		return models.StateShowtime
 
+	case lineStateException:
+		return models.StateError
+
 	}
 
 	return models.StateUnknown
