@@ -22,6 +22,11 @@ const (
 	StateError              State = "error"
 )
 
+const (
+	intervalDefault time.Duration = 30 * time.Second
+	intervalShort   time.Duration = 10 * time.Second
+)
+
 type stateChange struct {
 	State State
 
@@ -47,6 +52,9 @@ type client struct {
 
 	client dsl.Client
 
+	interval        time.Duration
+	intervalChanged chan bool
+
 	canceled bool
 	cancel   chan bool
 	done     chan bool
@@ -67,6 +75,8 @@ func newClient(config dsl.Config) *client {
 		unregisterReceiver: make(chan chan stateChange),
 		receivers:          make(map[chan stateChange]bool),
 		lastStateChange:    stateChange{State: StateLoading},
+		interval:           intervalDefault,
+		intervalChanged:    make(chan bool),
 		cancel:             make(chan bool),
 		done:               make(chan bool),
 		config:             config,
@@ -135,8 +145,24 @@ func (c *client) distribute() {
 			}
 			c.receivers[receiver] = true
 
+			if len(c.receivers) == 1 {
+				c.interval = intervalShort
+				select {
+				case c.intervalChanged <- true:
+				default:
+				}
+			}
+
 		case receiver := <-c.unregisterReceiver:
 			delete(c.receivers, receiver)
+
+			if len(c.receivers) == 0 {
+				c.interval = intervalDefault
+				select {
+				case c.intervalChanged <- true:
+				default:
+				}
+			}
 
 		}
 	}
@@ -268,13 +294,19 @@ mainloop:
 			}
 		}
 
-		now := time.Now()
-		nextUpdate := now.Truncate(30 * time.Second).Add(30 * time.Second)
+	waitloop:
+		for {
+			now := time.Now()
+			nextUpdate := now.Truncate(c.interval).Add(c.interval)
 
-		select {
-		case <-c.cancel:
-			break mainloop
-		case <-time.After(nextUpdate.Sub(now)):
+			select {
+			case <-c.cancel:
+				break mainloop
+			case <-time.After(nextUpdate.Sub(now)):
+				break waitloop
+			case <-c.intervalChanged:
+				continue
+			}
 		}
 	}
 
