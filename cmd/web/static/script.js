@@ -26,10 +26,10 @@ function updateState(newState, data) {
 
 			case STATE_READY:
 				summary.innerHTML = data["summary"];
-				graphBits.src = "data:image/svg+xml," + encodeURIComponent(data["graph_bits"]);
-				graphSNR.src = "data:image/svg+xml," + encodeURIComponent(data["graph_snr"]);
-				graphQLN.src = "data:image/svg+xml," + encodeURIComponent(data["graph_qln"]);
-				graphHlog.src = "data:image/svg+xml," + encodeURIComponent(data["graph_hlog"]);
+				graphBits.innerHTML = data["graph_bits"];
+				graphSNR.innerHTML = data["graph_snr"];
+				graphQLN.innerHTML = data["graph_qln"];
+				graphHlog.innerHTML = data["graph_hlog"];
 				break;
 
 			case STATE_ERROR:
