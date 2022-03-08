@@ -21,6 +21,8 @@ type baseModel struct {
 	ColorNeutralStroke Color
 	ColorUpstream      Color
 	ColorDownstream    Color
+	ColorMinStroke     Color
+	ColorMaxStroke     Color
 	ColorPilotTones    Color
 
 	PathLegend path
@@ -56,8 +58,12 @@ type bitsModel struct {
 
 type snrModel struct {
 	baseModel
-	Transform transform
-	Path      path
+	Transform       transform
+	TransformMinMax transform
+	StrokeWidth     float64
+	Path            path
+	PathMin         path
+	PathMax         path
 }
 
 type qlnModel struct {

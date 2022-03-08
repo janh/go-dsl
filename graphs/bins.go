@@ -78,6 +78,9 @@ func getBaseModel(spec graphSpec) baseModel {
 	m.ColorGraph, m.ColorGrid, m.ColorNeutralFill, m.ColorNeutralStroke =
 		getGraphColors(spec.ColorBackground, spec.ColorForeground)
 
+	m.ColorMinStroke = colorDownstream
+	m.ColorMaxStroke = colorUpstream
+
 	m.ColorUpstream = colorUpstream
 	m.ColorDownstream = colorDownstream
 
@@ -386,7 +389,68 @@ func buildSNRQLNPath(p *path, bins models.BinsFloat, scaleY, offsetY, maxY, minY
 	}
 }
 
+func buildSNRMinMaxPath(pMin *path, pMax *path, bins models.BinsFloatMinMax, scaleY, maxY, postScaleY float64) {
+	width := float64(bins.GroupSize)
+
+	var lastValidMin, lastValidMax, lastDrawnMin, lastDrawnMax bool
+	var lastMin float64 = 0
+	var lastMax float64 = 0
+	var lastPosYMin, lastPosYMax float64
+
+	iter := func(p *path, i int, val float64, valid bool, last, lastPosY *float64, lastValid, lastDrawn *bool) {
+		changed := *last != val
+		drawn := false
+
+		posX := (float64(i) + 0.5) * width
+		posY := math.Min(maxY, val)*scaleY - 0.5
+
+		if *lastValid && !valid {
+			p.LineTo(posX-0.5*width, *lastPosY*postScaleY)
+		}
+		if !*lastValid && valid {
+			p.MoveTo(posX-0.5*width, posY*postScaleY)
+			*lastPosY = posY
+		}
+		if valid && changed {
+			if *lastValid {
+				if !*lastDrawn {
+					p.LineTo(posX-width, *lastPosY*postScaleY)
+				}
+				p.LineTo(posX, posY*postScaleY)
+				drawn = true
+			}
+			*lastPosY = posY
+		}
+
+		*lastDrawn = drawn
+		*lastValid = valid
+		*last = val
+	}
+
+	count := len(bins.Min)
+	for i := 0; i < count; i++ {
+		min := bins.Min[i]
+		max := bins.Max[i]
+		valid := (min > 0 && min <= 95) || (max > 0 && max <= 95)
+
+		iter(pMin, i, min, valid, &lastMin, &lastPosYMin, &lastValidMin, &lastDrawnMin)
+		iter(pMax, i, max, valid, &lastMax, &lastPosYMax, &lastValidMax, &lastDrawnMax)
+	}
+
+	if lastValidMin {
+		pMin.LineTo(float64(count*bins.GroupSize), lastPosYMin*postScaleY)
+	}
+	if lastValidMax {
+		pMax.LineTo(float64(count*bins.GroupSize), lastPosYMax*postScaleY)
+	}
+
+}
+
 func DrawSNRGraph(out io.Writer, data models.Bins, params GraphParams) error {
+	return DrawSNRGraphWithHistory(out, data, models.BinsHistory{}, params)
+}
+
+func DrawSNRGraphWithHistory(out io.Writer, data models.Bins, history models.BinsHistory, params GraphParams) error {
 	bins, step, freq := getLegendX(data.Mode)
 
 	spec := graphSpec{
@@ -423,8 +487,20 @@ func DrawSNRGraph(out io.Writer, data models.Bins, params GraphParams) error {
 	buildSNRQLNPath(&m.Path, data.SNR.Downstream, scaleY, 0, spec.LegendYTop, -32, 95)
 	buildSNRQLNPath(&m.Path, data.SNR.Upstream, scaleY, 0, spec.LegendYTop, -32, 95)
 
+	m.PathMin.SetPrecision(1)
+	m.PathMax.SetPrecision(1)
+
+	buildSNRMinMaxPath(&m.PathMin, &m.PathMax, history.SNR.Downstream, scaleY, spec.LegendYTop, 1/scaleX)
+	buildSNRMinMaxPath(&m.PathMin, &m.PathMax, history.SNR.Upstream, scaleY, spec.LegendYTop, 1/scaleX)
+
 	m.Transform.Scale(scaleX, -1)
 	m.Transform.Translate(x, y+h)
+
+	// scaling of y by scaleX in order to simulate vector-effect="non-scaling-stroke" for non-supporting renderers
+	m.TransformMinMax.Scale(scaleX, -scaleX)
+	m.TransformMinMax.Translate(x, y+h)
+
+	m.StrokeWidth = 1 / scaleX
 
 	return writeTemplate(out, m, templateBase, templateSNR)
 }
