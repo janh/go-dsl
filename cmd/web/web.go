@@ -119,6 +119,19 @@ func getGraphString(bins models.Bins, graphFunc func(out io.Writer, data models.
 	return buf.String()
 }
 
+func getGraphStringWithHistory(bins models.Bins, history models.BinsHistory,
+	graphFunc func(out io.Writer, data models.Bins, history models.BinsHistory, params graphs.GraphParams) error) string {
+
+	buf := new(bytes.Buffer)
+
+	err := graphFunc(buf, bins, history, graphs.DefaultGraphParams)
+	if err != nil {
+		return ""
+	}
+
+	return buf.String()
+}
+
 func handleEvents(w http.ResponseWriter, req *http.Request) {
 	if req.Method != http.MethodGet {
 		http.Error(w, "405 method not allowed", http.StatusMethodNotAllowed)
@@ -151,7 +164,7 @@ func handleEvents(w http.ResponseWriter, req *http.Request) {
 				msg.Data = data{
 					Summary:   getSummaryString(change.Status),
 					GraphBits: getGraphString(change.Bins, graphs.DrawBitsGraph),
-					GraphSNR:  getGraphString(change.Bins, graphs.DrawSNRGraph),
+					GraphSNR:  getGraphStringWithHistory(change.Bins, change.BinsHistory, graphs.DrawSNRGraphWithHistory),
 					GraphQLN:  getGraphString(change.Bins, graphs.DrawQLNGraph),
 					GraphHlog: getGraphString(change.Bins, graphs.DrawHlogGraph),
 				}
@@ -212,6 +225,9 @@ func handleDownload(w http.ResponseWriter, req *http.Request) {
 
 	fileWriter, _ = archive.Create(filenameBase + "_snr.svg")
 	graphs.DrawSNRGraph(fileWriter, state.Bins, graphs.DefaultGraphParams)
+
+	fileWriter, _ = archive.Create(filenameBase + "_snr_minmax.svg")
+	graphs.DrawSNRGraphWithHistory(fileWriter, state.Bins, state.BinsHistory, graphs.DefaultGraphParams)
 
 	fileWriter, _ = archive.Create(filenameBase + "_qln.svg")
 	graphs.DrawQLNGraph(fileWriter, state.Bins, graphs.DefaultGraphParams)

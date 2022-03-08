@@ -10,6 +10,7 @@ import (
 
 	"3e8.eu/go/dsl"
 	"3e8.eu/go/dsl/models"
+	"3e8.eu/go/dsl/history"
 )
 
 type State string
@@ -30,10 +31,11 @@ const (
 type stateChange struct {
 	State State
 
-	Time    time.Time
-	RawData []byte
-	Status  models.Status
-	Bins    models.Bins
+	Time        time.Time
+	RawData     []byte
+	Status      models.Status
+	Bins        models.Bins
+	BinsHistory models.BinsHistory
 
 	Fingerprint string
 
@@ -251,6 +253,11 @@ func (c *client) update() {
 		}
 	}
 
+	history, err := history.NewBins(history.DefaultBinsConfig)
+	if err != nil {
+		panic(err)
+	}
+
 mainloop:
 	for {
 		for i := 0; i < 2; i++ {
@@ -265,12 +272,17 @@ mainloop:
 
 			if err == nil {
 
+				now := time.Now()
+
+				history.Update(c.client.Status(), c.client.Bins(), now)
+
 				c.changeState <- stateChange{
-					State:   StateReady,
-					Time:    time.Now(),
-					RawData: c.client.RawData(),
-					Status:  c.client.Status(),
-					Bins:    c.client.Bins(),
+					State:       StateReady,
+					Time:        now,
+					RawData:     c.client.RawData(),
+					Status:      c.client.Status(),
+					Bins:        c.client.Bins(),
+					BinsHistory: history.Data(),
 				}
 
 				c.errCount = 0
