@@ -13,13 +13,13 @@ import (
 )
 
 type BinsConfig struct {
-	PeriodLength  time.Duration
-	PeriodCount   int
-	MaxBinCount   int
+	PeriodLength time.Duration
+	PeriodCount  int
+	MaxBinCount  int
 }
 
 var DefaultBinsConfig = BinsConfig{
-	PeriodLength: 1*time.Hour,
+	PeriodLength: 1 * time.Hour,
 	PeriodCount:  24,
 	MaxBinCount:  1024,
 }
@@ -65,7 +65,7 @@ func (m *snrMinMax) ShiftPeriods(count int) {
 	periodCount := len(m.Periods)
 
 	if count < periodCount {
-		for i := periodCount-1; i > count-1; i-- {
+		for i := periodCount - 1; i > count-1; i-- {
 			m.Periods[i] = m.Periods[i-count]
 		}
 	}

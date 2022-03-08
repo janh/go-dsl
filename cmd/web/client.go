@@ -9,8 +9,8 @@ import (
 	"time"
 
 	"3e8.eu/go/dsl"
-	"3e8.eu/go/dsl/models"
 	"3e8.eu/go/dsl/history"
+	"3e8.eu/go/dsl/models"
 )
 
 type State string
