@@ -61,21 +61,16 @@ func (m *snrMinMax) Reset(snr models.BinsFloat, maxBinCount, periodCount int) {
 	}
 }
 
-func (m *snrMinMax) ShiftPeriods(count int) {
+func (m *snrMinMax) ClearPeriods(startIndex int, count int) {
 	periodCount := len(m.Periods)
-
-	if count < periodCount {
-		for i := periodCount - 1; i > count-1; i-- {
-			m.Periods[i] = m.Periods[i-count]
-		}
-	}
-
 	minmaxCount := len(m.Total.Min)
 
 	for i := 0; i < count && i < periodCount; i++ {
+		idx := (startIndex + i) % periodCount
+
 		for j := 0; j < minmaxCount; j++ {
-			m.Periods[i].Min[j] = 0
-			m.Periods[i].Max[j] = 0
+			m.Periods[idx].Min[j] = 0
+			m.Periods[idx].Max[j] = 0
 		}
 	}
 }
@@ -114,6 +109,7 @@ type Bins struct {
 	config      BinsConfig
 	mode        models.Mode
 	periodStart time.Time
+	periodIndex int
 	snr         snrMinMaxDownUp
 }
 
@@ -170,17 +166,18 @@ func (h *Bins) Update(status models.Status, bins models.Bins, now time.Time) {
 		elapsedPeriods := int(elapsedPeriodTime / h.config.PeriodLength)
 
 		if elapsedPeriods > 0 {
-			h.periodStart = currentPeriodStart
-
-			h.snr.Downstream.ShiftPeriods(elapsedPeriods)
-			h.snr.Upstream.ShiftPeriods(elapsedPeriods)
+			h.snr.Downstream.ClearPeriods(h.periodIndex+1, elapsedPeriods)
+			h.snr.Upstream.ClearPeriods(h.periodIndex+1, elapsedPeriods)
 
 			h.snr.Downstream.RecalculateTotal()
 			h.snr.Upstream.RecalculateTotal()
+
+			h.periodStart = currentPeriodStart
+			h.periodIndex = (h.periodIndex + elapsedPeriods) % h.config.PeriodCount
 		}
 
-		updateBinsFloatMinMax(&h.snr.Downstream.Periods[0], bins.SNR.Downstream)
-		updateBinsFloatMinMax(&h.snr.Upstream.Periods[0], bins.SNR.Upstream)
+		updateBinsFloatMinMax(&h.snr.Downstream.Periods[h.periodIndex], bins.SNR.Downstream)
+		updateBinsFloatMinMax(&h.snr.Upstream.Periods[h.periodIndex], bins.SNR.Upstream)
 	}
 
 	updateBinsFloatMinMax(&h.snr.Downstream.Total, bins.SNR.Downstream)
