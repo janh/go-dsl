@@ -154,7 +154,7 @@ func (h *Bins) Update(status models.Status, bins models.Bins, now time.Time) {
 		return
 	}
 
-	if h.needsReset(bins) || currentPeriodStart.After(now) {
+	if h.needsReset(bins) || h.periodStart.After(currentPeriodStart) {
 		h.mode = bins.Mode
 
 		if h.config.PeriodCount != 0 {
