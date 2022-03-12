@@ -19,13 +19,7 @@ import (
 	"3e8.eu/go/dsl/cmd/cli"
 	"3e8.eu/go/dsl/cmd/web"
 
-	_ "3e8.eu/go/dsl/broadcom"
-	_ "3e8.eu/go/dsl/draytek"
-	_ "3e8.eu/go/dsl/fritzbox"
-	_ "3e8.eu/go/dsl/lantiq"
-	_ "3e8.eu/go/dsl/mediatek"
-	_ "3e8.eu/go/dsl/sagemcom"
-	_ "3e8.eu/go/dsl/speedport"
+	_ "3e8.eu/go/dsl/all"
 )
 
 var (
