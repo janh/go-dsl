@@ -10,16 +10,26 @@ import (
 	"io"
 	"net/http"
 	"strings"
+
+	"github.com/andybalholm/brotli"
 )
 
-type eventStreamWriter struct {
-	writer     http.ResponseWriter
-	flusher    http.Flusher
-	gzipWriter *gzip.Writer
+type writeFlushCloser interface {
+	io.Writer
+	io.Closer
+	Flush() error
 }
 
-func acceptsGzip(req *http.Request) bool {
+type eventStreamWriter struct {
+	writer  http.ResponseWriter
+	flusher http.Flusher
+	zWriter writeFlushCloser
+}
+
+func getCompressedWriter(rw http.ResponseWriter, req *http.Request) writeFlushCloser {
 	acceptEncoding := req.Header.Get("Accept-Encoding")
+
+	encodingsMap := make(map[string]bool)
 
 	encodings := strings.Split(acceptEncoding, ",")
 	for _, encoding := range encodings {
@@ -28,12 +38,20 @@ func acceptsGzip(req *http.Request) bool {
 		}
 		encoding = strings.TrimSpace(encoding)
 
-		if strings.ToLower(encoding) == "gzip" {
-			return true
-		}
+		encodingsMap[strings.ToLower(encoding)] = true
 	}
 
-	return false
+	if encodingsMap["br"] {
+		rw.Header().Set("Content-Encoding", "br")
+		return brotli.NewWriter(rw)
+	}
+
+	if encodingsMap["gzip"] {
+		rw.Header().Set("Content-Encoding", "gzip")
+		return gzip.NewWriter(rw)
+	}
+
+	return nil
 }
 
 func newEventStreamWriter(rw http.ResponseWriter, req *http.Request) (*eventStreamWriter, error) {
@@ -51,10 +69,7 @@ func newEventStreamWriter(rw http.ResponseWriter, req *http.Request) (*eventStre
 	e.writer.Header().Set("Cache-Control", "no-cache")
 	e.writer.Header().Set("Connection", "keep-alive")
 
-	if acceptsGzip(req) {
-		e.writer.Header().Set("Content-Encoding", "gzip")
-		e.gzipWriter = gzip.NewWriter(e.writer)
-	}
+	e.zWriter = getCompressedWriter(rw, req)
 
 	return e, nil
 }
@@ -62,12 +77,12 @@ func newEventStreamWriter(rw http.ResponseWriter, req *http.Request) (*eventStre
 func (e *eventStreamWriter) WriteMessage(msg string) error {
 	data := "data: " + msg + "\n\n"
 
-	if e.gzipWriter != nil {
-		_, err := io.WriteString(e.gzipWriter, data)
+	if e.zWriter != nil {
+		_, err := io.WriteString(e.zWriter, data)
 		if err != nil {
 			return err
 		}
-		err = e.gzipWriter.Flush()
+		err = e.zWriter.Flush()
 		if err != nil {
 			return err
 		}
@@ -84,8 +99,8 @@ func (e *eventStreamWriter) WriteMessage(msg string) error {
 }
 
 func (e *eventStreamWriter) Close() error {
-	if e.gzipWriter != nil {
-		return e.gzipWriter.Close()
+	if e.zWriter != nil {
+		return e.zWriter.Close()
 	}
 
 	return nil
