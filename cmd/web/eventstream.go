@@ -68,7 +68,7 @@ func newEventStreamWriter(rw http.ResponseWriter, req *http.Request) (*eventStre
 	e.writer.Header().Set("Content-Type", "text/event-stream")
 	e.writer.Header().Set("Cache-Control", "no-cache")
 	e.writer.Header().Set("Connection", "keep-alive")
-	e.Writer.Header().Set("X-Accel-Buffering", "no")
+	e.writer.Header().Set("X-Accel-Buffering", "no")
 
 	e.zWriter = getCompressedWriter(rw, req)
 
