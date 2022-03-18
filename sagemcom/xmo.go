@@ -122,9 +122,25 @@ type xmoError struct {
 	Description string `json:"description"`
 }
 
+type xmoSessionID string
+
+func (id *xmoSessionID) UnmarshalJSON(data []byte) (err error) {
+	if len(data) > 0 && data[0] == '"' {
+		var s string
+		err = json.Unmarshal(data, &s)
+		*id = xmoSessionID(s)
+		return err
+	}
+
+	var i uint32
+	err = json.Unmarshal(data, &i)
+	*id = xmoSessionID(strconv.FormatUint(uint64(i), 10))
+	return
+}
+
 type xmoLoginReplyParameters struct {
-	ID    uint32 `json:"id"`
-	Nonce string `json:"nonce"`
+	ID    xmoSessionID `json:"id"`
+	Nonce string       `json:"nonce"`
 }
 
 type xmoValueReplyParameters struct {
@@ -278,7 +294,7 @@ func (s *session) login() error {
 		return err
 	}
 
-	s.sessionID = strconv.FormatUint(uint64(parameters.ID), 10)
+	s.sessionID = string(parameters.ID)
 	s.serverNonce = parameters.Nonce
 
 	return nil
