@@ -64,13 +64,16 @@ func getGraphColors(background, foreground Color) (colorGraph, colorGrid, colorN
 func getBaseModel(spec graphSpec) baseModel {
 	m := baseModel{}
 
+	m.ScaledWidth = float64(spec.Width) / spec.ScaleFactor
+	m.ScaledHeight = float64(spec.Height) / spec.ScaleFactor
+
 	m.Width = float64(spec.Width)
 	m.Height = float64(spec.Height)
 
-	m.GraphX = 28.0
-	m.GraphY = 4.0
-	m.GraphWidth = m.Width - 42.0
-	m.GraphHeight = m.Height - 23.0
+	m.GraphX = math.Round(28.0 * spec.ScaleFactor)
+	m.GraphY = math.Round(4.0 * spec.ScaleFactor)
+	m.GraphWidth = m.Width - math.Round(42.0*spec.ScaleFactor)
+	m.GraphHeight = m.Height - math.Round(23.0*spec.ScaleFactor)
 
 	m.ColorBackground = spec.ColorBackground
 	m.ColorText = spec.ColorForeground
@@ -86,50 +89,61 @@ func getBaseModel(spec graphSpec) baseModel {
 
 	m.ColorPilotTones = colorPilotTones
 
-	textOffset := 3.5
+	if spec.ScaleFactor > 1.0 {
+		m.StrokeWidthBase = math.Round(spec.ScaleFactor)
+	} else {
+		m.StrokeWidthBase = 1.0
+	}
+
+	m.FontSize = 10.5 * spec.ScaleFactor
+
+	textOffset := 3.5 * spec.ScaleFactor
 
 	x := m.GraphX
 	y := m.GraphY
 	w := m.GraphWidth
 	h := m.GraphHeight
 
+	f := spec.ScaleFactor
+	s := m.StrokeWidthBase
+
 	// legend for x-axis
-	m.PathLegend.MoveTo(x-0.5, y+h+0.5)
-	m.PathLegend.LineTo(x-0.5+w, y+h+0.5)
+	m.PathLegend.MoveTo(x-0.5*s, y+h+0.5*s)
+	m.PathLegend.LineTo(x-0.5*s+w, y+h+0.5*s)
 	for i := 0.0; i <= spec.LegendXMax; i += float64(spec.LegendXStep) {
 		frac := i / spec.LegendXMax
-		pos := x - 0.5 + math.Round(w*frac)
-		m.PathLegend.MoveTo(pos, y+h+2.5)
-		m.PathLegend.LineTo(pos, y+h+1.5)
+		pos := x - 0.5*s + math.Round(w*frac)
+		m.PathLegend.MoveTo(pos, y+h+math.Round(2*f)+0.5*s)
+		m.PathLegend.LineTo(pos, y+h+math.Round(1*f)+0.5*s)
 		text := fmt.Sprintf(spec.LegendXFormat, i*spec.LegendXFactor)
-		m.LabelsX = append(m.LabelsX, label{X: pos, Y: y + h + 10.5 + textOffset, Text: text})
+		m.LabelsX = append(m.LabelsX, label{X: pos, Y: y + h + m.FontSize + textOffset, Text: text})
 	}
 
 	// legend for y-axis
 	if math.Max(math.Abs(float64(spec.LegendYLabelStart)), math.Abs(float64(spec.LegendYLabelEnd))) >= 100 {
-		m.LabelsYTransform.Translate(10.5-x, 0)
+		m.LabelsYTransform.Translate(m.FontSize-x, 0)
 		m.LabelsYTransform.Scale(0.7, 1)
-		m.LabelsYTransform.Translate(x-10.5, 0)
+		m.LabelsYTransform.Translate(x-m.FontSize, 0)
 	}
-	m.PathLegend.MoveTo(x-0.5, y+0.5)
-	m.PathLegend.LineTo(x-0.5, y+h+0.5)
+	m.PathLegend.MoveTo(x-0.5*s, y+0.5*s)
+	m.PathLegend.LineTo(x-0.5*s, y+h+0.5*s)
 	for i := spec.LegendYLabelStart + spec.LegendYLabelStep/2; i <= spec.LegendYLabelEnd; i += spec.LegendYLabelStep {
 		frac := (float64(i) - spec.LegendYBottom) / (spec.LegendYTop - spec.LegendYBottom)
-		pos := y + h + 0.5 - math.Round(h*frac)
-		m.PathLegend.MoveTo(x-2.5, pos)
-		m.PathLegend.LineTo(x-1.5, pos)
+		pos := y + h + 0.5*s - math.Round(h*frac)
+		m.PathLegend.MoveTo(x-math.Round(2*f)-0.5*s, pos)
+		m.PathLegend.LineTo(x-math.Round(1*f)-0.5*s, pos)
 	}
 	for i := spec.LegendYLabelStart; i <= spec.LegendYLabelEnd; i += spec.LegendYLabelStep {
 		frac := (float64(i) - spec.LegendYBottom) / (spec.LegendYTop - spec.LegendYBottom)
-		pos := y + h + 0.5 - math.Round(h*frac)
-		m.PathLegend.MoveTo(x-4.5, pos)
-		m.PathLegend.LineTo(x-1.5, pos)
+		pos := y + h + 0.5*s - math.Round(h*frac)
+		m.PathLegend.MoveTo(x-math.Round(4*f)-0.5*s, pos)
+		m.PathLegend.LineTo(x-math.Round(1*f)-0.5*s, pos)
 		if frac > 0.01 {
-			m.PathGrid.MoveTo(x+0.5, pos)
-			m.PathGrid.LineTo(x+w-0.5, pos)
+			m.PathGrid.MoveTo(x+0.5*s, pos)
+			m.PathGrid.LineTo(x+w-0.5*s, pos)
 		}
 		text := fmt.Sprintf("%d", i)
-		m.LabelsY = append(m.LabelsY, label{X: x - 10.5, Y: pos + textOffset, Text: text})
+		m.LabelsY = append(m.LabelsY, label{X: x - m.FontSize, Y: pos + textOffset, Text: text})
 	}
 
 	return m
@@ -148,6 +162,8 @@ func setBandsData(m *baseModel, data models.Bins, useColor bool) {
 
 	m.ColorBandsStroke = m.ColorNeutralStroke
 	m.ColorBandsStroke.A = 0.1
+
+	s := m.StrokeWidthBase
 
 	type bandWithPath struct {
 		models.Band
@@ -176,8 +192,8 @@ func setBandsData(m *baseModel, data models.Bins, useColor bool) {
 		band.PathFill.MoveTo(start, bottom)
 		band.PathFill.LineTo(start, top)
 
-		m.PathBandsStroke.MoveTo(start+0.5, bottom-0.5)
-		m.PathBandsStroke.LineTo(start+0.5, top+0.5)
+		m.PathBandsStroke.MoveTo(start+0.5*s, bottom-0.5*s)
+		m.PathBandsStroke.LineTo(start+0.5*s, top+0.5*s)
 	}
 
 	for i := 1; i < len(bands); i++ {
@@ -187,20 +203,20 @@ func setBandsData(m *baseModel, data models.Bins, useColor bool) {
 		end := m.GraphX + math.Ceil((float64(band1.End)+0.5)*scaleX)
 		start := m.GraphX + math.Floor((float64(band2.Start)+0.5)*scaleX)
 
-		if start-end <= 1 {
+		if start-end <= 1*s {
 			center := float64(band2.Start+band1.End) / 2
-			pos := m.GraphX + math.Floor((center+0.5)*scaleX) + 0.5
+			pos := m.GraphX + math.Floor((center+0.5)*scaleX) + 0.5*s
 			end = pos
 			start = pos
 
-			m.PathBandsStroke.MoveTo(pos, bottom-0.5)
-			m.PathBandsStroke.LineTo(pos, top+0.5)
+			m.PathBandsStroke.MoveTo(pos, bottom-0.5*s)
+			m.PathBandsStroke.LineTo(pos, top+0.5*s)
 		} else {
-			m.PathBandsStroke.MoveTo(end-0.5, bottom-0.5)
-			m.PathBandsStroke.LineTo(end-0.5, top+0.5)
+			m.PathBandsStroke.MoveTo(end-0.5*s, bottom-0.5*s)
+			m.PathBandsStroke.LineTo(end-0.5*s, top+0.5*s)
 
-			m.PathBandsStroke.MoveTo(start+0.5, bottom-0.5)
-			m.PathBandsStroke.LineTo(start+0.5, top+0.5)
+			m.PathBandsStroke.MoveTo(start+0.5*s, bottom-0.5*s)
+			m.PathBandsStroke.LineTo(start+0.5*s, top+0.5*s)
 		}
 
 		band1.PathFill.LineTo(end, top)
@@ -219,8 +235,8 @@ func setBandsData(m *baseModel, data models.Bins, useColor bool) {
 		band.PathFill.LineTo(end, bottom)
 		band.PathFill.Close()
 
-		m.PathBandsStroke.MoveTo(end-0.5, bottom-0.5)
-		m.PathBandsStroke.LineTo(end-0.5, top+0.5)
+		m.PathBandsStroke.MoveTo(end-0.5*s, bottom-0.5*s)
+		m.PathBandsStroke.LineTo(end-0.5*s, top+0.5*s)
 	}
 }
 
@@ -295,9 +311,12 @@ func buildBitsPath(p *path, bins models.BinsBits, scaleY float64) {
 func DrawBitsGraph(out io.Writer, data models.Bins, params GraphParams) error {
 	bins, step, _ := getLegendX(data.Mode)
 
+	params.normalize()
+
 	spec := graphSpec{
 		Width:             params.Width,
 		Height:            params.Height,
+		ScaleFactor:       params.ScaleFactor,
 		ColorBackground:   params.ColorBackground,
 		ColorForeground:   params.ColorForeground,
 		LegendXMax:        float64(bins),
@@ -328,6 +347,8 @@ func DrawBitsGraph(out io.Writer, data models.Bins, params GraphParams) error {
 	if scaleX < 1.5 {
 		m.StrokeWidthPilotTones = 1.5 / scaleX
 	}
+	m.StrokeWidthPilotTones *= spec.ScaleFactor
+
 	buildPilotTonesPath(&m.PathPilotTones, data.PilotTones, h)
 
 	buildBitsPath(&m.PathDownstream, data.Bits.Downstream, scaleY)
@@ -453,9 +474,12 @@ func DrawSNRGraph(out io.Writer, data models.Bins, params GraphParams) error {
 func DrawSNRGraphWithHistory(out io.Writer, data models.Bins, history models.BinsHistory, params GraphParams) error {
 	bins, step, freq := getLegendX(data.Mode)
 
+	params.normalize()
+
 	spec := graphSpec{
 		Width:             params.Width,
 		Height:            params.Height,
+		ScaleFactor:       params.ScaleFactor,
 		ColorBackground:   params.ColorBackground,
 		ColorForeground:   params.ColorForeground,
 		LegendXMax:        float64(bins),
@@ -500,7 +524,7 @@ func DrawSNRGraphWithHistory(out io.Writer, data models.Bins, history models.Bin
 	m.TransformMinMax.Scale(scaleX, -scaleX)
 	m.TransformMinMax.Translate(x, y+h)
 
-	m.StrokeWidth = 1 / scaleX
+	m.StrokeWidth = spec.ScaleFactor / scaleX
 
 	return writeTemplate(out, m, templateBase, templateSNR)
 }
@@ -508,9 +532,12 @@ func DrawSNRGraphWithHistory(out io.Writer, data models.Bins, history models.Bin
 func DrawQLNGraph(out io.Writer, data models.Bins, params GraphParams) error {
 	bins, step, freq := getLegendX(data.Mode)
 
+	params.normalize()
+
 	spec := graphSpec{
 		Width:             params.Width,
 		Height:            params.Height,
+		ScaleFactor:       params.ScaleFactor,
 		ColorBackground:   params.ColorBackground,
 		ColorForeground:   params.ColorForeground,
 		LegendXMax:        float64(bins),
@@ -599,9 +626,12 @@ func buildHlogPath(p *path, bins models.BinsFloat, scaleY, offsetY, maxY, postSc
 func DrawHlogGraph(out io.Writer, data models.Bins, params GraphParams) error {
 	bins, step, freq := getLegendX(data.Mode)
 
+	params.normalize()
+
 	spec := graphSpec{
 		Width:             params.Width,
 		Height:            params.Height,
+		ScaleFactor:       params.ScaleFactor,
 		ColorBackground:   params.ColorBackground,
 		ColorForeground:   params.ColorForeground,
 		LegendXMax:        float64(bins),
@@ -637,7 +667,7 @@ func DrawHlogGraph(out io.Writer, data models.Bins, params GraphParams) error {
 	m.Transform.Scale(scaleX, -scaleX)
 	m.Transform.Translate(x, y+h)
 
-	m.StrokeWidth = 1 / scaleX
+	m.StrokeWidth = spec.ScaleFactor / scaleX
 
 	return writeTemplate(out, m, templateBase, templateHlog)
 }

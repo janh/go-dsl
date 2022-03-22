@@ -1,13 +1,13 @@
 <?xml version="1.0"?>
-<svg viewBox="0 0 {{ .Width }} {{ .Height }}" width="{{ .Width }}" height="{{ .Height }}" xmlns="http://www.w3.org/2000/svg">
+<svg viewBox="0 0 {{ .Width }} {{ .Height }}" width="{{ .ScaledWidth }}" height="{{ .ScaledHeight }}" xmlns="http://www.w3.org/2000/svg">
 
 <rect fill="{{ .ColorBackground }}" x="0" y="0" width="{{ .Width }}" height="{{ .Height }}"/>
 <rect fill="{{ .ColorGraph }}" x="{{ .GraphX }}" y="{{ .GraphY }}" width="{{ .GraphWidth }}" height="{{ .GraphHeight }}"/>
-<g fill="none" stroke-linecap="square">
+<g fill="none" stroke-linecap="square" stroke-width="{{ .StrokeWidthBase }}">
 	<path stroke="{{ .ColorText }}" d="{{ .PathLegend }}"/>
 	<path stroke="{{ .ColorGrid }}" d="{{ .PathGrid }}"/>
 </g>
-<g font-family="Arial,Helvetica,sans-serif" font-size="10.5" fill="{{ .ColorText }}">
+<g font-family="Arial,Helvetica,sans-serif" font-size="{{ .FontSize }}" fill="{{ .ColorText }}">
 	<g text-anchor="middle">
 		{{ range .LabelsX }}<text x="{{ .X }}" y="{{ .Y }}">{{ .Text }}</text>{{ end }}
 	</g>
@@ -18,7 +18,7 @@
 
 <path fill="{{ .ColorBandsUpstream }}" d="{{ .PathBandsUpstream }}"/>
 <path fill="{{ .ColorBandsDownstream }}" d="{{ .PathBandsDownstream }}"/>
-<path fill="none" stroke-linecap="square" stroke="{{ .ColorBandsStroke }}" d="{{ .PathBandsStroke }}"/>
+<path fill="none" stroke-linecap="square" stroke-width="{{ .StrokeWidthBase }}" stroke="{{ .ColorBandsStroke }}" d="{{ .PathBandsStroke }}"/>
 
 {{ template "content" . }}
 

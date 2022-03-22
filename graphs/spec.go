@@ -8,6 +8,8 @@ type graphSpec struct {
 	Width  int
 	Height int
 
+	ScaleFactor float64
+
 	ColorBackground Color
 	ColorForeground Color
 

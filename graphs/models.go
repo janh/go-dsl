@@ -5,6 +5,9 @@
 package graphs
 
 type baseModel struct {
+	ScaledWidth  float64
+	ScaledHeight float64
+
 	Width  float64
 	Height float64
 
@@ -24,6 +27,9 @@ type baseModel struct {
 	ColorMinStroke     Color
 	ColorMaxStroke     Color
 	ColorPilotTones    Color
+
+	StrokeWidthBase float64
+	FontSize        float64
 
 	PathLegend path
 	PathGrid   path
