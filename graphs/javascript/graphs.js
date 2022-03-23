@@ -312,9 +312,13 @@ var DSLGraphs = DSLGraphs || (function () {
 			this._labelsY = [];
 
 			// legend for x-axis
+			var legendXStep = spec.legendXStep;
+			while (w*legendXStep/spec.legendXMax < this.fontSize*2.5) {
+				legendXStep *= 2;
+			}
 			this._pathLegend.moveTo(x-0.5*s, y+h+0.5*s);
 			this._pathLegend.lineTo(x-0.5*s+w, y+h+0.5*s);
-			for (var i = 0.0; i <= spec.legendXMax; i += spec.legendXStep) {
+			for (var i = 0.0; i <= spec.legendXMax; i += legendXStep) {
 				let frac = i / spec.legendXMax;
 				let pos = x - 0.5*s + Math.round(w*frac);
 				this._pathLegend.moveTo(pos, y+h+Math.round(2*f)+0.5*s);
@@ -324,6 +328,10 @@ var DSLGraphs = DSLGraphs || (function () {
 			}
 
 			// legend for y-axis
+			var legendYLabelStep = spec.legendYLabelStep;
+			while (h*legendYLabelStep/(spec.legendYTop-spec.legendYBottom) < this.fontSize) {
+				legendYLabelStep *= 2;
+			}
 			this.labelsYTransform = null;
 			if (Math.max(Math.abs(spec.legendYLabelStart), Math.abs(spec.legendYLabelEnd)) >= 100) {
 				this.labelsYTransform = new Transform();
@@ -333,13 +341,13 @@ var DSLGraphs = DSLGraphs || (function () {
 			}
 			this._pathLegend.moveTo(x-0.5*s, y+0.5*s);
 			this._pathLegend.lineTo(x-0.5*s, y+h+0.5*s);
-			for (var i = spec.legendYLabelStart + spec.legendYLabelStep/2; i <= spec.legendYLabelEnd; i += spec.legendYLabelStep) {
+			for (var i = spec.legendYLabelStart + legendYLabelStep/2; i <= spec.legendYLabelEnd; i += legendYLabelStep) {
 				let frac = (i - spec.legendYBottom) / (spec.legendYTop - spec.legendYBottom);
 				let pos = y + h + 0.5*s - Math.round(h*frac);
 				this._pathLegend.moveTo(x-Math.round(2*f)-0.5*s, pos);
 				this._pathLegend.lineTo(x-Math.round(1*f)-0.5*s, pos);
 			}
-			for (var i = spec.legendYLabelStart; i <= spec.legendYLabelEnd; i += spec.legendYLabelStep) {
+			for (var i = spec.legendYLabelStart; i <= spec.legendYLabelEnd; i += legendYLabelStep) {
 				let frac = (i - spec.legendYBottom) / (spec.legendYTop - spec.legendYBottom);
 				let pos = y + h + 0.5*s - Math.round(h*frac);
 				this._pathLegend.moveTo(x-Math.round(4*f)-0.5*s, pos);
