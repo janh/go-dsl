@@ -60,7 +60,7 @@ func (t transform) String() string {
 		if i != 0 {
 			sb.WriteRune(' ')
 		}
-		sb.WriteString(t.funcs[count-i-1])
+		sb.WriteString(t.funcs[i])
 	}
 
 	return sb.String()

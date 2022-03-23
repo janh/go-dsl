@@ -121,9 +121,9 @@ func getBaseModel(spec graphSpec) baseModel {
 
 	// legend for y-axis
 	if math.Max(math.Abs(float64(spec.LegendYLabelStart)), math.Abs(float64(spec.LegendYLabelEnd))) >= 100 {
-		m.LabelsYTransform.Translate(m.FontSize-x, 0)
-		m.LabelsYTransform.Scale(0.7, 1)
 		m.LabelsYTransform.Translate(x-m.FontSize, 0)
+		m.LabelsYTransform.Scale(0.7, 1)
+		m.LabelsYTransform.Translate(m.FontSize-x, 0)
 	}
 	m.PathLegend.MoveTo(x-0.5*s, y+0.5*s)
 	m.PathLegend.LineTo(x-0.5*s, y+h+0.5*s)
@@ -354,8 +354,8 @@ func DrawBitsGraph(out io.Writer, data models.Bins, params GraphParams) error {
 	buildBitsPath(&m.PathDownstream, data.Bits.Downstream, scaleY)
 	buildBitsPath(&m.PathUpstream, data.Bits.Upstream, scaleY)
 
-	m.Transform.Scale(scaleX, -1)
 	m.Transform.Translate(x, y+h)
+	m.Transform.Scale(scaleX, -1)
 
 	return writeTemplate(out, m, templateBase, templateBits)
 }
@@ -517,12 +517,12 @@ func DrawSNRGraphWithHistory(out io.Writer, data models.Bins, history models.Bin
 	buildSNRMinMaxPath(&m.PathMin, &m.PathMax, history.SNR.Downstream, scaleY, spec.LegendYTop, 1/scaleX)
 	buildSNRMinMaxPath(&m.PathMin, &m.PathMax, history.SNR.Upstream, scaleY, spec.LegendYTop, 1/scaleX)
 
-	m.Transform.Scale(scaleX, -1)
 	m.Transform.Translate(x, y+h)
+	m.Transform.Scale(scaleX, -1)
 
 	// scaling of y by scaleX in order to simulate vector-effect="non-scaling-stroke" for non-supporting renderers
-	m.TransformMinMax.Scale(scaleX, -scaleX)
 	m.TransformMinMax.Translate(x, y+h)
+	m.TransformMinMax.Scale(scaleX, -scaleX)
 
 	m.StrokeWidth = spec.ScaleFactor / scaleX
 
@@ -569,8 +569,8 @@ func DrawQLNGraph(out io.Writer, data models.Bins, params GraphParams) error {
 	buildSNRQLNPath(&m.Path, data.QLN.Downstream, scaleY, spec.LegendYBottom, spec.LegendYTop, -150, -23)
 	buildSNRQLNPath(&m.Path, data.QLN.Upstream, scaleY, spec.LegendYBottom, spec.LegendYTop, -150, -23)
 
-	m.Transform.Scale(scaleX, -1)
 	m.Transform.Translate(x, y+h)
+	m.Transform.Scale(scaleX, -1)
 
 	return writeTemplate(out, m, templateBase, templateQLN)
 }
@@ -664,8 +664,8 @@ func DrawHlogGraph(out io.Writer, data models.Bins, params GraphParams) error {
 	buildHlogPath(&m.Path, data.Hlog.Upstream, scaleY, spec.LegendYBottom, spec.LegendYTop, 1/scaleX)
 
 	// scaling of y by scaleX in order to simulate vector-effect="non-scaling-stroke" for non-supporting renderers
-	m.Transform.Scale(scaleX, -scaleX)
 	m.Transform.Translate(x, y+h)
+	m.Transform.Scale(scaleX, -scaleX)
 
 	m.StrokeWidth = spec.ScaleFactor / scaleX
 
