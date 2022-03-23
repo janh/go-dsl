@@ -18,9 +18,11 @@ import (
 	"os"
 	"os/signal"
 	"syscall"
+	"time"
 
 	"3e8.eu/go/dsl"
 	"3e8.eu/go/dsl/graphs"
+	jsgraphs "3e8.eu/go/dsl/graphs/javascript"
 	"3e8.eu/go/dsl/models"
 )
 
@@ -35,6 +37,7 @@ func Start(config dsl.Config) {
 	staticFS := http.FS(files)
 	fs := http.FileServer(staticFS)
 	http.Handle("/static/", fs)
+	http.HandleFunc("/static/graphs.js", handleGraphsScript)
 
 	http.HandleFunc("/events", handleEvents)
 
@@ -82,6 +85,11 @@ func Start(config dsl.Config) {
 	}
 }
 
+func handleGraphsScript(w http.ResponseWriter, req *http.Request) {
+	reader := bytes.NewReader(jsgraphs.Script())
+	http.ServeContent(w, req, "graphs.js", time.Time{}, reader)
+}
+
 func handleRoot(w http.ResponseWriter, req *http.Request) {
 	if req.URL.Path != "/" {
 		http.NotFound(w, req)
@@ -104,30 +112,6 @@ func getSummaryString(status models.Status) string {
 
 	tpl := template.Must(template.ParseFS(files, "templates/summary.html"))
 	tpl.Execute(buf, status)
-
-	return buf.String()
-}
-
-func getGraphString(bins models.Bins, graphFunc func(out io.Writer, data models.Bins, params graphs.GraphParams) error) string {
-	buf := new(bytes.Buffer)
-
-	err := graphFunc(buf, bins, graphs.DefaultGraphParams)
-	if err != nil {
-		return ""
-	}
-
-	return buf.String()
-}
-
-func getGraphStringWithHistory(bins models.Bins, history models.BinsHistory,
-	graphFunc func(out io.Writer, data models.Bins, history models.BinsHistory, params graphs.GraphParams) error) string {
-
-	buf := new(bytes.Buffer)
-
-	err := graphFunc(buf, bins, history, graphs.DefaultGraphParams)
-	if err != nil {
-		return ""
-	}
 
 	return buf.String()
 }
@@ -162,11 +146,9 @@ func handleEvents(w http.ResponseWriter, req *http.Request) {
 
 			case StateReady:
 				msg.Data = data{
-					Summary:   getSummaryString(change.Status),
-					GraphBits: getGraphString(change.Bins, graphs.DrawBitsGraph),
-					GraphSNR:  getGraphStringWithHistory(change.Bins, change.BinsHistory, graphs.DrawSNRGraphWithHistory),
-					GraphQLN:  getGraphString(change.Bins, graphs.DrawQLNGraph),
-					GraphHlog: getGraphString(change.Bins, graphs.DrawHlogGraph),
+					Summary: getSummaryString(change.Status),
+					Bins:    jsgraphs.EncodeBins(change.Bins),
+					History: jsgraphs.EncodeBinsHistory(change.BinsHistory),
 				}
 
 			case StatePassphraseRequired:

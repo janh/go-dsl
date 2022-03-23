@@ -105,10 +105,9 @@ dt::after {
 	content: ":";
 }
 
-svg {
-	max-width: 100%;
+canvas {
+	width: 100%;
 	height: auto;
-	user-select: none;
 }
 #graphs {
 	margin: 1.5em 0;

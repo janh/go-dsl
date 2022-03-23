@@ -4,15 +4,17 @@
 
 package web
 
+import (
+	"encoding/json"
+)
+
 type message struct {
 	State string      `json:"state"`
 	Data  interface{} `json:"data,omitempty"`
 }
 
 type data struct {
-	Summary   string `json:"summary"`
-	GraphBits string `json:"graph_bits"`
-	GraphSNR  string `json:"graph_snr"`
-	GraphQLN  string `json:"graph_qln"`
-	GraphHlog string `json:"graph_hlog"`
+	Summary string          `json:"summary"`
+	Bins    json.RawMessage `json:"bins"`
+	History json.RawMessage `json:"history"`
 }

@@ -10,7 +10,7 @@ var state;
 
 var eventSource;
 
-var summary, graphBits, graphSNR, graphQLN, graphHlog;
+var summary, graphs, graphBits, graphSNR, graphQLN, graphHlog;
 var overlay, overlayPassword, overlayPassphrase, overlayError, overlayLoading;
 var fingerprint;
 
@@ -25,11 +25,13 @@ function updateState(newState, data) {
 				break;
 
 			case STATE_READY:
+				var bins = DSLGraphs.decodeBins(data["bins"]);
+				var history = DSLGraphs.decodeBinsHistory(data["history"]);
 				summary.innerHTML = data["summary"];
-				graphBits.innerHTML = data["graph_bits"];
-				graphSNR.innerHTML = data["graph_snr"];
-				graphQLN.innerHTML = data["graph_qln"];
-				graphHlog.innerHTML = data["graph_hlog"];
+				graphBits.setData(bins);
+				graphSNR.setData(bins, history);
+				graphQLN.setData(bins);
+				graphHlog.setData(bins);
 				break;
 
 			case STATE_ERROR:
@@ -110,12 +112,52 @@ function initEvents() {
 	});
 }
 
+function getGraphParams(width, devicePixelRatio) {
+	var params = new DSLGraphs.GraphParams();
+
+	var width = width;
+	var height = 114;
+
+	params.width = Math.round(width * devicePixelRatio);
+	params.height = Math.round(height * devicePixelRatio);
+
+	params.scaleFactor = devicePixelRatio;
+
+	return params;
+}
+
+function initGraphs() {
+	var lastDevicePixelRatio = window.devicePixelRatio;
+	var lastWidth = graphs.offsetWidth;
+
+	var params = getGraphParams(lastWidth, lastDevicePixelRatio);
+
+	graphBits = new DSLGraphs.BitsGraph(document.getElementById("graph_bits"), params);
+	graphSNR = new DSLGraphs.SNRGraph(document.getElementById("graph_snr"), params);
+	graphQLN = new DSLGraphs.QLNGraph(document.getElementById("graph_qln"), params);
+	graphHlog = new DSLGraphs.HlogGraph(document.getElementById("graph_hlog"), params);
+
+	window.addEventListener("resize", function() {
+		var devicePixelRatio = window.devicePixelRatio;
+		var width = graphs.offsetWidth;
+
+		if (devicePixelRatio != lastDevicePixelRatio || width != lastWidth) {
+			lastDevicePixelRatio = devicePixelRatio;
+			lastWidth = width;
+
+			var params = getGraphParams(width, devicePixelRatio);
+
+			graphBits.setParams(params);
+			graphSNR.setParams(params);
+			graphQLN.setParams(params);
+			graphHlog.setParams(params);
+		}
+	});
+}
+
 function loaded(event) {
 	summary = document.getElementById("summary");
-	graphBits = document.getElementById("graph_bits");
-	graphSNR = document.getElementById("graph_snr");
-	graphQLN = document.getElementById("graph_qln");
-	graphHlog = document.getElementById("graph_hlog");
+	graphs = document.getElementById("graphs");
 
 	overlay = document.getElementById("overlay");
 	overlayPassword = document.getElementById("overlay-password");
@@ -128,6 +170,7 @@ function loaded(event) {
 	updateState("loading");
 
 	initForms();
+	initGraphs();
 	initEvents();
 }
 
