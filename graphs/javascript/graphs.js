@@ -338,7 +338,7 @@ var DSLGraphs = DSLGraphs || (function () {
 				this._pathLegend.moveTo(pos, y+h+Math.round(2*f)+0.5*s);
 				this._pathLegend.lineTo(pos, y+h+Math.round(1*f)+0.5*s);
 				let text = spec.legendXFormatFunc(i*spec.legendXFactor);
-				this._labelsX.push({x: pos, y: y + h + 2 + 8*ff + textOffset, text: text});
+				this._labelsX.push({x: pos, y: y + h + (2+8*ff)*f + textOffset, text: text});
 			}
 
 			// legend for y-axis
@@ -349,9 +349,9 @@ var DSLGraphs = DSLGraphs || (function () {
 			this.labelsYTransform = null;
 			if (Math.max(Math.abs(spec.legendYLabelStart), Math.abs(spec.legendYLabelEnd)) >= 100) {
 				this.labelsYTransform = new Transform();
-				this.labelsYTransform.translate(x-5*f-5.5*ff, 0);
+				this.labelsYTransform.translate(x-(5+5.5*ff)*f, 0);
 				this.labelsYTransform.scale(0.7, 1);
-				this.labelsYTransform.translate(5*f+5.5*ff-x, 0);
+				this.labelsYTransform.translate((5+5.5*ff)*f-x, 0);
 			}
 			this._pathLegend.moveTo(x-0.5*s, y+0.5*s);
 			this._pathLegend.lineTo(x-0.5*s, y+h+0.5*s);
@@ -371,7 +371,7 @@ var DSLGraphs = DSLGraphs || (function () {
 					this._pathGrid.lineTo(x+w-0.5*s, pos);
 				}
 				let text = i.toString();
-				this._labelsY.push({x: x - 5*f - 5.5*ff, y: pos + textOffset, text: text});
+				this._labelsY.push({x: x - (5+5.5*ff)*f, y: pos + textOffset, text: text});
 			}
 		}
 

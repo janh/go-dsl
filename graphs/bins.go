@@ -129,7 +129,7 @@ func getBaseModel(spec graphSpec) baseModel {
 		m.PathLegend.MoveTo(pos, y+h+math.Round(2*f)+0.5*s)
 		m.PathLegend.LineTo(pos, y+h+math.Round(1*f)+0.5*s)
 		text := fmt.Sprintf(spec.LegendXFormat, i*spec.LegendXFactor)
-		m.LabelsX = append(m.LabelsX, label{X: pos, Y: y + h + 2 + 8*ff + textOffset, Text: text})
+		m.LabelsX = append(m.LabelsX, label{X: pos, Y: y + h + (2+8*ff)*f + textOffset, Text: text})
 	}
 
 	// legend for y-axis
@@ -138,9 +138,9 @@ func getBaseModel(spec graphSpec) baseModel {
 		legendYLabelStep *= 2
 	}
 	if math.Max(math.Abs(float64(spec.LegendYLabelStart)), math.Abs(float64(spec.LegendYLabelEnd))) >= 100 {
-		m.LabelsYTransform.Translate(x-5*f-5.5*ff, 0)
+		m.LabelsYTransform.Translate(x-(5+5.5*ff)*f, 0)
 		m.LabelsYTransform.Scale(0.7, 1)
-		m.LabelsYTransform.Translate(5*f+5.5*ff-x, 0)
+		m.LabelsYTransform.Translate((5+5.5*ff)*f-x, 0)
 	}
 	m.PathLegend.MoveTo(x-0.5*s, y+0.5*s)
 	m.PathLegend.LineTo(x-0.5*s, y+h+0.5*s)
@@ -160,7 +160,7 @@ func getBaseModel(spec graphSpec) baseModel {
 			m.PathGrid.LineTo(x+w-0.5*s, pos)
 		}
 		text := fmt.Sprintf("%d", i)
-		m.LabelsY = append(m.LabelsY, label{X: x - 5*f - 5.5*ff, Y: pos + textOffset, Text: text})
+		m.LabelsY = append(m.LabelsY, label{X: x - (5+5.5*ff)*f, Y: pos + textOffset, Text: text})
 	}
 
 	return m
