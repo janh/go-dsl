@@ -76,6 +76,7 @@ var DSLGraphs = DSLGraphs || (function () {
 			this.width = 554;
 			this.height = 114;
 			this.scaleFactor = 1.0;
+			this.fontSize = 0.0;
 			this.colorBackground = new Color(255, 255, 255, 1.0);
 			this.colorForeground = new Color(0, 0, 0, 1.0);
 		}
@@ -85,6 +86,7 @@ var DSLGraphs = DSLGraphs || (function () {
 	Object.defineProperty(GraphParams.prototype, 'width', {writable: true});
 	Object.defineProperty(GraphParams.prototype, 'height', {writable: true});
 	Object.defineProperty(GraphParams.prototype, 'scaleFactor', {writable: true});
+	Object.defineProperty(GraphParams.prototype, 'fontSize', {writable: true});
 	Object.defineProperty(GraphParams.prototype, 'colorBackground', {writable: true});
 	Object.defineProperty(GraphParams.prototype, 'colorForeground', {writable: true});
 
@@ -263,13 +265,26 @@ var DSLGraphs = DSLGraphs || (function () {
 	class BaseGraphHelper {
 
 		setSpec(spec) {
+			var scaledWidth = spec.width / spec.scaleFactor;
+			var scaledHeight = spec.height / spec.scaleFactor;
+
 			this.width = spec.width;
 			this.height = spec.height;
 
-			this.graphX = Math.round(28.0 * spec.scaleFactor);
-			this.graphY = Math.round(4.0 * spec.scaleFactor);
-			this.graphWidth = spec.width - Math.round(42.0*spec.scaleFactor);
-			this.graphHeight = spec.height - Math.round(23.0*spec.scaleFactor);
+			var fontFactor;
+			if (spec.fontSize == 0) {
+				let factor = Math.min(scaledWidth/554, scaledHeight/114);
+				fontFactor = Math.min(Math.max(1.0, factor), 1.35);
+				this.fontSize = 10.5 * fontFactor * spec.scaleFactor;
+			} else {
+				fontFactor = spec.fontSize / 10.5;
+				this.fontSize = spec.fontSize * spec.scaleFactor;
+			}
+
+			this.graphX = Math.round((23.0*fontFactor + 5.0) * spec.scaleFactor);
+			this.graphY = Math.round(4.0 * fontFactor * spec.scaleFactor);
+			this.graphWidth = spec.width - Math.round((38.0*fontFactor+4.0)*spec.scaleFactor);
+			this.graphHeight = spec.height - Math.round((18.0*fontFactor+5.0)*spec.scaleFactor);
 
 			this.colorBackground = spec.colorBackground;
 			this.colorText = spec.colorForeground;
@@ -294,9 +309,7 @@ var DSLGraphs = DSLGraphs || (function () {
 				this.strokeWidthBase = 1.0;
 			}
 
-			this.fontSize = 10.5 * spec.scaleFactor;
-
-			var textOffset = 3.5 * spec.scaleFactor;
+			var textOffset = 3.5 * fontFactor * spec.scaleFactor;
 
 			var x = this.graphX;
 			var y = this.graphY;
@@ -304,6 +317,7 @@ var DSLGraphs = DSLGraphs || (function () {
 			var h = this.graphHeight;
 
 			var f = spec.scaleFactor;
+			var ff = fontFactor;
 			var s = this.strokeWidthBase;
 
 			this._pathLegend = new Path2D();
@@ -324,7 +338,7 @@ var DSLGraphs = DSLGraphs || (function () {
 				this._pathLegend.moveTo(pos, y+h+Math.round(2*f)+0.5*s);
 				this._pathLegend.lineTo(pos, y+h+Math.round(1*f)+0.5*s);
 				let text = spec.legendXFormatFunc(i*spec.legendXFactor);
-				this._labelsX.push({x: pos, y: y + h + this.fontSize + textOffset, text: text});
+				this._labelsX.push({x: pos, y: y + h + 2 + 8*ff + textOffset, text: text});
 			}
 
 			// legend for y-axis
@@ -335,9 +349,9 @@ var DSLGraphs = DSLGraphs || (function () {
 			this.labelsYTransform = null;
 			if (Math.max(Math.abs(spec.legendYLabelStart), Math.abs(spec.legendYLabelEnd)) >= 100) {
 				this.labelsYTransform = new Transform();
-				this.labelsYTransform.translate(x-this.fontSize, 0);
+				this.labelsYTransform.translate(x-5*f-5.5*ff, 0);
 				this.labelsYTransform.scale(0.7, 1);
-				this.labelsYTransform.translate(this.fontSize-x, 0);
+				this.labelsYTransform.translate(5*f+5.5*ff-x, 0);
 			}
 			this._pathLegend.moveTo(x-0.5*s, y+0.5*s);
 			this._pathLegend.lineTo(x-0.5*s, y+h+0.5*s);
@@ -357,7 +371,7 @@ var DSLGraphs = DSLGraphs || (function () {
 					this._pathGrid.lineTo(x+w-0.5*s, pos);
 				}
 				let text = i.toString();
-				this._labelsY.push({x: x - this.fontSize, y: pos + textOffset, text: text});
+				this._labelsY.push({x: x - 5*f - 5.5*ff, y: pos + textOffset, text: text});
 			}
 		}
 
@@ -832,6 +846,7 @@ var DSLGraphs = DSLGraphs || (function () {
 			this._spec.width = params.width;
 			this._spec.height =  params.height;
 			this._spec.scaleFactor = params.scaleFactor;
+			this._spec.fontSize = params.fontSize;
 			this._spec.colorBackground = params.colorBackground;
 			this._spec.colorForeground = params.colorForeground;
 
@@ -969,6 +984,7 @@ var DSLGraphs = DSLGraphs || (function () {
 			this._spec.width = params.width;
 			this._spec.height =  params.height;
 			this._spec.scaleFactor = params.scaleFactor;
+			this._spec.fontSize = params.fontSize;
 			this._spec.colorBackground = params.colorBackground;
 			this._spec.colorForeground = params.colorForeground;
 
@@ -1071,6 +1087,7 @@ var DSLGraphs = DSLGraphs || (function () {
 			this._spec.width = params.width;
 			this._spec.height =  params.height;
 			this._spec.scaleFactor = params.scaleFactor;
+			this._spec.fontSize = params.fontSize;
 			this._spec.colorBackground = params.colorBackground;
 			this._spec.colorForeground = params.colorForeground;
 
@@ -1175,6 +1192,7 @@ var DSLGraphs = DSLGraphs || (function () {
 			this._spec.width = params.width;
 			this._spec.height =  params.height;
 			this._spec.scaleFactor = params.scaleFactor;
+			this._spec.fontSize = params.fontSize;
 			this._spec.colorBackground = params.colorBackground;
 			this._spec.colorForeground = params.colorForeground;
 

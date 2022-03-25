@@ -8,6 +8,7 @@ type GraphParams struct {
 	Width           int
 	Height          int
 	ScaleFactor     float64
+	FontSize        float64
 	ColorBackground Color
 	ColorForeground Color
 }
@@ -24,6 +25,8 @@ var (
 
 	DefaultScaleFactor = 1.0
 
+	DefaultFontSize = 0.0
+
 	DefaultColorBackground = Color{255, 255, 255, 1.0}
 	DefaultColorForeground = Color{0, 0, 0, 1.0}
 
@@ -31,6 +34,7 @@ var (
 		Width:           DefaultWidth,
 		Height:          DefaultHeight,
 		ScaleFactor:     DefaultScaleFactor,
+		FontSize:        DefaultFontSize,
 		ColorBackground: DefaultColorBackground,
 		ColorForeground: DefaultColorForeground,
 	}

@@ -70,10 +70,20 @@ func getBaseModel(spec graphSpec) baseModel {
 	m.Width = float64(spec.Width)
 	m.Height = float64(spec.Height)
 
-	m.GraphX = math.Round(28.0 * spec.ScaleFactor)
-	m.GraphY = math.Round(4.0 * spec.ScaleFactor)
-	m.GraphWidth = m.Width - math.Round(42.0*spec.ScaleFactor)
-	m.GraphHeight = m.Height - math.Round(23.0*spec.ScaleFactor)
+	var fontFactor float64
+	if spec.FontSize == 0 {
+		factor := math.Min(m.ScaledWidth/554, m.ScaledHeight/114)
+		fontFactor = math.Min(math.Max(1.0, factor), 1.35)
+		m.FontSize = 10.5 * fontFactor * spec.ScaleFactor
+	} else {
+		fontFactor = spec.FontSize / 10.5
+		m.FontSize = spec.FontSize * spec.ScaleFactor
+	}
+
+	m.GraphX = math.Round((23.0*fontFactor + 5.0) * spec.ScaleFactor)
+	m.GraphY = math.Round(4.0 * fontFactor * spec.ScaleFactor)
+	m.GraphWidth = m.Width - math.Round((38.0*fontFactor+4.0)*spec.ScaleFactor)
+	m.GraphHeight = m.Height - math.Round((18.0*fontFactor+5.0)*spec.ScaleFactor)
 
 	m.ColorBackground = spec.ColorBackground
 	m.ColorText = spec.ColorForeground
@@ -95,9 +105,7 @@ func getBaseModel(spec graphSpec) baseModel {
 		m.StrokeWidthBase = 1.0
 	}
 
-	m.FontSize = 10.5 * spec.ScaleFactor
-
-	textOffset := 3.5 * spec.ScaleFactor
+	textOffset := 3.5 * fontFactor * spec.ScaleFactor
 
 	x := m.GraphX
 	y := m.GraphY
@@ -105,6 +113,7 @@ func getBaseModel(spec graphSpec) baseModel {
 	h := m.GraphHeight
 
 	f := spec.ScaleFactor
+	ff := fontFactor
 	s := m.StrokeWidthBase
 
 	// legend for x-axis
@@ -120,7 +129,7 @@ func getBaseModel(spec graphSpec) baseModel {
 		m.PathLegend.MoveTo(pos, y+h+math.Round(2*f)+0.5*s)
 		m.PathLegend.LineTo(pos, y+h+math.Round(1*f)+0.5*s)
 		text := fmt.Sprintf(spec.LegendXFormat, i*spec.LegendXFactor)
-		m.LabelsX = append(m.LabelsX, label{X: pos, Y: y + h + m.FontSize + textOffset, Text: text})
+		m.LabelsX = append(m.LabelsX, label{X: pos, Y: y + h + 2 + 8*ff + textOffset, Text: text})
 	}
 
 	// legend for y-axis
@@ -129,9 +138,9 @@ func getBaseModel(spec graphSpec) baseModel {
 		legendYLabelStep *= 2
 	}
 	if math.Max(math.Abs(float64(spec.LegendYLabelStart)), math.Abs(float64(spec.LegendYLabelEnd))) >= 100 {
-		m.LabelsYTransform.Translate(x-m.FontSize, 0)
+		m.LabelsYTransform.Translate(x-5*f-5.5*ff, 0)
 		m.LabelsYTransform.Scale(0.7, 1)
-		m.LabelsYTransform.Translate(m.FontSize-x, 0)
+		m.LabelsYTransform.Translate(5*f+5.5*ff-x, 0)
 	}
 	m.PathLegend.MoveTo(x-0.5*s, y+0.5*s)
 	m.PathLegend.LineTo(x-0.5*s, y+h+0.5*s)
@@ -151,7 +160,7 @@ func getBaseModel(spec graphSpec) baseModel {
 			m.PathGrid.LineTo(x+w-0.5*s, pos)
 		}
 		text := fmt.Sprintf("%d", i)
-		m.LabelsY = append(m.LabelsY, label{X: x - m.FontSize, Y: pos + textOffset, Text: text})
+		m.LabelsY = append(m.LabelsY, label{X: x - 5*f - 5.5*ff, Y: pos + textOffset, Text: text})
 	}
 
 	return m
@@ -325,6 +334,7 @@ func DrawBitsGraph(out io.Writer, data models.Bins, params GraphParams) error {
 		Width:             params.Width,
 		Height:            params.Height,
 		ScaleFactor:       params.ScaleFactor,
+		FontSize:          params.FontSize,
 		ColorBackground:   params.ColorBackground,
 		ColorForeground:   params.ColorForeground,
 		LegendXMax:        float64(bins),
@@ -488,6 +498,7 @@ func DrawSNRGraphWithHistory(out io.Writer, data models.Bins, history models.Bin
 		Width:             params.Width,
 		Height:            params.Height,
 		ScaleFactor:       params.ScaleFactor,
+		FontSize:          params.FontSize,
 		ColorBackground:   params.ColorBackground,
 		ColorForeground:   params.ColorForeground,
 		LegendXMax:        float64(bins),
@@ -546,6 +557,7 @@ func DrawQLNGraph(out io.Writer, data models.Bins, params GraphParams) error {
 		Width:             params.Width,
 		Height:            params.Height,
 		ScaleFactor:       params.ScaleFactor,
+		FontSize:          params.FontSize,
 		ColorBackground:   params.ColorBackground,
 		ColorForeground:   params.ColorForeground,
 		LegendXMax:        float64(bins),
@@ -640,6 +652,7 @@ func DrawHlogGraph(out io.Writer, data models.Bins, params GraphParams) error {
 		Width:             params.Width,
 		Height:            params.Height,
 		ScaleFactor:       params.ScaleFactor,
+		FontSize:          params.FontSize,
 		ColorBackground:   params.ColorBackground,
 		ColorForeground:   params.ColorForeground,
 		LegendXMax:        float64(bins),

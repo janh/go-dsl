@@ -10,6 +10,8 @@ type graphSpec struct {
 
 	ScaleFactor float64
 
+	FontSize float64
+
 	ColorBackground Color
 	ColorForeground Color
 
