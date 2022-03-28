@@ -43,7 +43,11 @@ func getCompressedWriter(rw http.ResponseWriter, req *http.Request) writeFlushCl
 
 	if encodingsMap["br"] {
 		rw.Header().Set("Content-Encoding", "br")
-		return brotli.NewWriter(rw)
+		options := brotli.WriterOptions{
+			Quality: brotli.DefaultCompression,
+			LGWin:   18,
+		}
+		return brotli.NewWriterOptions(rw, options)
 	}
 
 	if encodingsMap["gzip"] {
