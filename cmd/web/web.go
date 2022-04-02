@@ -29,34 +29,20 @@ import (
 //go:embed static templates
 var files embed.FS
 
-var c *client
+var (
+	c         *client
+	server    http.Server
+	serverErr chan error
+)
 
-func Start(config dsl.Config) {
-	http.HandleFunc("/", handleRoot)
-
-	staticFS := http.FS(files)
-	fs := http.FileServer(staticFS)
-	http.Handle("/static/", fs)
-	http.HandleFunc("/static/graphs.js", handleGraphsScript)
-
-	http.HandleFunc("/events", handleEvents)
-
-	http.HandleFunc("/download", handleDownload)
-
-	http.HandleFunc("/password", handlePassword)
-	http.HandleFunc("/passphrase", handlePassphrase)
-
-	listener, err := net.Listen("tcp", "[::1]:0")
+func Run(config dsl.Config) {
+	addr, err := Start(config)
 	if err != nil {
 		fmt.Println("failed to start web server:", err)
 		os.Exit(1)
 	}
 
-	fmt.Printf("Started web server at: http://%s\n", listener.Addr().String())
-
-	c = newClient(config)
-
-	var server http.Server
+	fmt.Printf("Started web server at: %s\n", addr)
 
 	sigs := make(chan os.Signal, 1)
 	signal.Notify(sigs, syscall.SIGINT, syscall.SIGTERM)
@@ -73,16 +59,59 @@ func Start(config dsl.Config) {
 			os.Exit(0)
 		}()
 
-		c.close()
-		server.Shutdown(context.Background())
+		Stop()
 	}()
 
-	err = server.Serve(listener)
-
-	if err != nil && err != http.ErrServerClosed {
+	err = Wait()
+	if err != nil {
 		fmt.Println("failed to start web server:", err)
 		os.Exit(1)
 	}
+}
+
+func Start(config dsl.Config) (addr string, err error) {
+	http.HandleFunc("/", handleRoot)
+
+	staticFS := http.FS(files)
+	fs := http.FileServer(staticFS)
+	http.Handle("/static/", fs)
+	http.HandleFunc("/static/graphs.js", handleGraphsScript)
+
+	http.HandleFunc("/events", handleEvents)
+
+	http.HandleFunc("/download", handleDownload)
+
+	http.HandleFunc("/password", handlePassword)
+	http.HandleFunc("/passphrase", handlePassphrase)
+
+	listener, err := net.Listen("tcp", "[::1]:0")
+	if err != nil {
+		return
+	}
+
+	addr = "http://" + listener.Addr().String()
+
+	c = newClient(config)
+
+	serverErr = make(chan error, 1)
+
+	go func() {
+		err := server.Serve(listener)
+		if err != http.ErrServerClosed {
+			serverErr <- err
+		}
+	}()
+
+	return
+}
+
+func Wait() error {
+	return <-serverErr
+}
+
+func Stop() {
+	c.close()
+	serverErr <- server.Shutdown(context.Background())
 }
 
 func handleGraphsScript(w http.ResponseWriter, req *http.Request) {
@@ -131,6 +160,12 @@ func handleEvents(w http.ResponseWriter, req *http.Request) {
 	receiver := make(chan stateChange, 10)
 	c.RegisterReceiver(receiver)
 
+	shutdown := make(chan bool, 1)
+
+	server.RegisterOnShutdown(func() {
+		shutdown <- true
+	})
+
 	defer func() {
 		c.UnregisterReceiver(receiver)
 		writer.Close()
@@ -170,6 +205,9 @@ func handleEvents(w http.ResponseWriter, req *http.Request) {
 			}
 
 		case <-req.Context().Done():
+			return
+
+		case <-shutdown:
 			return
 
 		}

@@ -122,7 +122,7 @@ func main() {
 	config := buildClientConfig(clientType, flagSet.Arg(0), *user, *privateKey, *knownHosts, options)
 
 	if *startWebServer {
-		web.Start(config)
+		web.Run(config)
 	} else {
 		cli.LoadData(config)
 	}
