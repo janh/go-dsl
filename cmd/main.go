@@ -17,6 +17,7 @@ import (
 	"3e8.eu/go/dsl"
 
 	"3e8.eu/go/dsl/cmd/cli"
+	"3e8.eu/go/dsl/cmd/gui"
 	"3e8.eu/go/dsl/cmd/web"
 
 	_ "3e8.eu/go/dsl/all"
@@ -77,6 +78,10 @@ func main() {
 	privateKey := flagSet.String("private-key", defaultPrivateKey, "private key file for SSH authentication")
 	knownHosts := flagSet.String("known-hosts", defaultKnownHosts, "known hosts file for SSH host key validation, validation is skipped if set to \"IGNORE\"")
 	startWebServer := flagSet.Bool("web", false, "start web server instead of printing result")
+	var startGUI *bool
+	if gui.Enabled {
+		startGUI = flagSet.Bool("gui", false, "start graphical user interface")
+	}
 
 	err := flagSet.Parse(os.Args[1:])
 	if err != nil {
@@ -86,6 +91,10 @@ func main() {
 		} else {
 			os.Exit(2)
 		}
+	}
+
+	if *startWebServer && gui.Enabled && *startGUI {
+		exitWithUsage(flagSet, "Web interface and GUI cannot be selected together.")
 	}
 
 	clientType := dsl.ClientType(*device)
@@ -123,6 +132,8 @@ func main() {
 
 	if *startWebServer {
 		web.Run(config)
+	} else if gui.Enabled && *startGUI {
+		gui.Run(config)
 	} else {
 		cli.LoadData(config)
 	}
