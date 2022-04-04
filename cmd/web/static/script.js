@@ -120,8 +120,8 @@ function getGraphParams(width, devicePixelRatio) {
 	var width = width;
 	var height = 114;
 
-	params.width = Math.round(width * devicePixelRatio);
-	params.height = Math.round(height * devicePixelRatio);
+	params.width = Math.floor(width * devicePixelRatio);
+	params.height = Math.floor(height * devicePixelRatio);
 
 	params.scaleFactor = devicePixelRatio;
 
