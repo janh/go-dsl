@@ -137,6 +137,7 @@ canvas {
 	background: #fff;
 	padding: 1em;
 	max-width: 20em;
+	box-shadow: 0 0 2em rgba(0,0,0,.25);
 }
 #overlaycontent > * {
 	display: none;
