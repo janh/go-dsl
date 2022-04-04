@@ -114,11 +114,6 @@ func Stop() {
 	serverErr <- server.Shutdown(context.Background())
 }
 
-func handleGraphsScript(w http.ResponseWriter, req *http.Request) {
-	reader := bytes.NewReader(jsgraphs.Script())
-	http.ServeContent(w, req, "graphs.js", time.Time{}, reader)
-}
-
 func handleRoot(w http.ResponseWriter, req *http.Request) {
 	if req.URL.Path != "/" {
 		http.NotFound(w, req)
