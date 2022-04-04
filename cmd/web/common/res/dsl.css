@@ -72,10 +72,6 @@ dt::after {
 	content: ":";
 }
 
-canvas {
-	max-width: 100%;
-	height: auto;
-}
 #graphs {
 	margin: 1.5em 0;
 }
