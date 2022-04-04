@@ -10,7 +10,9 @@ var state;
 
 var eventSource;
 
-var summary, graphs, graphBits, graphSNR, graphQLN, graphHlog;
+var summary, graphs;
+var graphBitsCanvas, graphSNRCanvas, graphQLNCanvas, graphHlogCanvas;
+var graphBits, graphSNR, graphQLN, graphHlog;
 var overlay, overlayPassword, overlayPassphrase, overlayError, overlayLoading;
 var fingerprint;
 
@@ -126,16 +128,31 @@ function getGraphParams(width, devicePixelRatio) {
 	return params;
 }
 
+function setCanvasWidths(params) {
+	var width = (params.width / params.scaleFactor).toString() + "px";
+	graphBitsCanvas.style.width = width;
+	graphSNRCanvas.style.width = width;
+	graphQLNCanvas.style.width = width;
+	graphHlogCanvas.style.width = width;
+}
+
 function initGraphs() {
 	var lastDevicePixelRatio = window.devicePixelRatio;
 	var lastWidth = graphs.offsetWidth;
 
 	var params = getGraphParams(lastWidth, lastDevicePixelRatio);
 
-	graphBits = new DSLGraphs.BitsGraph(document.getElementById("graph_bits"), params);
-	graphSNR = new DSLGraphs.SNRGraph(document.getElementById("graph_snr"), params);
-	graphQLN = new DSLGraphs.QLNGraph(document.getElementById("graph_qln"), params);
-	graphHlog = new DSLGraphs.HlogGraph(document.getElementById("graph_hlog"), params);
+	graphBitsCanvas = document.getElementById("graph_bits");
+	graphSNRCanvas = document.getElementById("graph_snr");
+	graphQLNCanvas = document.getElementById("graph_qln");
+	graphHlogCanvas = document.getElementById("graph_hlog");
+
+	graphBits = new DSLGraphs.BitsGraph(graphBitsCanvas, params);
+	graphSNR = new DSLGraphs.SNRGraph(graphSNRCanvas, params);
+	graphQLN = new DSLGraphs.QLNGraph(graphQLNCanvas, params);
+	graphHlog = new DSLGraphs.HlogGraph(graphHlogCanvas, params);
+
+	setCanvasWidths(params);
 
 	window.addEventListener("resize", function() {
 		var devicePixelRatio = window.devicePixelRatio;
@@ -151,6 +168,8 @@ function initGraphs() {
 			graphSNR.setParams(params);
 			graphQLN.setParams(params);
 			graphHlog.setParams(params);
+
+			setCanvasWidths(params);
 		}
 	});
 }
