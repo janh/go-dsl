@@ -72,10 +72,10 @@ func Run(config dsl.Config) {
 func Start(config dsl.Config) (addr string, err error) {
 	http.HandleFunc("/", handleRoot)
 
-	staticFS := http.FS(files)
-	fs := http.FileServer(staticFS)
-	http.Handle("/static/", fs)
-	http.HandleFunc("/static/graphs.js", handleGraphsScript)
+	static := &staticHandler{}
+	static.MustAddFS("/static/", files, "static")
+	static.MustAdd("/static/graphs.js", staticItemBytes{jsgraphs.Script()})
+	http.Handle("/static/", static)
 
 	http.HandleFunc("/events", handleEvents)
 
