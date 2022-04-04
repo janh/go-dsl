@@ -2,7 +2,7 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-package web
+package common
 
 import (
 	"errors"
@@ -28,7 +28,7 @@ const (
 	intervalShort   time.Duration = 10 * time.Second
 )
 
-type stateChange struct {
+type StateChange struct {
 	State State
 
 	Time        time.Time
@@ -42,15 +42,15 @@ type stateChange struct {
 	Err error
 }
 
-type client struct {
+type Client struct {
 	setPassword        chan string
 	setPassphrase      chan string
-	changeState        chan stateChange
-	registerReceiver   chan chan stateChange
-	unregisterReceiver chan chan stateChange
+	changeState        chan StateChange
+	registerReceiver   chan chan StateChange
+	unregisterReceiver chan chan StateChange
 
-	receivers       map[chan stateChange]bool
-	lastStateChange stateChange
+	receivers       map[chan StateChange]bool
+	lastStateChange StateChange
 
 	client dsl.Client
 
@@ -68,15 +68,15 @@ type client struct {
 	passphrase map[string]string
 }
 
-func newClient(config dsl.Config) *client {
-	c := &client{
+func NewClient(config dsl.Config) *Client {
+	c := &Client{
 		setPassword:        make(chan string),
 		setPassphrase:      make(chan string),
-		changeState:        make(chan stateChange),
-		registerReceiver:   make(chan chan stateChange),
-		unregisterReceiver: make(chan chan stateChange),
-		receivers:          make(map[chan stateChange]bool),
-		lastStateChange:    stateChange{State: StateLoading},
+		changeState:        make(chan StateChange),
+		registerReceiver:   make(chan chan StateChange),
+		unregisterReceiver: make(chan chan StateChange),
+		receivers:          make(map[chan StateChange]bool),
+		lastStateChange:    StateChange{State: StateLoading},
 		interval:           intervalDefault,
 		intervalChanged:    make(chan bool),
 		cancel:             make(chan bool),
@@ -91,15 +91,15 @@ func newClient(config dsl.Config) *client {
 	return c
 }
 
-func (c *client) State() stateChange {
-	receiver := make(chan stateChange, 1)
+func (c *Client) State() StateChange {
+	receiver := make(chan StateChange, 1)
 	c.registerReceiver <- receiver
 	change := <-receiver
 	c.unregisterReceiver <- receiver
 	return change
 }
 
-func (c *client) SetPassword(password string) error {
+func (c *Client) SetPassword(password string) error {
 	select {
 	case c.setPassword <- password:
 		return nil
@@ -108,7 +108,7 @@ func (c *client) SetPassword(password string) error {
 	}
 }
 
-func (c *client) SetPassphrase(passphrase string) error {
+func (c *Client) SetPassphrase(passphrase string) error {
 	select {
 	case c.setPassphrase <- passphrase:
 		return nil
@@ -117,15 +117,15 @@ func (c *client) SetPassphrase(passphrase string) error {
 	}
 }
 
-func (c *client) RegisterReceiver(receiver chan stateChange) {
+func (c *Client) RegisterReceiver(receiver chan StateChange) {
 	c.registerReceiver <- receiver
 }
 
-func (c *client) UnregisterReceiver(receiver chan stateChange) {
+func (c *Client) UnregisterReceiver(receiver chan StateChange) {
 	c.unregisterReceiver <- receiver
 }
 
-func (c *client) distribute() {
+func (c *Client) distribute() {
 	for {
 		select {
 
@@ -170,7 +170,7 @@ func (c *client) distribute() {
 	}
 }
 
-func (c *client) connect() {
+func (c *Client) connect() {
 	var err error
 	var interval = 2 * time.Second
 
@@ -194,7 +194,7 @@ func (c *client) connect() {
 			}
 		}
 
-		c.changeState <- stateChange{State: StateError, Err: err}
+		c.changeState <- StateChange{State: StateError, Err: err}
 
 		select {
 		case <-c.cancel:
@@ -210,13 +210,13 @@ func (c *client) connect() {
 	}
 }
 
-func (c *client) update() {
+func (c *Client) update() {
 	clientDesc := c.config.Type.ClientDesc()
 
 	if clientDesc.SupportedAuthTypes&dsl.AuthTypePassword != 0 {
 		c.config.AuthPassword = func() string {
 			if c.password == "" {
-				c.changeState <- stateChange{State: StatePasswordRequired}
+				c.changeState <- StateChange{State: StatePasswordRequired}
 
 				select {
 				case <-c.cancel:
@@ -226,7 +226,7 @@ func (c *client) update() {
 					c.password = password
 				}
 
-				c.changeState <- stateChange{State: StateLoading}
+				c.changeState <- StateChange{State: StateLoading}
 			}
 
 			return c.password
@@ -236,7 +236,7 @@ func (c *client) update() {
 	if clientDesc.SupportedAuthTypes&dsl.AuthTypePrivateKeys != 0 {
 		c.config.AuthPrivateKeys.Passphrase = func(fingerprint string) string {
 			if c.passphrase[fingerprint] == "" {
-				c.changeState <- stateChange{State: StatePasswordRequired, Fingerprint: fingerprint}
+				c.changeState <- StateChange{State: StatePasswordRequired, Fingerprint: fingerprint}
 
 				select {
 				case <-c.cancel:
@@ -246,7 +246,7 @@ func (c *client) update() {
 					c.passphrase[fingerprint] = passphrase
 				}
 
-				c.changeState <- stateChange{State: StateLoading}
+				c.changeState <- StateChange{State: StateLoading}
 			}
 
 			return c.passphrase[fingerprint]
@@ -276,7 +276,7 @@ mainloop:
 
 				history.Update(c.client.Status(), c.client.Bins(), now)
 
-				c.changeState <- stateChange{
+				c.changeState <- StateChange{
 					State:       StateReady,
 					Time:        now,
 					RawData:     c.client.RawData(),
@@ -291,7 +291,7 @@ mainloop:
 
 			} else {
 
-				c.changeState <- stateChange{State: StateError, Err: err}
+				c.changeState <- StateChange{State: StateError, Err: err}
 
 				c.errCount++
 
@@ -329,7 +329,7 @@ mainloop:
 	c.done <- true
 }
 
-func (c *client) close() {
+func (c *Client) Close() {
 	c.cancel <- true
 	<-c.done
 }

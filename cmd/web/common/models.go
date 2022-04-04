@@ -2,18 +2,27 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-package web
+package common
 
 import (
 	"encoding/json"
 )
 
-type message struct {
+type Message struct {
 	State string      `json:"state"`
 	Data  interface{} `json:"data,omitempty"`
 }
 
-type data struct {
+func (m Message) JSON() []byte {
+	dataBytes, err := json.Marshal(m)
+	if err != nil {
+		dataBytes = []byte(`{"state":"error","data":"encoding error"}`)
+	}
+
+	return dataBytes
+}
+
+type MessageData struct {
 	Summary string          `json:"summary"`
 	Bins    json.RawMessage `json:"bins"`
 	History json.RawMessage `json:"history"`
