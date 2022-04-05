@@ -103,7 +103,11 @@
 		var params = new DSLGraphs.GraphParams();
 
 		var width = width;
-		var height = 114;
+		if (width >= params.width) {
+			var height = params.height + 0.75 * (width-params.width) * params.height / params.width;
+		} else {
+			var height = params.height;
+		}
 
 		params.width = Math.floor(width * devicePixelRatio);
 		params.height = Math.floor(height * devicePixelRatio);

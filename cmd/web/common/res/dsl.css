@@ -1,5 +1,5 @@
 #content {
-	max-width: 554px;
+	max-width: 60em;
 	margin: 2em auto;
 }
 
@@ -9,12 +9,16 @@ h2 {
 	margin: 1.3em 0 .8em 0;
 }
 
+#state, dl {
+	max-width: 45em;
+}
+
 #state {
 	display: grid;
 	grid-template-columns: 1fr 2fr 1fr;
 	grid-gap: 1em;
 	align-items: center;
-	margin: 1.5em 0 1em 0;
+	margin: 1.5em auto 1em auto;
 	min-height: 3.75em;
 }
 #state p {
@@ -36,6 +40,9 @@ h2 {
 	border-bottom: 1px solid #d7d7d7;
 }
 
+dl {
+	margin: 1em auto;
+}
 dl div {
 	display: flex;
 	align-items: center;
