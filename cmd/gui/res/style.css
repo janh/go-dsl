@@ -70,6 +70,11 @@ header a.disabled {
 	z-index: 2;
 }
 
+#content {
+	margin-top: 2em;
+	margin-bottom: 2em;
+}
+
 #messages {
 	display: none;
 }

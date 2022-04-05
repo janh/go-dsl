@@ -1,6 +1,7 @@
 #content {
 	max-width: 60em;
-	margin: 2em auto;
+	margin-left: auto;
+	margin-right: auto;
 }
 
 h2 {
@@ -152,5 +153,33 @@ input {
 	}
 	dd {
 		max-width: 10.5em;
+	}
+}
+
+@media (min-width: 1200px) and (max-height: 1000px), (min-width: 1400px) {
+	#content {
+		max-width: 120em;
+		display: grid;
+		grid-gap: 1.8em;
+		grid-template-columns: 3fr 5fr;
+		align-items: center;
+	}
+	#summary {
+		grid-row: 1;
+		grid-column: 1;
+		min-width: 554px;
+		max-width: 45em;
+	}
+	#graphs {
+		grid-row: 1;
+		grid-column: 2;
+		margin: 0;
+		overflow: hidden;
+	}
+	#summary > :first-child, #graphs > :first-child {
+		margin-top: 0;
+	}
+	#summary > :last-child, #graphs > :last-child {
+		margin-bottom: 0;
 	}
 }
