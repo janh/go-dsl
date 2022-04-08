@@ -9,7 +9,6 @@ import (
 	"flag"
 	"fmt"
 	"os"
-	"path/filepath"
 	"sort"
 	"strings"
 	"unicode"
@@ -17,6 +16,7 @@ import (
 	"3e8.eu/go/dsl"
 
 	"3e8.eu/go/dsl/cmd/cli"
+	"3e8.eu/go/dsl/cmd/config"
 	"3e8.eu/go/dsl/cmd/gui"
 	"3e8.eu/go/dsl/cmd/web"
 
@@ -27,14 +27,6 @@ var (
 	defaultPrivateKey string
 	defaultKnownHosts string
 )
-
-func init() {
-	home, err := os.UserHomeDir()
-	if err == nil {
-		defaultPrivateKey = filepath.Join(home, ".ssh") + string(filepath.Separator)
-		defaultKnownHosts = filepath.Join(home, ".ssh", "known_hosts")
-	}
-}
 
 type optionsFlag map[string]string
 
@@ -57,6 +49,21 @@ func (o *optionsFlag) Set(val string) error {
 	return nil
 }
 
+type stringFlag struct {
+	Value string
+	Valid bool
+}
+
+func (s *stringFlag) String() string {
+	return s.Value
+}
+
+func (s *stringFlag) Set(val string) error {
+	s.Value = val
+	s.Valid = true
+	return nil
+}
+
 func main() {
 	flagSet := flag.NewFlagSet(os.Args[0], flag.ContinueOnError)
 	flagSet.Usage = func() { printUsage(flagSet) }
@@ -70,17 +77,31 @@ func main() {
 		deviceTypeOptions += string(clientType)
 	}
 
-	var options optionsFlag
+	var device stringFlag
+	flagSet.Var(&device, "d", "device type (valid options: "+deviceTypeOptions+")")
 
-	device := flagSet.String("d", "", "device type (valid options: "+deviceTypeOptions+")")
-	user := flagSet.String("u", "", "user name (optional depending on device type)")
+	var user stringFlag
+	flagSet.Var(&user, "u", "user name (optional depending on device type)")
+
+	var options optionsFlag
 	flagSet.Var(&options, "o", "device-specific option, in format Key=Value")
-	privateKey := flagSet.String("private-key", defaultPrivateKey, "private key file for SSH authentication")
-	knownHosts := flagSet.String("known-hosts", defaultKnownHosts, "known hosts file for SSH host key validation, validation is skipped if set to \"IGNORE\"")
-	startWebServer := flagSet.Bool("web", false, "start web server instead of printing result")
-	var startGUI *bool
+
+	privateKey := stringFlag{Value: config.DefaultPrivateKeyPath}
+	flagSet.Var(&privateKey, "private-key", "private key file for SSH authentication")
+	flagSet.Lookup("private-key").DefValue = privateKey.Value
+
+	knownHosts := stringFlag{Value: config.DefaultKnownHostsPath}
+	flagSet.Var(&knownHosts, "known-hosts", "known hosts file for SSH host key validation, validation is skipped if set to \"IGNORE\"")
+	flagSet.Lookup("known-hosts").DefValue = knownHosts.Value
+
+	var startWebServer bool
+	flagSet.BoolVar(&startWebServer, "web", false, "start web server")
+	flagSet.Lookup("web").DefValue = ""
+
+	var startGUI bool
 	if gui.Enabled {
-		startGUI = flagSet.Bool("gui", false, "start graphical user interface")
+		flagSet.BoolVar(&startGUI, "gui", false, "start graphical user interface")
+		flagSet.Lookup("gui").DefValue = ""
 	}
 
 	err := flagSet.Parse(os.Args[1:])
@@ -93,49 +114,60 @@ func main() {
 		}
 	}
 
-	if *startWebServer && gui.Enabled && *startGUI {
-		exitWithUsage(flagSet, "Web interface and GUI cannot be selected together.")
-	}
-
-	clientType := dsl.ClientType(*device)
-	if !clientType.IsValid() {
-		exitWithUsage(flagSet, "Invalid or missing device type.")
-	}
-	clientDesc := clientType.ClientDesc()
-
-	if flagSet.NArg() == 0 {
-		exitWithUsage(flagSet, "No hostname specified.")
-	} else if flagSet.NArg() > 1 {
+	if flagSet.NArg() > 1 {
 		exitWithUsage(flagSet, "Too many arguments.")
 	}
 
-	if clientDesc.RequiresUser == dsl.TristateNo && *user != "" {
-		exitWithUsage(flagSet, "Username specified, but not required for device.")
-	} else if clientDesc.RequiresUser == dsl.TristateYes && *user == "" {
-		exitWithUsage(flagSet, "No username specified.")
+	if startWebServer && gui.Enabled && startGUI {
+		exitWithUsage(flagSet, "Web interface and GUI cannot be selected together.")
 	}
 
-	for optionKey := range options {
-		valid := false
-		for option := range clientDesc.OptionDescriptions {
-			if optionKey == option {
-				valid = true
-				break
-			}
-		}
-		if !valid {
-			exitWithUsage(flagSet, "Invalid device-specific option: "+optionKey)
-		}
+	err = config.Load(config.DefaultConfigPath)
+	if err != nil {
+		fmt.Println(err)
 	}
 
-	config := buildClientConfig(clientType, flagSet.Arg(0), *user, *privateKey, *knownHosts, options)
+	if device.Valid {
+		config.Config.DeviceType = dsl.ClientType(device.String())
+	}
 
-	if *startWebServer {
-		web.Run(config)
-	} else if gui.Enabled && *startGUI {
-		gui.Run(config)
+	if flagSet.Arg(0) != "" {
+		config.Config.Host = flagSet.Arg(0)
+	}
+
+	if user.Valid {
+		config.Config.User = user.String()
+	}
+
+	if privateKey.Valid {
+		config.Config.PrivateKeyPath = privateKey.String()
+	}
+
+	if knownHosts.Valid {
+		config.Config.KnownHostsPath = knownHosts.String()
+	}
+
+	for k, v := range options {
+		config.Config.Options[k] = v
+	}
+
+	err = config.Validate()
+	if err != nil {
+		exitWithUsage(flagSet, err.Error())
+	}
+
+	clientConfig, err := config.ClientConfig()
+	if err != nil {
+		fmt.Println(err)
+		os.Exit(1)
+	}
+
+	if startWebServer {
+		web.Run(clientConfig)
+	} else if gui.Enabled && startGUI {
+		gui.Run(clientConfig)
 	} else {
-		cli.LoadData(config)
+		cli.LoadData(clientConfig)
 	}
 }
 
@@ -285,88 +317,4 @@ func exitWithUsage(flagSet *flag.FlagSet, message string) {
 	fmt.Println(message)
 	flagSet.Usage()
 	os.Exit(2)
-}
-
-func loadKnownHosts(file string) (string, error) {
-	if file == "" {
-		return "", nil
-	}
-
-	data, err := os.ReadFile(file)
-	if err != nil && file != defaultKnownHosts {
-		return "", err
-	}
-
-	return string(data), nil
-}
-
-func loadPrivateKeys(file string) ([]string, error) {
-	if file == "" {
-		return nil, nil
-	}
-
-	if file[len(file)-1] == filepath.Separator {
-		var keys []string
-
-		keyFileNames := []string{"id_ed25519", "id_rsa", "id_ecdsa"}
-		for _, name := range keyFileNames {
-			data, err := os.ReadFile(file + name)
-			if err != nil && file != defaultPrivateKey {
-				return []string{}, err
-			}
-
-			if err == nil {
-				keys = append(keys, string(data))
-			}
-		}
-
-		return keys, nil
-	}
-
-	data, err := os.ReadFile(file)
-	if err != nil && file != defaultPrivateKey {
-		return []string{}, err
-	}
-
-	return []string{string(data)}, nil
-}
-
-func buildClientConfig(clientType dsl.ClientType, host, user, privateKey, knownHosts string, options map[string]string) dsl.Config {
-	clientDesc := clientType.ClientDesc()
-
-	if clientDesc.RequiresKnownHosts {
-		if knownHosts == "IGNORE" {
-			fmt.Println("WARNING: Host key validation disabled!")
-		} else {
-			var err error
-			knownHosts, err = loadKnownHosts(knownHosts)
-			if err != nil {
-				fmt.Println("failed to load known hosts file:", err)
-				os.Exit(1)
-			}
-		}
-	}
-
-	var privateKeysCallback dsl.PrivateKeysCallback
-	if clientDesc.SupportedAuthTypes&dsl.AuthTypePrivateKeys != 0 {
-		privateKeysCallback.Keys = func() ([]string, error) {
-			keys, err := loadPrivateKeys(privateKey)
-			if err != nil {
-				fmt.Println("failed to load private key file:", err)
-				os.Exit(1)
-			}
-			return keys, nil
-		}
-	}
-
-	config := dsl.Config{
-		Type:            clientType,
-		Host:            host,
-		User:            user,
-		AuthPrivateKeys: privateKeysCallback,
-		KnownHosts:      knownHosts,
-		Options:         options,
-	}
-
-	return config
 }
