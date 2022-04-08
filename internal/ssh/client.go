@@ -52,13 +52,20 @@ func (c *Client) connect(host, username string,
 		config.Auth = append(config.Auth, ssh.PublicKeysCallback(func() ([]ssh.Signer, error) {
 			signers := make([]ssh.Signer, 0)
 
-			privateKeys := privateKeysCallback.Keys()
+			privateKeys, err := privateKeysCallback.Keys()
+			if err != nil {
+				return nil, &dsl.AuthenticationError{Err: err}
+			}
+
 			for _, key := range privateKeys {
 				signer, err := ssh.ParsePrivateKey([]byte(key))
 
 				if errPassphrase, ok := err.(*ssh.PassphraseMissingError); ok && privateKeysCallback.Passphrase != nil {
 					fingerprint := ssh.FingerprintSHA256(errPassphrase.PublicKey)
-					passphrase := privateKeysCallback.Passphrase(fingerprint)
+					passphrase, err := privateKeysCallback.Passphrase(fingerprint)
+					if err != nil {
+						return nil, &dsl.AuthenticationError{Err: err}
+					}
 
 					signer, err = ssh.ParsePrivateKeyWithPassphrase([]byte(key), []byte(passphrase))
 					if err != nil {
@@ -78,7 +85,10 @@ func (c *Client) connect(host, username string,
 
 	if passwordCallback != nil {
 		config.Auth = append(config.Auth, ssh.PasswordCallback(func() (string, error) {
-			password := passwordCallback()
+			password, err := passwordCallback()
+			if err != nil {
+				return "", &dsl.AuthenticationError{Err: err}
+			}
 			return password, nil
 		}))
 	}

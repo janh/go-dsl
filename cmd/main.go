@@ -349,13 +349,13 @@ func buildClientConfig(clientType dsl.ClientType, host, user, privateKey, knownH
 
 	var privateKeysCallback dsl.PrivateKeysCallback
 	if clientDesc.SupportedAuthTypes&dsl.AuthTypePrivateKeys != 0 {
-		privateKeysCallback.Keys = func() []string {
+		privateKeysCallback.Keys = func() ([]string, error) {
 			keys, err := loadPrivateKeys(privateKey)
 			if err != nil {
 				fmt.Println("failed to load private key file:", err)
 				os.Exit(1)
 			}
-			return keys
+			return keys, nil
 		}
 	}
 

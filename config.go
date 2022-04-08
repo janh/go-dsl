@@ -4,21 +4,21 @@
 
 package dsl
 
-type PasswordCallback func() string
+type PasswordCallback func() (string, error)
 
 func Password(password string) PasswordCallback {
-	return func() string { return password }
+	return func() (string, error) { return password, nil }
 }
 
 type PrivateKeysCallback struct {
-	Keys       func() []string
-	Passphrase func(fingerprint string) string
+	Keys       func() ([]string, error)
+	Passphrase func(fingerprint string) (string, error)
 }
 
 func PrivateKey(key string, passphrase string) PrivateKeysCallback {
 	return PrivateKeysCallback{
-		Keys:       func() []string { return []string{key} },
-		Passphrase: func(string) string { return passphrase },
+		Keys:       func() ([]string, error) { return []string{key}, nil },
+		Passphrase: func(string) (string, error) { return passphrase, nil },
 	}
 }
 

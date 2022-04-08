@@ -61,7 +61,10 @@ func newSession(host string, passwordCallback dsl.PasswordCallback, tlsSkipVerif
 		return nil, err
 	}
 
-	password := passwordCallback()
+	password, err := passwordCallback()
+	if err != nil {
+		return nil, &dsl.AuthenticationError{Err: err}
+	}
 
 	err = s.login(password)
 	if err != nil {

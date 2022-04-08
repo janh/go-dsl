@@ -175,7 +175,10 @@ func (c *Client) connect(host, username string, passwordCallback dsl.PasswordCal
 
 			var password string
 			if passwordCallback != nil {
-				password = passwordCallback()
+				password, err = passwordCallback()
+				if err != nil {
+					return &dsl.AuthenticationError{Err: err}
+				}
 
 				err = c.conn.SetDeadline(time.Now().Add(10 * time.Second))
 				if err != nil {

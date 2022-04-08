@@ -114,7 +114,10 @@ func newSession(host, username string, passwordCallback dsl.PasswordCallback, tl
 
 	// get password
 	if passwordCallback != nil {
-		s.password = passwordCallback()
+		s.password, err = passwordCallback()
+		if err != nil {
+			return nil, &dsl.AuthenticationError{Err: err}
+		}
 	}
 	if enforceAuthentication && s.password == "" {
 		err := errors.New("password authentication is required when TLS is used")

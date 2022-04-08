@@ -175,7 +175,10 @@ func newSession(host, username string, passwordCallback dsl.PasswordCallback, tl
 		return nil, err
 	}
 
-	s.password = passwordCallback()
+	s.password, err = passwordCallback()
+	if err != nil {
+		return nil, &dsl.AuthenticationError{Err: err}
+	}
 
 	err = s.login()
 	if err != nil {

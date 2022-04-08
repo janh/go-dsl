@@ -36,21 +36,21 @@ func LoadData(config dsl.Config) {
 	fmt.Print("Connecting…")
 
 	if clientDesc.SupportedAuthTypes&dsl.AuthTypePassword != 0 {
-		config.AuthPassword = func() string {
+		config.AuthPassword = func() (string, error) {
 			fmt.Println(" password required")
 			password := readPassword("Password: ")
 			fmt.Print("Authenticating…")
-			return password
+			return password, nil
 		}
 	}
 
 	if clientDesc.SupportedAuthTypes&dsl.AuthTypePrivateKeys != 0 {
-		config.AuthPrivateKeys.Passphrase = func(fingerprint string) string {
+		config.AuthPrivateKeys.Passphrase = func(fingerprint string) (string, error) {
 			fmt.Println(" passphrase required")
 			fmt.Println("Fingerprint: " + fingerprint)
 			passphrase := readPassword("Passphrase: ")
 			fmt.Print("Authenticating…")
-			return passphrase
+			return passphrase, nil
 		}
 	}
 

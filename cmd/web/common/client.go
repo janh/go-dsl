@@ -214,14 +214,14 @@ func (c *Client) update() {
 	clientDesc := c.config.Type.ClientDesc()
 
 	if clientDesc.SupportedAuthTypes&dsl.AuthTypePassword != 0 {
-		c.config.AuthPassword = func() string {
+		c.config.AuthPassword = func() (string, error) {
 			if c.password == "" {
 				c.changeState <- StateChange{State: StatePasswordRequired}
 
 				select {
 				case <-c.cancel:
 					c.canceled = true
-					return ""
+					return "", errors.New("canceled")
 				case password := <-c.setPassword:
 					c.password = password
 				}
@@ -229,19 +229,19 @@ func (c *Client) update() {
 				c.changeState <- StateChange{State: StateLoading}
 			}
 
-			return c.password
+			return c.password, nil
 		}
 	}
 
 	if clientDesc.SupportedAuthTypes&dsl.AuthTypePrivateKeys != 0 {
-		c.config.AuthPrivateKeys.Passphrase = func(fingerprint string) string {
+		c.config.AuthPrivateKeys.Passphrase = func(fingerprint string) (string, error) {
 			if c.passphrase[fingerprint] == "" {
 				c.changeState <- StateChange{State: StatePasswordRequired, Fingerprint: fingerprint}
 
 				select {
 				case <-c.cancel:
 					c.canceled = true
-					return ""
+					return "", errors.New("canceled")
 				case passphrase := <-c.setPassphrase:
 					c.passphrase[fingerprint] = passphrase
 				}
@@ -249,7 +249,7 @@ func (c *Client) update() {
 				c.changeState <- StateChange{State: StateLoading}
 			}
 
-			return c.passphrase[fingerprint]
+			return c.passphrase[fingerprint], nil
 		}
 	}
 
