@@ -166,11 +166,8 @@ func ClientConfig() (dsl.Config, error) {
 }
 
 func init() {
-	home, err := os.UserHomeDir()
-	if err == nil {
-		DefaultPrivateKeyPath = filepath.Join(home, ".ssh") + string(filepath.Separator)
-		DefaultKnownHostsPath = filepath.Join(home, ".ssh", "known_hosts")
-	}
+	DefaultPrivateKeyPath = filepath.Join(xdg.Home, ".ssh") + string(filepath.Separator)
+	DefaultKnownHostsPath = filepath.Join(xdg.Home, ".ssh", "known_hosts")
 
 	DefaultConfigPath = filepath.Join(xdg.ConfigHome, "3e8.eu-go-dsl", "config.toml")
 }
