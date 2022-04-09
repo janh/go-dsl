@@ -36,9 +36,10 @@ const Enabled = true
 var resources embed.FS
 
 var (
-	c    *common.Client
-	w    webview.WebView
-	stop chan bool
+	c             *common.Client
+	w             webview.WebView
+	stop          chan bool
+	isInitialized bool
 )
 
 func Run(config dsl.Config) {
@@ -103,8 +104,12 @@ func receive(stop chan bool) {
 }
 
 func updateState(msg common.Message) {
+	if !isInitialized {
+		return
+	}
+
 	w.Dispatch(func() {
-		w.Eval("if (window.updateState) updateState(" + string(msg.JSON()) + ")")
+		w.Eval("updateState(" + string(msg.JSON()) + ")")
 	})
 }
 
