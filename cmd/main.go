@@ -77,6 +77,9 @@ func main() {
 		deviceTypeOptions += string(clientType)
 	}
 
+	var configPath string
+	flagSet.StringVar(&configPath, "config", config.DefaultConfigPath, "path to configuration file")
+
 	var device stringFlag
 	flagSet.Var(&device, "d", "device type (valid options: "+deviceTypeOptions+")")
 
@@ -122,7 +125,7 @@ func main() {
 		exitWithUsage(flagSet, "Web interface and GUI cannot be selected together.")
 	}
 
-	err = config.Load(config.DefaultConfigPath)
+	err = config.Load(configPath)
 	if err != nil {
 		fmt.Println(err)
 	}

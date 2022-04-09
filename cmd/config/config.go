@@ -12,6 +12,7 @@ import (
 	"path/filepath"
 
 	"github.com/BurntSushi/toml"
+	"github.com/adrg/xdg"
 
 	"3e8.eu/go/dsl"
 )
@@ -171,5 +172,5 @@ func init() {
 		DefaultKnownHostsPath = filepath.Join(home, ".ssh", "known_hosts")
 	}
 
-	DefaultConfigPath = "config.toml"
+	DefaultConfigPath = filepath.Join(xdg.ConfigHome, "3e8.eu-go-dsl", "config.toml")
 }
