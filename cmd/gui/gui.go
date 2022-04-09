@@ -21,6 +21,7 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/adrg/xdg"
 	"github.com/webview/webview"
 
 	"3e8.eu/go/dsl"
@@ -116,18 +117,36 @@ func showMessage(msg string) {
 }
 
 func initialized() {
+	isInitialized = true
+
 	change := c.State()
 	updateState(common.GetStateMessage(change))
 }
 
-func writeArchive(state common.StateChange) (filename string, err error) {
+func writeArchive(state common.StateChange) (path string, err error) {
 	filenameBase := state.Time.Format("dsl_20060102_150405")
-	filename = filenameBase + ".zip"
+	filename := filenameBase + ".zip"
 
-	f, err := os.OpenFile(filename, os.O_RDWR|os.O_CREATE|os.O_EXCL, 0666)
-	if err != nil {
-		return
+	var paths = []string{
+		filepath.Join(xdg.UserDirs.Download, filename),
+		filepath.Join(xdg.Home, filename),
 	}
+
+	var f *os.File
+
+	for i := range paths {
+		path = paths[i]
+		f, err = os.OpenFile(path, os.O_RDWR|os.O_CREATE|os.O_EXCL, 0666)
+
+		if i < len(paths)-1 && errors.Is(err, fs.ErrNotExist) {
+			continue
+		} else if err != nil {
+			return
+		} else {
+			break
+		}
+	}
+
 	defer f.Close()
 
 	err = common.WriteArchive(f, filenameBase, state)
@@ -140,14 +159,14 @@ func save() {
 		return
 	}
 
-	filename, err := writeArchive(change)
+	path, err := writeArchive(change)
 
-	filename, _ = filepath.Abs(filename)
+	path, _ = filepath.Abs(path)
 
 	if err == nil {
-		showMessage(fmt.Sprintf("Saved to %s.", filename))
+		showMessage(fmt.Sprintf("Saved to %s.", path))
 	} else if errors.Is(err, fs.ErrExist) {
-		showMessage(fmt.Sprintf("File %s already exists.", filename))
+		showMessage(fmt.Sprintf("File %s already exists.", path))
 	} else if err != nil {
 		showMessage("Saving failed!")
 		fmt.Println("failed to save archive:", err)
