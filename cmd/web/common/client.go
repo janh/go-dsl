@@ -48,6 +48,7 @@ type Client struct {
 	changeState        chan StateChange
 	registerReceiver   chan chan StateChange
 	unregisterReceiver chan chan StateChange
+	stopDistribute     chan bool
 
 	receivers       map[chan StateChange]bool
 	lastStateChange StateChange
@@ -75,6 +76,7 @@ func NewClient(config dsl.Config) *Client {
 		changeState:        make(chan StateChange),
 		registerReceiver:   make(chan chan StateChange),
 		unregisterReceiver: make(chan chan StateChange),
+		stopDistribute:     make(chan bool),
 		receivers:          make(map[chan StateChange]bool),
 		lastStateChange:    StateChange{State: StateLoading},
 		interval:           intervalDefault,
@@ -165,6 +167,9 @@ func (c *Client) distribute() {
 				default:
 				}
 			}
+
+		case <-c.stopDistribute:
+			return
 
 		}
 	}
@@ -326,6 +331,7 @@ mainloop:
 		c.client.Close()
 	}
 
+	c.stopDistribute <- true
 	c.done <- true
 }
 
