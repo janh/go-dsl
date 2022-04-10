@@ -154,23 +154,25 @@ func main() {
 		config.Config.Options[k] = v
 	}
 
-	err = config.Validate()
-	if err != nil {
-		exitWithUsage(flagSet, err.Error())
-	}
-
-	clientConfig, err := config.ClientConfig()
-	if err != nil {
-		fmt.Println(err)
-		os.Exit(1)
-	}
-
-	if startWebServer {
-		web.Run(clientConfig)
-	} else if gui.Enabled && startGUI {
-		gui.Run(clientConfig)
+	if gui.Enabled && startGUI {
+		gui.Run()
 	} else {
-		cli.LoadData(clientConfig)
+		err = config.Validate()
+		if err != nil {
+			exitWithUsage(flagSet, err.Error())
+		}
+
+		clientConfig, err := config.ClientConfig()
+		if err != nil {
+			fmt.Println(err)
+			os.Exit(1)
+		}
+
+		if startWebServer {
+			web.Run(clientConfig)
+		} else {
+			cli.LoadData(clientConfig)
+		}
 	}
 }
 

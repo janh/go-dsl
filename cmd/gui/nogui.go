@@ -6,10 +6,6 @@
 
 package gui
 
-import (
-	"3e8.eu/go/dsl"
-)
-
 const Enabled = false
 
-func Run(config dsl.Config) {}
+func Run() {}

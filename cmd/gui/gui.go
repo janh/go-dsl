@@ -24,9 +24,9 @@ import (
 	"github.com/adrg/xdg"
 	"github.com/webview/webview"
 
-	"3e8.eu/go/dsl"
 	jsgraphs "3e8.eu/go/dsl/graphs/javascript"
 
+	"3e8.eu/go/dsl/cmd/config"
 	"3e8.eu/go/dsl/cmd/web/common"
 )
 
@@ -40,10 +40,13 @@ var (
 	w             webview.WebView
 	stop          chan bool
 	isInitialized bool
+	lastMessage   common.Message
 )
 
-func Run(config dsl.Config) {
-	c = common.NewClient(config)
+func Run() {
+	updateState(common.Message{State: string(common.StateLoading)})
+
+	connect()
 
 	sigs := make(chan os.Signal, 1)
 	signal.Notify(sigs, syscall.SIGINT, syscall.SIGTERM)
@@ -60,9 +63,45 @@ func Run(config dsl.Config) {
 		os.Exit(1)
 	}()
 
-	c.Close()
+	disconnect()
 
 	os.Exit(0)
+}
+
+func connect() {
+	stop = make(chan bool, 1)
+
+	err := config.Validate()
+	if err != nil {
+		msg := common.Message{
+			State: string(common.StateError),
+			Data:  "configuration error: " + err.Error(),
+		}
+		updateState(msg)
+		return
+	}
+
+	clientConfig, err := config.ClientConfig()
+	if err != nil {
+		msg := common.Message{
+			State: string(common.StateError),
+			Data:  "client error: " + err.Error(),
+		}
+		updateState(msg)
+		return
+	}
+
+	c = common.NewClient(clientConfig)
+
+	go receive(stop)
+}
+
+func disconnect() {
+	if c != nil {
+		stop <- true
+		c.Close()
+		c = nil
+	}
 }
 
 func getMainDataURI() string {
@@ -104,6 +143,8 @@ func receive(stop chan bool) {
 }
 
 func updateState(msg common.Message) {
+	lastMessage = msg
+
 	if !isInitialized {
 		return
 	}
@@ -124,8 +165,7 @@ func showMessage(msg string) {
 func initialized() {
 	isInitialized = true
 
-	change := c.State()
-	updateState(common.GetStateMessage(change))
+	updateState(lastMessage)
 }
 
 func writeArchive(state common.StateChange) (path string, err error) {
@@ -201,9 +241,6 @@ func startWebView() {
 	w.SetSize(620, 300, webview.HintMin)
 	w.SetSize(620, 600, webview.HintNone)
 
-	stop = make(chan bool, 1)
-	go receive(stop)
-
 	w.Bind("goInitialized", initialized)
 	w.Bind("goSave", save)
 	w.Bind("goSetPassword", setPassword)
@@ -219,7 +256,6 @@ func startWebView() {
 
 func stopWebView() {
 	if w != nil {
-		stop <- true
 		w.Terminate()
 	}
 }
