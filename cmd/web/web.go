@@ -30,7 +30,7 @@ var (
 )
 
 func Run(config dsl.Config) {
-	addr, err := Start(config)
+	addr, err := start(config)
 	if err != nil {
 		fmt.Println("failed to start web server:", err)
 		os.Exit(1)
@@ -53,17 +53,17 @@ func Run(config dsl.Config) {
 			os.Exit(0)
 		}()
 
-		Stop()
+		stop()
 	}()
 
-	err = Wait()
+	err = wait()
 	if err != nil {
 		fmt.Println("failed to start web server:", err)
 		os.Exit(1)
 	}
 }
 
-func Start(config dsl.Config) (addr string, err error) {
+func start(config dsl.Config) (addr string, err error) {
 	http.HandleFunc("/", handleRoot)
 
 	static := &staticHandler{}
@@ -100,11 +100,11 @@ func Start(config dsl.Config) (addr string, err error) {
 	return
 }
 
-func Wait() error {
+func wait() error {
 	return <-serverErr
 }
 
-func Stop() {
+func stop() {
 	c.Close()
 	serverErr <- server.Shutdown(context.Background())
 }
