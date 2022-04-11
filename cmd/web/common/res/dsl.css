@@ -101,8 +101,8 @@ dt::after {
 }
 #overlaycontent {
 	background: #fff;
+	margin: 1em;
 	padding: 1em;
-	max-width: 20em;
 	box-shadow: 0 0 2em rgba(0,0,0,.25);
 }
 #overlaycontent > * {
@@ -111,16 +111,22 @@ dt::after {
 #overlaycontent > .visible {
 	display: block;
 }
-form {
+#overlaycontent > div {
+	max-width: 20em;
+}
+#overlaycontent > form {
 	width: 20em;
 }
 label {
 	display: block;
 	margin: 0 0 .5em 0;
 }
-input {
+input, select {
 	box-sizing: border-box;
 	width: 100%;
+	font: inherit;
+	padding: .2em .4em;
+	margin: 0;
 }
 
 @media (max-width: 500px) {
