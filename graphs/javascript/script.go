@@ -11,7 +11,7 @@ import (
 //go:embed graphs.js
 var script []byte
 
-// Javascript returns a library for drawing graphs to an HTML canvas.
+// Script returns a Javascript library for drawing graphs to an HTML canvas.
 func Script() []byte {
 	return script
 }
