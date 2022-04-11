@@ -100,7 +100,7 @@ func clientStopEvents() {
 
 	if stop != nil {
 		stop <- true
-		<- stopDone
+		<-stopDone
 	}
 }
 
