@@ -11,5 +11,5 @@ import (
 type Config struct {
 	Host          string
 	Password      dsl.PasswordCallback
-	TLSSkipVerify bool // TODO?
+	TLSSkipVerify bool
 }
