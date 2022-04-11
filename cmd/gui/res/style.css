@@ -75,6 +75,72 @@ header a.disabled {
 	margin-bottom: 2em;
 }
 
+#overlaycontent #overlay-connect {
+	width: 30em;
+}
+#overlay-connect fieldset {
+	border: none;
+	padding: 0;
+	margin: 0;
+}
+#overlay-connect fieldset, #overlay-connect fieldset > div {
+	display: grid;
+	grid-gap: .5em;
+}
+#overlay-connect fieldset + fieldset {
+	margin-top: 1em;
+}
+#overlay-connect fieldset:last-child {
+	margin-top: 1.5em;
+}
+#overlay-connect fieldset legend {
+	display: block;
+	width: 100%;
+	box-sizing: border-box;
+	padding: 0 0 0 1em;
+	margin: 0 0 .75em 0;
+	position: relative;
+	cursor: pointer;
+}
+#overlay-connect fieldset legend::before {
+	content: "";
+	width: 0;
+	height: 0;
+	border: .3em solid transparent;
+	border-top: .5em solid #aaa;
+	position: absolute;
+	left: 0;
+	top: .4em;
+}
+#overlay-connect fieldset.collapsed div, #overlay-connect fieldset.collapsed p {
+	display: none;
+}
+#overlay-connect fieldset.collapsed legend {
+	margin-bottom: 0;
+}
+#overlay-connect fieldset.collapsed legend::before {
+	border-top: .3em solid transparent;
+	border-left: .5em solid #aaa;
+	top: .35em;
+}
+#overlay-connect p {
+	display: flex;
+	flex-direction: row;
+	align-items: center;
+	margin: 0;
+}
+#overlay-connect label {
+	width: 10em;
+	margin-bottom: 0;
+}
+#overlay-connect input, #overlay-connect select {
+	width: auto;
+	flex-grow: 1;
+}
+#overlay-connect .hide {
+	display: none;
+}
+
 #messages {
 	display: none;
 }

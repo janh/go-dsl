@@ -13,6 +13,7 @@
 
 		<header>
 			<h1>xDSL stats</h1>
+			<a id="button-disconnect" href="javascript:goDisconnect()">Disconnect</a>
 			<a id="button-save" href="javascript:goSave()">Save</a>
 		</header>
 
@@ -61,6 +62,44 @@
 				<div id="overlay-error"></div>
 
 				<div id="overlay-loading">Loading…</div>
+
+				<div id="overlay-disconnecting">Disconnecting…</div>
+
+				<form id="overlay-connect">
+					<fieldset>
+						<p>
+							<label for="config-device-type">Device type:</label>
+							<select id="config-device-type"></select>
+						</p>
+					</fieldset>
+					<fieldset>
+						<p>
+							<label for="config-host">Host:</label>
+							<input type="text" id="config-host" />
+						</p>
+						<p>
+							<label for="config-user">User:</label>
+							<input type="text" id="config-user" />
+						</p>
+					</fieldset>
+					<fieldset id="config-advanced" class="collapsed">
+						<legend>Advanced options</legend>
+						<p>
+							<label for="config-private-key">Private key path:</label>
+							<input type="text" id="config-private-key" />
+						</p>
+						<p>
+							<label for="config-known-hosts">Known hosts path:</label>
+							<input type="text" id="config-known-hosts" />
+						</p>
+						<div id="config-options"></div>
+					</fieldset>
+					<fieldset>
+						<p>
+							<input type="submit" value="Connect" />
+						</p>
+					</fieldset>
+				</form>
 
 			</div>
 		</div>

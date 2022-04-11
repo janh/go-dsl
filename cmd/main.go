@@ -154,7 +154,7 @@ func main() {
 		config.Config.Options[k] = v
 	}
 
-	if gui.Enabled && startGUI {
+	if gui.Enabled && (startGUI || len(os.Args) == 1) {
 		gui.Run()
 	} else {
 		err = config.Validate()

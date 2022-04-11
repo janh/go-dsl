@@ -6,18 +6,145 @@
 	const STATE_PASSPHRASE = "passphrase";
 	const STATE_ERROR = "error";
 	const STATE_LOADING = "loading";
+	const STATE_INITIALIZING = "initializing";
+	const STATE_DISCONNECTING = "disconnecting";
+	const STATE_CONNECT = "connect";
+
+	const TRISTATE_MAYBE = 0;
+	const TRISTATE_NO = -1;
+	const TRISTATE_YES = 1;
+
+	const AuthTypePassword = 1 << 0;
+	const AuthTypePrivateKeys = 1 << 1;
 
 	var state;
+	var clientDescs;
 
 	var eventSource;
 
-	var buttonSave;
+	var buttonSave, buttonDisconnect;
 	var summary, graphs;
 	var graphBitsCanvas, graphSNRCanvas, graphQLNCanvas, graphHlogCanvas;
 	var graphBits, graphSNR, graphQLN, graphHlog;
-	var overlay, overlayPassword, overlayPassphrase, overlayError, overlayLoading;
+	var overlay, overlayPassword, overlayPassphrase, overlayError, overlayLoading, overlayDisconnecting, overlayConnect;
+	var configAdvanced, configDeviceType, configHost, configUser, configPrivateKey, configKnownHosts, configOptions;
 	var messages;
 	var fingerprint;
+
+	function setConfig(config, clients) {
+		clientDescs = clients;
+
+		while (configDeviceType.firstChild) {
+			configDeviceType.removeChild(configDeviceType.lastChild);
+		}
+		for (let key in clients) {
+			configDeviceType.add(new Option(key));
+		}
+
+		configDeviceType.value = config.DeviceType;
+		updateConfig();
+
+		configHost.value = config.Host;
+		configUser.value = config.User;
+		configPrivateKey.value = config.PrivateKeyPath;
+		configKnownHosts.value = config.KnownHostsPath;
+
+		for (let option in config.Options) {
+			let id = "config-option-" + option;
+			let input = document.getElementById(id);
+			if (input) {
+				input.value = config.Options[option];
+			}
+		}
+	}
+
+	function updateConfig() {
+		let deviceType = configDeviceType.value;
+		let clientDesc = clientDescs[deviceType];
+
+		if (!clientDesc) {
+			clientDesc = {
+				"RequiresUser": TRISTATE_MAYBE,
+				"SupportedAuthTypes": 0,
+				"RequiresKnownHosts": false,
+				"OptionDescriptions": null
+			};
+		}
+
+		if (clientDesc.RequiresUser == TRISTATE_NO) {
+			configUser.value = "";
+		}
+		configUser.parentElement.classList.toggle("hide", clientDesc.RequiresUser == TRISTATE_NO);
+
+		let hidePrivateKey = !(clientDesc.SupportedAuthTypes & AuthTypePrivateKeys);
+		configPrivateKey.parentElement.classList.toggle("hide", hidePrivateKey);
+
+		let hideKnownHosts = !clientDesc.RequiresKnownHosts;
+		configKnownHosts.parentElement.classList.toggle("hide", hideKnownHosts);
+
+		let hideOptions = !clientDesc.OptionDescriptions;
+		configOptions.classList.toggle("hide", hideOptions);
+
+		configAdvanced.classList.toggle("hide", hidePrivateKey && hideKnownHosts && hideOptions);
+
+		while (configOptions.firstChild) {
+			configOptions.removeChild(configOptions.lastChild);
+		}
+		for (let option in clientDesc.OptionDescriptions) {
+			let id = "config-option-" + option;
+			let item = document.createElement("p");
+
+			let label = document.createElement("label");
+			label.htmlFor = id;
+			label.innerText = option + ":";
+			item.appendChild(label);
+
+			let input = document.createElement("input");
+			input.type = "text";
+			input.id = id;
+			input.name = option;
+			item.appendChild(input);
+
+			configOptions.appendChild(item);
+		}
+	}
+
+	function connect(event) {
+		var data = {
+			"DeviceType": configDeviceType.value,
+			"Host": configHost.value,
+			"User": configUser.value,
+			"PrivateKeysPath": configPrivateKey.value,
+			"KnownHostsPath": configKnownHosts.value,
+			"Options": {}
+		};
+
+		let optionInputs = configOptions.getElementsByTagName("input");
+		for (let input of optionInputs) {
+			if (input.value.length) {
+				data.Options[input.name] = input.value;
+			}
+		}
+
+		goConnect(data);
+
+		event.preventDefault();
+	}
+
+	function toggleFieldset(event) {
+		let fieldset = event.target.parentElement;
+		fieldset.classList.toggle("collapsed");
+	}
+
+	function initConfig() {
+		configDeviceType.addEventListener("change", updateConfig);
+		overlayConnect.addEventListener("submit", connect);
+
+		let legends = overlayConnect.getElementsByTagName("legend");
+		for (let legend of legends) {
+			legend.addEventListener("click", toggleFieldset);
+		}
+	}
 
 	function updateState(newState, data) {
 		let oldState = state;
@@ -49,12 +176,16 @@
 			state = newState;
 
 			buttonSave.classList.toggle("disabled", state != STATE_READY);
+			buttonDisconnect.classList.toggle("disabled",
+				state != STATE_READY && state != STATE_PASSWORD && state != STATE_PASSPHRASE && state != STATE_ERROR && state != STATE_LOADING);
 
 			overlay.classList.toggle("visible", state != STATE_READY);
 			overlayPassword.classList.toggle("visible", state == STATE_PASSWORD);
 			overlayPassphrase.classList.toggle("visible", state == STATE_PASSPHRASE);
 			overlayError.classList.toggle("visible", state == STATE_ERROR);
-			overlayLoading.classList.toggle("visible", state == STATE_LOADING);
+			overlayLoading.classList.toggle("visible", state == STATE_LOADING || state == STATE_INITIALIZING);
+			overlayDisconnecting.classList.toggle("visible", state == STATE_DISCONNECTING);
+			overlayConnect.classList.toggle("visible", state == STATE_CONNECT);
 		}
 	}
 
@@ -92,7 +223,7 @@
 	}
 
 	function initForms() {
-		let forms = document.getElementsByTagName("form");
+		let forms = document.querySelectorAll("#overlay-password, #overlay-passphrase");
 
 		for (let form of forms) {
 			form.addEventListener("submit", sendForm);
@@ -165,6 +296,7 @@
 
 	function loaded(event) {
 		buttonSave = document.getElementById("button-save");
+		buttonDisconnect = document.getElementById("button-disconnect");
 
 		summary = document.getElementById("summary");
 		graphs = document.getElementById("graphs");
@@ -174,12 +306,22 @@
 		overlayPassphrase = document.getElementById("overlay-passphrase");
 		overlayError = document.getElementById("overlay-error");
 		overlayLoading = document.getElementById("overlay-loading");
+		overlayDisconnecting = document.getElementById("overlay-disconnecting");
+		overlayConnect = document.getElementById("overlay-connect");
+
+		configAdvanced = document.getElementById("config-advanced");
+		configDeviceType = document.getElementById("config-device-type");
+		configHost = document.getElementById("config-host");
+		configUser = document.getElementById("config-user");
+		configPrivateKey = document.getElementById("config-private-key");
+		configKnownHosts = document.getElementById("config-known-hosts");
+		configOptions = document.getElementById("config-options");
 
 		messages = document.getElementById("messages");
 
 		fingerprint = document.getElementById("fingerprint");
 
-		updateState("loading");
+		updateState("initializing");
 
 		window.updateState = function(data) {
 			updateState(data.state, data.data);
@@ -189,6 +331,11 @@
 			showMessage(text);
 		}
 
+		window.setConfig = function(config, clients) {
+			setConfig(config, clients);
+		}
+
+		initConfig();
 		initForms();
 		initGraphs();
 		goInitialized();

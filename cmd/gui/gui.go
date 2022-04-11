@@ -18,12 +18,14 @@ import (
 	"os"
 	"os/signal"
 	"path/filepath"
+	"sync"
 	"syscall"
 	"time"
 
 	"github.com/adrg/xdg"
 	"github.com/webview/webview"
 
+	"3e8.eu/go/dsl"
 	jsgraphs "3e8.eu/go/dsl/graphs/javascript"
 
 	"3e8.eu/go/dsl/cmd/config"
@@ -32,6 +34,12 @@ import (
 
 const Enabled = true
 
+const (
+	stateInitializing  = "initializing"
+	stateDisconnecting = "disconnecting"
+	stateConnect       = "connect"
+)
+
 //go:embed res
 var resources embed.FS
 
@@ -39,20 +47,25 @@ var (
 	c             *common.Client
 	w             webview.WebView
 	stop          chan bool
+	stopDone      chan bool
 	isInitialized bool
 	lastMessage   common.Message
+	mutex         sync.Mutex
+	mutexClient   sync.Mutex
 )
 
 func Run() {
-	updateState(common.Message{State: string(common.StateLoading)})
-
-	connect()
+	updateState(common.Message{State: stateConnect})
 
 	sigs := make(chan os.Signal, 1)
 	signal.Notify(sigs, syscall.SIGINT, syscall.SIGTERM)
 
 	go func() {
 		<-sigs
+
+		mutex.Lock()
+		defer mutex.Unlock()
+
 		stopWebView()
 	}()
 
@@ -63,42 +76,39 @@ func Run() {
 		os.Exit(1)
 	}()
 
-	disconnect()
+	clientStopEvents()
+	clientDisconnect()
 
 	os.Exit(0)
 }
 
-func connect() {
-	stop = make(chan bool, 1)
-
-	err := config.Validate()
-	if err != nil {
-		msg := common.Message{
-			State: string(common.StateError),
-			Data:  "configuration error: " + err.Error(),
-		}
-		updateState(msg)
-		return
-	}
-
-	clientConfig, err := config.ClientConfig()
-	if err != nil {
-		msg := common.Message{
-			State: string(common.StateError),
-			Data:  "client error: " + err.Error(),
-		}
-		updateState(msg)
-		return
-	}
+func clientConnect(clientConfig dsl.Config) {
+	mutexClient.Lock()
+	defer mutexClient.Unlock()
 
 	c = common.NewClient(clientConfig)
 
-	go receive(stop)
+	stop = make(chan bool)
+	stopDone = make(chan bool)
+
+	go receive()
 }
 
-func disconnect() {
-	if c != nil {
+func clientStopEvents() {
+	mutexClient.Lock()
+	defer mutexClient.Unlock()
+
+	if stop != nil {
 		stop <- true
+		<- stopDone
+	}
+}
+
+func clientDisconnect() {
+	mutexClient.Lock()
+	defer mutexClient.Unlock()
+
+	if c != nil {
 		c.Close()
 		c = nil
 	}
@@ -121,8 +131,9 @@ func getMainDataURI() string {
 	return "data:text/html;charset=utf-8;base64," + base64.StdEncoding.EncodeToString(buf.Bytes())
 }
 
-func receive(stop chan bool) {
+func receive() {
 	receiver := make(chan common.StateChange, 10)
+
 	c.RegisterReceiver(receiver)
 
 	defer func() {
@@ -133,9 +144,13 @@ func receive(stop chan bool) {
 		select {
 
 		case change := <-receiver:
+			mutex.Lock()
 			updateState(common.GetStateMessage(change))
+			mutex.Unlock()
 
 		case <-stop:
+			stop = nil
+			stopDone <- true
 			return
 
 		}
@@ -157,14 +172,36 @@ func updateState(msg common.Message) {
 func showMessage(msg string) {
 	msgJSON, _ := json.Marshal(msg)
 
+	if !isInitialized {
+		return
+	}
+
 	w.Dispatch(func() {
 		w.Eval("showMessage(" + string(msgJSON) + ")")
 	})
 }
 
+func setConfig() {
+	configJSON, _ := json.Marshal(config.Config)
+
+	clients := make(map[string]dsl.ClientDesc)
+	for _, clientType := range dsl.GetClientTypes() {
+		clients[string(clientType)] = clientType.ClientDesc()
+	}
+	clientsJSON, _ := json.Marshal(clients)
+
+	w.Dispatch(func() {
+		w.Eval("setConfig(" + string(configJSON) + ", " + string(clientsJSON) + ")")
+	})
+}
+
 func initialized() {
+	mutex.Lock()
+	defer mutex.Unlock()
+
 	isInitialized = true
 
+	setConfig()
 	updateState(lastMessage)
 }
 
@@ -199,6 +236,13 @@ func writeArchive(state common.StateChange) (path string, err error) {
 }
 
 func save() {
+	mutex.Lock()
+	defer mutex.Unlock()
+
+	if lastMessage.State != string(common.StateReady) {
+		return
+	}
+
 	change := c.State()
 	if change.State != common.StateReady {
 		return
@@ -219,17 +263,102 @@ func save() {
 }
 
 func setPassword(data string) {
+	mutex.Lock()
+	defer mutex.Unlock()
+
+	if lastMessage.State != string(common.StatePasswordRequired) {
+		return
+	}
+
 	err := c.SetPassword(data)
 	if err != nil {
-		fmt.Println("unexpected call to setPassword")
+		fmt.Println("setting password failed:", err)
 	}
 }
 
 func setPassphrase(data string) {
+	mutex.Lock()
+	defer mutex.Unlock()
+
+	if lastMessage.State != string(common.StatePassphraseRequired) {
+		return
+	}
+
 	err := c.SetPassphrase(data)
 	if err != nil {
-		fmt.Println("unexpected call to setPassphrase")
+		fmt.Println("setting passphrase failed:", err)
 	}
+}
+
+func connect(cfg json.RawMessage) {
+	mutex.Lock()
+	defer mutex.Unlock()
+
+	if lastMessage.State != stateConnect {
+		return
+	}
+
+	config.Config.Options = make(map[string]string)
+	err := json.Unmarshal(cfg, &config.Config)
+	if err != nil {
+		msg := common.Message{
+			State: string(common.StateError),
+			Data:  "parsing error: " + err.Error(),
+		}
+		updateState(msg)
+		return
+	}
+
+	err = config.Validate()
+	if err != nil {
+		msg := common.Message{
+			State: string(common.StateError),
+			Data:  "configuration error: " + err.Error(),
+		}
+		updateState(msg)
+		return
+	}
+
+	clientConfig, err := config.ClientConfig()
+	if err != nil {
+		msg := common.Message{
+			State: string(common.StateError),
+			Data:  "client error: " + err.Error(),
+		}
+		updateState(msg)
+		return
+	}
+
+	updateState(common.Message{State: string(common.StateLoading)})
+
+	clientConnect(clientConfig)
+}
+
+func disconnect() {
+	mutex.Lock()
+	defer mutex.Unlock()
+
+	if lastMessage.State != string(common.StateReady) &&
+		lastMessage.State != string(common.StatePasswordRequired) &&
+		lastMessage.State != string(common.StatePassphraseRequired) &&
+		lastMessage.State != string(common.StateError) &&
+		lastMessage.State != string(common.StateLoading) {
+
+		return
+	}
+
+	clientStopEvents()
+
+	updateState(common.Message{State: stateDisconnecting})
+
+	go func() {
+		clientDisconnect()
+
+		mutex.Lock()
+		defer mutex.Unlock()
+
+		updateState(common.Message{State: stateConnect})
+	}()
 }
 
 func startWebView() {
@@ -245,6 +374,8 @@ func startWebView() {
 	w.Bind("goSave", save)
 	w.Bind("goSetPassword", setPassword)
 	w.Bind("goSetPassphrase", setPassphrase)
+	w.Bind("goConnect", connect)
+	w.Bind("goDisconnect", disconnect)
 
 	script, _ := resources.ReadFile("res/script.js")
 	w.Init(string(script))
@@ -256,6 +387,7 @@ func startWebView() {
 
 func stopWebView() {
 	if w != nil {
+		isInitialized = false
 		w.Terminate()
 	}
 }
