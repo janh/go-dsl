@@ -148,9 +148,9 @@ type xmoValueReplyParameters struct {
 }
 
 const (
-	XMOInvalidSessionError = "XMO_INVALID_SESSION_ERR"
-	XMORequestNoError      = "XMO_REQUEST_NO_ERR"
-	XMONoError             = "XMO_NO_ERR"
+	xmoInvalidSessionError = "XMO_INVALID_SESSION_ERR"
+	xmoRequestNoError      = "XMO_REQUEST_NO_ERR"
+	xmoNoError             = "XMO_NO_ERR"
 )
 
 func newSession(host, username string, passwordCallback dsl.PasswordCallback, tlsSkipVerify bool) (*session, error) {
@@ -286,7 +286,7 @@ func (s *session) login() error {
 	}
 	callback := &action.Callbacks[0]
 
-	if callback.Result.Description != XMONoError {
+	if callback.Result.Description != xmoNoError {
 		err := fmt.Errorf("login failed: %s", callback.Result.Description)
 		return &dsl.AuthenticationError{Err: err}
 	}
@@ -317,10 +317,10 @@ func (s *session) loadValue(xpath string) ([]byte, error) {
 		return nil, err
 	}
 
-	if reply.Error.Description != XMORequestNoError {
+	if reply.Error.Description != xmoRequestNoError {
 		err = fmt.Errorf("loading value failed: %s", reply.Error.Description)
 
-		if reply.Error.Description == XMOInvalidSessionError {
+		if reply.Error.Description == xmoInvalidSessionError {
 			return nil, &dsl.ConnectionError{Err: err}
 		}
 		return nil, err
@@ -331,7 +331,7 @@ func (s *session) loadValue(xpath string) ([]byte, error) {
 	}
 	action := &reply.Actions[0]
 
-	if action.Error.Description != XMONoError {
+	if action.Error.Description != xmoNoError {
 		return nil, fmt.Errorf("loading value failed: %s", action.Error.Description)
 	}
 
@@ -340,7 +340,7 @@ func (s *session) loadValue(xpath string) ([]byte, error) {
 	}
 	callback := &action.Callbacks[0]
 
-	if callback.Result.Description != XMONoError {
+	if callback.Result.Description != xmoNoError {
 		return nil, fmt.Errorf("loading value failed: %s", callback.Result.Description)
 	}
 
