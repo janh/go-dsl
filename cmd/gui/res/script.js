@@ -87,27 +87,37 @@
 
 		configAdvanced.classList.toggle("hide", hidePrivateKey && hideKnownHosts && hideOptions);
 
+		let existingOptionItems = {};
 		while (configOptions.firstChild) {
-			configOptions.removeChild(configOptions.firstChild);
+			let item = configOptions.removeChild(configOptions.firstChild);
+			existingOptionItems[item.dataset.option] = item;
 		}
 		for (let option in clientDesc.OptionDescriptions) {
-			let id = "config-option-" + option;
-			let item = document.createElement("p");
+			let descText = clientDesc.OptionDescriptions[option];
 
-			let label = document.createElement("label");
-			label.htmlFor = id;
-			label.innerText = option + ":";
-			item.appendChild(label);
+			let item = existingOptionItems[option];
+			if (!item || item.dataset.desc != descText) {
+				let id = "config-option-" + option;
 
-			let input = document.createElement("input");
-			input.type = "text";
-			input.id = id;
-			input.name = option;
-			item.appendChild(input);
+				item = document.createElement("p");
+				item.dataset.option = option;
+				item.dataset.desc = descText;
 
-			let desc = document.createElement("span");
-			desc.innerText = clientDesc.OptionDescriptions[option];
-			item.appendChild(desc);
+				let label = document.createElement("label");
+				label.htmlFor = id;
+				label.innerText = option + ":";
+				item.appendChild(label);
+
+				let input = document.createElement("input");
+				input.type = "text";
+				input.id = id;
+				input.name = option;
+				item.appendChild(input);
+
+				let desc = document.createElement("span");
+				desc.innerText = descText;
+				item.appendChild(desc);
+			}
 
 			configOptions.appendChild(item);
 		}
