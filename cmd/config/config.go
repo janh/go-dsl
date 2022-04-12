@@ -23,7 +23,10 @@ var (
 	DefaultPrivateKeyPath string
 )
 
-var Config ConfigData
+var (
+	Path   string
+	Config ConfigData
+)
 
 type ConfigData struct {
 	DeviceType     dsl.ClientType
@@ -35,6 +38,8 @@ type ConfigData struct {
 }
 
 func Load(path string) error {
+	Path = path
+
 	Config = ConfigData{
 		PrivateKeyPath: DefaultPrivateKeyPath,
 		KnownHostsPath: DefaultKnownHostsPath,
@@ -47,6 +52,62 @@ func Load(path string) error {
 	}
 
 	return err
+}
+
+func Save() error {
+	err := os.MkdirAll(filepath.Dir(Path), os.ModePerm)
+	if err != nil {
+		return err
+	}
+
+	file, err := os.OpenFile(Path, os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0600)
+	if err != nil {
+		return err
+	}
+	defer file.Close()
+	enc := toml.NewEncoder(file)
+
+	if Config.DeviceType != "" {
+		err = enc.Encode(map[string]string{"DeviceType": string(Config.DeviceType)})
+		if err != nil {
+			return err
+		}
+	}
+
+	if Config.Host != "" {
+		err = enc.Encode(map[string]string{"Host": Config.Host})
+		if err != nil {
+			return err
+		}
+	}
+
+	if Config.User != "" {
+		err = enc.Encode(map[string]string{"User": Config.User})
+		if err != nil {
+			return err
+		}
+	}
+
+	if Config.PrivateKeyPath != DefaultPrivateKeyPath {
+		err = enc.Encode(map[string]string{"PrivateKeyPath": Config.PrivateKeyPath})
+		if err != nil {
+			return err
+		}
+	}
+
+	if Config.KnownHostsPath != DefaultKnownHostsPath {
+		err = enc.Encode(map[string]string{"KnownHostsPath": Config.KnownHostsPath})
+		if err != nil {
+			return err
+		}
+	}
+
+	err = enc.Encode(map[string]map[string]string{"Options": Config.Options})
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
 
 func Validate() error {

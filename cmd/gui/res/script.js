@@ -27,7 +27,7 @@
 	var graphBitsCanvas, graphSNRCanvas, graphQLNCanvas, graphHlogCanvas;
 	var graphBits, graphSNR, graphQLN, graphHlog;
 	var overlay, overlayPassword, overlayPassphrase, overlayError, overlayLoading, overlayDisconnecting, overlayConnect;
-	var configAdvanced, configDeviceType, configHost, configUser, configPrivateKey, configKnownHosts, configOptions;
+	var configAdvanced, configDeviceType, configHost, configUser, configPrivateKey, configKnownHosts, configOptions, configRemember;
 	var messages;
 	var fingerprint;
 
@@ -141,7 +141,9 @@
 			}
 		}
 
-		goConnect(data);
+		let remember = configRemember.checked;
+
+		goConnect(data, remember);
 
 		event.preventDefault();
 	}
@@ -331,6 +333,7 @@
 		configPrivateKey = document.getElementById("config-private-key");
 		configKnownHosts = document.getElementById("config-known-hosts");
 		configOptions = document.getElementById("config-options");
+		configRemember = document.getElementById("config-remember");
 
 		messages = document.getElementById("messages");
 

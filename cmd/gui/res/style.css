@@ -92,6 +92,7 @@ header a.disabled {
 }
 #overlay-connect fieldset:last-child {
 	margin-top: 1.5em;
+	grid-gap: 1em;
 }
 #overlay-connect fieldset legend {
 	display: block;
@@ -135,6 +136,14 @@ header a.disabled {
 	margin-bottom: 0;
 }
 #overlay-connect input, #overlay-connect select {
+	width: auto;
+	flex-grow: 1;
+}
+#overlay-connect input[type="checkbox"] {
+	flex-grow: 0;
+}
+#overlay-connect input[type="checkbox"] + label {
+	padding-left: .5em;
 	width: auto;
 	flex-grow: 1;
 }

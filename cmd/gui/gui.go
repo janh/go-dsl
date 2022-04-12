@@ -290,7 +290,7 @@ func setPassphrase(data string) {
 	}
 }
 
-func connect(cfg json.RawMessage) {
+func connect(cfg json.RawMessage, remember bool) {
 	mutex.Lock()
 	defer mutex.Unlock()
 
@@ -332,6 +332,14 @@ func connect(cfg json.RawMessage) {
 	updateState(common.Message{State: string(common.StateLoading)})
 
 	clientConnect(clientConfig)
+
+	if remember {
+		err = config.Save()
+		if err != nil {
+			showMessage("Saving configuration failed!")
+			fmt.Println("failed to save config:", err)
+		}
+	}
 }
 
 func disconnect() {
