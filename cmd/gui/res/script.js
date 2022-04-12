@@ -105,6 +105,10 @@
 			input.name = option;
 			item.appendChild(input);
 
+			let desc = document.createElement("span");
+			desc.innerText = clientDesc.OptionDescriptions[option];
+			item.appendChild(desc);
+
 			configOptions.appendChild(item);
 		}
 	}
