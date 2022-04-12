@@ -35,7 +35,7 @@
 		clientDescs = clients;
 
 		while (configDeviceType.firstChild) {
-			configDeviceType.removeChild(configDeviceType.lastChild);
+			configDeviceType.removeChild(configDeviceType.firstChild);
 		}
 		for (let key in clients) {
 			configDeviceType.add(new Option(key));
@@ -88,7 +88,7 @@
 		configAdvanced.classList.toggle("hide", hidePrivateKey && hideKnownHosts && hideOptions);
 
 		while (configOptions.firstChild) {
-			configOptions.removeChild(configOptions.lastChild);
+			configOptions.removeChild(configOptions.firstChild);
 		}
 		for (let option in clientDesc.OptionDescriptions) {
 			let id = "config-option-" + option;
