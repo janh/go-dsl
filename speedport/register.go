@@ -21,7 +21,7 @@ func init() {
 		RequiresUser:       dsl.TristateNo,
 		SupportedAuthTypes: dsl.AuthTypePassword,
 		OptionDescriptions: map[string]string{
-			"TLSSkipVerify": "verification of TLS certificates will be skipped if set to 1",
+			"TLSSkipVerify": "skip verification of TLS certificates if set to 1",
 		},
 	}
 	dsl.RegisterClient("speedport", newFunc, clientDesc)
