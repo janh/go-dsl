@@ -339,7 +339,7 @@
 
 		fingerprint = document.getElementById("fingerprint");
 
-		updateState("initializing");
+		updateState(STATE_INITIALIZING);
 
 		window.updateState = function(data) {
 			updateState(data.state, data.data);
