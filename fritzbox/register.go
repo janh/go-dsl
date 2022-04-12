@@ -20,6 +20,7 @@ func init() {
 		return NewClient(clientConfig)
 	}
 	clientDesc := dsl.ClientDesc{
+		Title:              "FRITZ!Box",
 		RequiresUser:       dsl.TristateMaybe,
 		SupportedAuthTypes: dsl.AuthTypePassword,
 		OptionDescriptions: map[string]string{

@@ -18,6 +18,7 @@ func init() {
 		return NewTelnetClient(telnetConfig)
 	}
 	clientDescTelnet := dsl.ClientDesc{
+		Title:              "MediaTek (Telnet)",
 		RequiresUser:       dsl.TristateMaybe,
 		SupportedAuthTypes: dsl.AuthTypePassword,
 	}
@@ -34,6 +35,7 @@ func init() {
 		return NewSSHClient(sshConfig)
 	}
 	clientDescSSH := dsl.ClientDesc{
+		Title:              "MediaTek (SSH)",
 		RequiresUser:       dsl.TristateYes,
 		SupportedAuthTypes: dsl.AuthTypePassword | dsl.AuthTypePrivateKeys,
 		RequiresKnownHosts: true,

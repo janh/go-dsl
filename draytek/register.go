@@ -18,6 +18,7 @@ func init() {
 		return NewTelnetClient(telnetConfig)
 	}
 	clientDescTelnet := dsl.ClientDesc{
+		Title:              "DrayTek (Telnet)",
 		RequiresUser:       dsl.TristateMaybe,
 		SupportedAuthTypes: dsl.AuthTypePassword,
 	}

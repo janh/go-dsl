@@ -18,6 +18,7 @@ func init() {
 		return NewClient(clientConfig)
 	}
 	clientDesc := dsl.ClientDesc{
+		Title:              "Speedport",
 		RequiresUser:       dsl.TristateNo,
 		SupportedAuthTypes: dsl.AuthTypePassword,
 		OptionDescriptions: map[string]string{

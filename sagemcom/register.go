@@ -19,6 +19,7 @@ func init() {
 		return NewClient(clientConfig)
 	}
 	clientDesc := dsl.ClientDesc{
+		Title:              "Sagemcom",
 		RequiresUser:       dsl.TristateMaybe,
 		SupportedAuthTypes: dsl.AuthTypePassword,
 		OptionDescriptions: map[string]string{

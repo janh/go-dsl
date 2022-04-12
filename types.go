@@ -20,6 +20,7 @@ const (
 )
 
 type ClientDesc struct {
+	Title              string
 	RequiresUser       Tristate
 	SupportedAuthTypes AuthTypes
 	RequiresKnownHosts bool

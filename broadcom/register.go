@@ -23,6 +23,7 @@ func init() {
 		return NewTelnetClient(telnetConfig)
 	}
 	clientDescTelnet := dsl.ClientDesc{
+		Title:              "Broadcom (Telnet)",
 		RequiresUser:       dsl.TristateMaybe,
 		SupportedAuthTypes: dsl.AuthTypePassword,
 		OptionDescriptions: options,
@@ -41,6 +42,7 @@ func init() {
 		return NewSSHClient(sshConfig)
 	}
 	clientDescSSH := dsl.ClientDesc{
+		Title:              "Broadcom (SSH)",
 		RequiresUser:       dsl.TristateYes,
 		SupportedAuthTypes: dsl.AuthTypePassword | dsl.AuthTypePrivateKeys,
 		RequiresKnownHosts: true,

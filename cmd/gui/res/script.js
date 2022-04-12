@@ -38,7 +38,8 @@
 			configDeviceType.removeChild(configDeviceType.firstChild);
 		}
 		for (let key in clients) {
-			configDeviceType.add(new Option(key));
+			let clientDesc = clients[key];
+			configDeviceType.add(new Option(clientDesc.Title, key));
 		}
 
 		configDeviceType.value = config.DeviceType;
