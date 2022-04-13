@@ -114,6 +114,10 @@ type Bins struct {
 }
 
 func updateBinsFloatMinMax(minmax *models.BinsFloatMinMax, snr models.BinsFloat) {
+	if snr.GroupSize == 0 {
+		return
+	}
+
 	factor := minmax.GroupSize / snr.GroupSize
 
 	for i, val := range snr.Data {
@@ -189,14 +193,16 @@ func (h *Bins) needsReset(bins models.Bins) bool {
 		return true
 	}
 
-	if h.snr.Downstream.OriginalGroupSize != bins.SNR.Downstream.GroupSize ||
-		h.snr.Downstream.OriginalCount != len(bins.SNR.Downstream.Data) {
+	if (h.snr.Downstream.OriginalGroupSize != bins.SNR.Downstream.GroupSize ||
+		h.snr.Downstream.OriginalCount != len(bins.SNR.Downstream.Data)) &&
+		!(h.snr.Downstream.OriginalGroupSize != 0 && bins.SNR.Downstream.GroupSize == 0) {
 
 		return true
 	}
 
-	if h.snr.Upstream.OriginalGroupSize != bins.SNR.Upstream.GroupSize ||
-		h.snr.Upstream.OriginalCount != len(bins.SNR.Upstream.Data) {
+	if (h.snr.Upstream.OriginalGroupSize != bins.SNR.Upstream.GroupSize ||
+		h.snr.Upstream.OriginalCount != len(bins.SNR.Upstream.Data)) &&
+		!(h.snr.Upstream.OriginalGroupSize != 0 && bins.SNR.Upstream.GroupSize == 0) {
 
 		return true
 	}
