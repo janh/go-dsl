@@ -11,6 +11,8 @@ If you want to use the library in your own project, please note that the API is 
 Binaries for Linux, Windows and macOS are automatically built by GitHub Actions.
 You can [**download** these here](https://github.com/janh/go-dsl/releases).
 
+If the graphical user interface does not run: On Windows, make sure that [Microsoft Edge WebView2](https://go.microsoft.com/fwlink/p/?LinkId=2124703) is installed. On Linux, the GTK3 and WebKit2GTK libraries need to be installed.
+
 If you want to build binaries from source yourself, see the next section.
 Otherwise skip to the usage section for more information on how to use the application.
 
