@@ -14,7 +14,7 @@ var summary, graphs;
 var graphBitsCanvas, graphSNRCanvas, graphQLNCanvas, graphHlogCanvas;
 var graphBits, graphSNR, graphQLN, graphHlog;
 var overlay, overlayPassword, overlayPassphrase, overlayError, overlayLoading;
-var fingerprint;
+var fingerprint, inputPassword, inputPassphrase;
 
 function updateState(newState, data) {
 	let oldState = state;
@@ -50,6 +50,12 @@ function updateState(newState, data) {
 		overlayPassphrase.classList.toggle("visible", state == STATE_PASSPHRASE);
 		overlayError.classList.toggle("visible", state == STATE_ERROR);
 		overlayLoading.classList.toggle("visible", state == STATE_LOADING);
+
+		if (state == STATE_PASSWORD) {
+			inputPassword.focus();
+		} else if (state == STATE_PASSPHRASE) {
+			inputPassphrase.focus();
+		}
 	}
 }
 
@@ -189,6 +195,8 @@ function loaded(event) {
 	overlayLoading = document.getElementById("overlay-loading");
 
 	fingerprint = document.getElementById("fingerprint");
+	inputPassword = document.getElementById("password");
+	inputPassphrase = document.getElementById("passphrase");
 
 	updateState("loading");
 

@@ -29,7 +29,7 @@
 	var overlay, overlayPassword, overlayPassphrase, overlayError, overlayLoading, overlayDisconnecting, overlayConnect;
 	var configAdvanced, configDeviceType, configHost, configUser, configPrivateKey, configKnownHosts, configOptions, configRemember;
 	var messages;
-	var fingerprint;
+	var fingerprint, inputPassword, inputPassphrase;
 
 	function setConfig(config, clients) {
 		clientDescs = clients;
@@ -205,6 +205,12 @@
 			overlayLoading.classList.toggle("visible", state == STATE_LOADING || state == STATE_INITIALIZING);
 			overlayDisconnecting.classList.toggle("visible", state == STATE_DISCONNECTING);
 			overlayConnect.classList.toggle("visible", state == STATE_CONNECT);
+
+			if (state == STATE_PASSWORD) {
+				inputPassword.focus();
+			} else if (state == STATE_PASSPHRASE) {
+				inputPassphrase.focus();
+			}
 		}
 	}
 
@@ -340,6 +346,8 @@
 		messages = document.getElementById("messages");
 
 		fingerprint = document.getElementById("fingerprint");
+		inputPassword = document.getElementById("password");
+		inputPassphrase = document.getElementById("passphrase");
 
 		updateState(STATE_INITIALIZING);
 
