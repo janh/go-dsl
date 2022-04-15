@@ -15,6 +15,7 @@ In some cases additional steps may be required to get the application to run on 
 
 - Linux: The GTK3 and WebKit2GTK libraries need to be installed for the graphical user interface.
 - Windows: Make sure that [Microsoft Edge WebView2](https://go.microsoft.com/fwlink/p/?LinkId=2124703) is installed to run the graphical user interface.
+- macOS: You may need to right-click the application and select "Open" to start it for the first time.
 
 If you want to build binaries from source yourself, see the next section.
 Otherwise skip to the usage section for more information on how to use the application.
@@ -38,7 +39,7 @@ As the graphical user interface uses cgo, additional build tools are required in
 
 - Linux: basic C build tools, headers for `gtk+-3.0` and `webkit2gtk-4.0`
 - Windows: a C compiler such as TDM-GCC, for building the webview dependency additionally Visual Studio C/C++
-- macOS: Xcode
+- macOS: Xcode command line developer tools (the system should automatically offer to install them)
 
 ## Usage
 
