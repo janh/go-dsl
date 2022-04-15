@@ -155,6 +155,12 @@ header a.disabled {
 #overlay-connect .hide {
 	display: none;
 }
+#overlay-connect select {
+	min-height: 1.7em;
+}
+#overlay-connect input[type="submit"] {
+	appearance: button;
+}
 
 #messages {
 	display: none;
