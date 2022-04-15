@@ -31,32 +31,32 @@ func updateData(e executor) (status models.Status, bins models.Bins, rawData []b
 		return
 	}
 
-	adslShowbpcDs, err := e.Execute("cat /proc/tc3162/adsl_showbpc_ds")
+	adslShowbpcDs, err := e.Execute("cat /proc/tc3162/adsl_showbpc_ds; echo")
 	if err != nil {
 		return
 	}
 
-	adslShowbpcUs, err := e.Execute("cat /proc/tc3162/adsl_showbpc_us")
+	adslShowbpcUs, err := e.Execute("cat /proc/tc3162/adsl_showbpc_us; echo")
 	if err != nil {
 		return
 	}
 
-	adslShowsnr, err := e.Execute("cat /proc/tc3162/adsl_showsnr")
+	adslShowsnr, err := e.Execute("cat /proc/tc3162/adsl_showsnr; echo")
 	if err != nil {
 		return
 	}
 
-	vdslShowbpcDs, err := e.Execute("cat /proc/tc3162/vdsl_showbpc_ds")
+	vdslShowbpcDs, err := e.Execute("cat /proc/tc3162/vdsl_showbpc_ds; echo")
 	if err != nil {
 		return
 	}
 
-	vdslShowbpcUs, err := e.Execute("cat /proc/tc3162/vdsl_showbpc_us")
+	vdslShowbpcUs, err := e.Execute("cat /proc/tc3162/vdsl_showbpc_us; echo")
 	if err != nil {
 		return
 	}
 
-	vdslShowsnr, err := e.Execute("cat /proc/tc3162/vdsl_showsnr")
+	vdslShowsnr, err := e.Execute("cat /proc/tc3162/vdsl_showsnr; echo")
 	if err != nil {
 		return
 	}
