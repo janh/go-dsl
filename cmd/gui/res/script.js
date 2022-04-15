@@ -113,6 +113,8 @@
 				input.type = "text";
 				input.id = id;
 				input.name = option;
+				input.autocomplete = "off";
+				input.spellcheck = false;
 				item.appendChild(input);
 
 				let desc = document.createElement("span");
