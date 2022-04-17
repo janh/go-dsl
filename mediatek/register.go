@@ -26,11 +26,12 @@ func init() {
 
 	newSSH := func(config dsl.Config) (dsl.Client, error) {
 		sshConfig := SSHConfig{
-			Host:        config.Host,
-			User:        config.User,
-			Password:    config.AuthPassword,
-			PrivateKeys: config.AuthPrivateKeys,
-			KnownHosts:  config.KnownHosts,
+			Host:               config.Host,
+			User:               config.User,
+			Password:           config.AuthPassword,
+			PrivateKeys:        config.AuthPrivateKeys,
+			KnownHosts:         config.KnownHosts,
+			InsecureAlgorithms: config.Options["InsecureAlgorithms"] == "1",
 		}
 		return NewSSHClient(sshConfig)
 	}
@@ -39,6 +40,9 @@ func init() {
 		RequiresUser:       dsl.TristateYes,
 		SupportedAuthTypes: dsl.AuthTypePassword | dsl.AuthTypePrivateKeys,
 		RequiresKnownHosts: true,
+		OptionDescriptions: map[string]string{
+			"InsecureAlgorithms": "allow insecure SSH algorithms if set to 1",
+		},
 	}
 	dsl.RegisterClient("mediatek_ssh", newSSH, clientDescSSH)
 }

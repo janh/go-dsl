@@ -22,7 +22,7 @@ func NewSSHClient(config SSHConfig) (dsl.Client, error) {
 
 	var err error
 
-	c.client, err = ssh.NewClient(config.Host, config.User, config.Password, config.PrivateKeys, config.KnownHosts)
+	c.client, err = ssh.NewClient(config.Host, config.User, config.Password, config.PrivateKeys, config.KnownHosts, config.InsecureAlgorithms)
 	if err != nil {
 		return nil, err
 	}

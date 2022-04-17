@@ -25,11 +25,12 @@ type Client struct {
 func NewClient(host, username string,
 	password dsl.PasswordCallback,
 	privateKeys dsl.PrivateKeysCallback,
-	knownHosts string) (*Client, error) {
+	knownHosts string,
+	insecureAlgorithms bool) (*Client, error) {
 
 	c := Client{}
 
-	err := c.connect(host, username, password, privateKeys, knownHosts)
+	err := c.connect(host, username, password, privateKeys, knownHosts, insecureAlgorithms)
 	if err != nil {
 		return nil, err
 	}
@@ -40,7 +41,8 @@ func NewClient(host, username string,
 func (c *Client) connect(host, username string,
 	passwordCallback dsl.PasswordCallback,
 	privateKeysCallback dsl.PrivateKeysCallback,
-	knownHosts string) error {
+	knownHosts string,
+	insecureAlgorithms bool) error {
 
 	if !regexpPort.MatchString(host) {
 		host += ":22"
@@ -133,6 +135,17 @@ func (c *Client) connect(host, username string,
 
 		config.HostKeyAlgorithms = []string{hostKey.Type()}
 		config.HostKeyCallback = ssh.FixedHostKey(hostKey)
+	}
+
+	config.SetDefaults()
+	if insecureAlgorithms {
+		config.KeyExchanges = append(config.KeyExchanges,
+			"diffie-hellman-group1-sha1")
+
+		config.Ciphers = append(config.Ciphers,
+			"arcfour128", "arcfour256", "arcfour",
+			"aes128-cbc",
+			"3des-cbc")
 	}
 
 	var err error

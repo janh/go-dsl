@@ -32,12 +32,13 @@ func init() {
 
 	newSSH := func(config dsl.Config) (dsl.Client, error) {
 		sshConfig := SSHConfig{
-			Host:        config.Host,
-			User:        config.User,
-			Password:    config.AuthPassword,
-			PrivateKeys: config.AuthPrivateKeys,
-			KnownHosts:  config.KnownHosts,
-			Command:     config.Options["Command"],
+			Host:               config.Host,
+			User:               config.User,
+			Password:           config.AuthPassword,
+			PrivateKeys:        config.AuthPrivateKeys,
+			KnownHosts:         config.KnownHosts,
+			InsecureAlgorithms: config.Options["InsecureAlgorithms"] == "1",
+			Command:            config.Options["Command"],
 		}
 		return NewSSHClient(sshConfig)
 	}
@@ -46,7 +47,10 @@ func init() {
 		RequiresUser:       dsl.TristateYes,
 		SupportedAuthTypes: dsl.AuthTypePassword | dsl.AuthTypePrivateKeys,
 		RequiresKnownHosts: true,
-		OptionDescriptions: options,
+		OptionDescriptions: map[string]string{
+			"InsecureAlgorithms": "allow insecure SSH algorithms if set to 1",
+			"Command":            options["Command"],
+		},
 	}
 	dsl.RegisterClient("lantiq_ssh", newSSH, clientDescSSH)
 }
