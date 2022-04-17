@@ -4,10 +4,14 @@
 
 package telnet
 
+type Prompts struct {
+	Account  string
+	Password string
+	Command  string
+}
+
 type ClientConfig struct {
-	PromptAccount  string
-	PromptPassword string
-	PromptCommand  string
+	Prompts []Prompts
 
 	ExpectRepeatedPromptCRLF bool
 }

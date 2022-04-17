@@ -28,9 +28,13 @@ func NewTelnetClient(config TelnetConfig) (dsl.Client, error) {
 	}
 
 	clientConfig := telnet.ClientConfig{
-		PromptAccount:            "Account:",
-		PromptPassword:           "Password:",
-		PromptCommand:            "> ",
+		Prompts: []telnet.Prompts{
+			telnet.Prompts{
+				Account:  "Account:",
+				Password: "Password:",
+				Command:  "> ",
+			},
+		},
 		ExpectRepeatedPromptCRLF: true,
 	}
 	c.client, err = telnet.NewClient(clientConfig, config.Host, user, config.Password)

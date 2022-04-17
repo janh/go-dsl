@@ -67,8 +67,8 @@ func (c *Client) readUntilPromptRaw(prompts ...string) (data, prompt string, err
 	return
 }
 
-func (c *Client) readUntilPrompt(prompts ...string) (data, prompt string, err error) {
-	data, prompt, err = c.readUntilPromptRaw(prompts...)
+func (c *Client) readUntilPrompt(prompts ...string) (data string, promptType promptType, err error) {
+	data, prompt, err := c.readUntilPromptRaw(prompts...)
 	if err != nil {
 		return
 	}
@@ -122,6 +122,12 @@ func (c *Client) readUntilPrompt(prompts ...string) (data, prompt string, err er
 		data = ""
 	}
 
+	// Detect prompt type and remove non-matching prompt sets from config
+	promptType, err = c.handleReceivedPrompt(prompt)
+	if err != nil {
+		return
+	}
+
 	return
 }
 
@@ -145,7 +151,7 @@ func (c *Client) connect(host, username string, passwordCallback dsl.PasswordCal
 	}
 
 	for {
-		prompts := []string{c.config.PromptAccount, c.config.PromptPassword, c.config.PromptCommand}
+		prompts := c.getPromptList(promptTypeAccount | promptTypePassword | promptTypeCommand)
 		_, prompt, err := c.readUntilPrompt(prompts...)
 		if err != nil {
 			if errors.Is(err, os.ErrDeadlineExceeded) {
@@ -156,7 +162,7 @@ func (c *Client) connect(host, username string, passwordCallback dsl.PasswordCal
 
 		switch prompt {
 
-		case c.config.PromptAccount:
+		case promptTypeAccount:
 			if triedUsername {
 				return &dsl.AuthenticationError{Err: errors.New("invalid username/password")}
 			}
@@ -167,7 +173,7 @@ func (c *Client) connect(host, username string, passwordCallback dsl.PasswordCal
 				return err
 			}
 
-		case c.config.PromptPassword:
+		case promptTypePassword:
 			if triedPassword {
 				return &dsl.AuthenticationError{Err: errors.New("invalid username/password")}
 			}
@@ -191,7 +197,7 @@ func (c *Client) connect(host, username string, passwordCallback dsl.PasswordCal
 				return err
 			}
 
-		case c.config.PromptCommand:
+		case promptTypeCommand:
 			return nil
 
 		}
@@ -209,7 +215,8 @@ func (c *Client) Execute(command string) (string, error) {
 		return "", &dsl.ConnectionError{Err: err}
 	}
 
-	data, _, err := c.readUntilPrompt(c.config.PromptCommand)
+	prompts := c.getPromptList(promptTypeCommand)
+	data, _, err := c.readUntilPrompt(prompts...)
 	if err != nil {
 		return "", &dsl.ConnectionError{Err: err}
 	}
