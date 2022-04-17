@@ -60,6 +60,12 @@ For information about available command line options, run `./dsl -help`.
 
 Below is a list of supported devices, along with a few device-specfic notes and examples for command line usage.
 
+### Billion
+
+This has only been tested with the Billion 8800NL R2, although it may work with other Billion devices.
+
+Only Telnet is supported, as the built-in SSH server only support 3DES-CBC which has been deprecated by recent SSH clients.
+
 ### Broadcom
 
 Devices with a Broadcom modem that allow to access the system command line via SSH or Telnet.
