@@ -167,6 +167,12 @@ func (c *Client) Execute(command string) (string, error) {
 
 	output, err := session.CombinedOutput(command)
 	if err != nil {
+		var exitMissingError *ssh.ExitMissingError
+		if errors.As(err, &exitMissingError) {
+			// an SSH server is not required to send the exit status
+			return string(output), nil
+		}
+
 		var exitErr *ssh.ExitError
 		if !errors.As(err, &exitErr) {
 			return "", &dsl.ConnectionError{Err: err}
