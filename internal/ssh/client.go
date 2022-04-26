@@ -7,8 +7,10 @@ package ssh
 import (
 	"bufio"
 	"errors"
+	"net"
 	"regexp"
 	"strings"
+	"time"
 
 	"golang.org/x/crypto/ssh"
 	"golang.org/x/crypto/ssh/knownhosts"
@@ -19,6 +21,7 @@ import (
 var regexpPort = regexp.MustCompile(`:[0-9]+$`)
 
 type Client struct {
+	conn   net.Conn
 	client *ssh.Client
 }
 
@@ -135,17 +138,29 @@ func (c *Client) connect(host, username string,
 		config.HostKeyCallback = ssh.FixedHostKey(hostKey)
 	}
 
-	var err error
-	c.client, err = ssh.Dial("tcp", host, config)
+	tcpConn, err := net.DialTimeout("tcp", host, 10*time.Second)
+	if err != nil {
+		return err
+	}
 
+	sshConn, chans, reqs, err := ssh.NewClientConn(tcpConn, host, config)
 	if err != nil && strings.Contains(err.Error(), "unable to authenticate") {
 		return &dsl.AuthenticationError{Err: err}
 	}
 
-	return err
+	c.conn = tcpConn
+	c.client = ssh.NewClient(sshConn, chans, reqs)
+
+	return nil
 }
 
 func (c *Client) Execute(command string) (string, error) {
+	err := c.conn.SetDeadline(time.Now().Add(30 * time.Second))
+	if err != nil {
+		return "", &dsl.ConnectionError{Err: err}
+	}
+	defer c.conn.SetDeadline(time.Time{})
+
 	session, err := c.client.NewSession()
 	if err != nil {
 		return "", &dsl.ConnectionError{Err: err}
