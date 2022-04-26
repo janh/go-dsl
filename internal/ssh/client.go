@@ -144,8 +144,11 @@ func (c *Client) connect(host, username string,
 	}
 
 	sshConn, chans, reqs, err := ssh.NewClientConn(tcpConn, host, config)
-	if err != nil && strings.Contains(err.Error(), "unable to authenticate") {
-		return &dsl.AuthenticationError{Err: err}
+	if err != nil {
+		if strings.Contains(err.Error(), "unable to authenticate") {
+			return &dsl.AuthenticationError{Err: err}
+		}
+		return err
 	}
 
 	c.conn = tcpConn
