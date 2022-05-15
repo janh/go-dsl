@@ -51,9 +51,6 @@ type Status struct {
 	DownstreamPower ValuePower
 	UpstreamPower   ValuePower
 
-	DownstreamFECCount IntValue
-	UpstreamFECCount   IntValue
-
 	DownstreamRTXTXCount IntValue
 	UpstreamRTXTXCount   IntValue
 
@@ -62,6 +59,9 @@ type Status struct {
 
 	DownstreamRTXUCCount IntValue
 	UpstreamRTXUCCount   IntValue
+
+	DownstreamFECCount IntValue
+	UpstreamFECCount   IntValue
 
 	DownstreamCRCCount IntValue
 	UpstreamCRCCount   IntValue
@@ -110,11 +110,15 @@ func (s Status) Summary() string {
 	printValues(&b, "Transmit power", s.DownstreamPower, s.UpstreamPower)
 	fmt.Fprintln(&b)
 
-	printValues(&b, "FEC Count", s.DownstreamFECCount, s.UpstreamFECCount)
 	printValues(&b, "RTX TX Count", s.DownstreamRTXTXCount, s.UpstreamRTXTXCount)
 	printValues(&b, "RTX C Count", s.DownstreamRTXCCount, s.UpstreamRTXCCount)
 	printValues(&b, "RTX UC Count", s.DownstreamRTXUCCount, s.UpstreamRTXUCCount)
+	fmt.Fprintln(&b)
+
+	printValues(&b, "FEC Count", s.DownstreamFECCount, s.UpstreamFECCount)
 	printValues(&b, "CRC Count", s.DownstreamCRCCount, s.UpstreamCRCCount)
+	fmt.Fprintln(&b)
+
 	printValues(&b, "ES Count", s.DownstreamESCount, s.UpstreamESCount)
 	printValues(&b, "SES Count", s.DownstreamSESCount, s.UpstreamSESCount)
 
