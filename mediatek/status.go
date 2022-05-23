@@ -335,11 +335,21 @@ func parseFirmwareVersion(status *models.Status, fwVer string) {
 }
 
 func parseExtendedStatusCounters(status *models.Status, values map[string]string) {
-	status.DownstreamFECCount = interpretIntValueError(values, "nearendpath1fec", "nearendpath0fec")
-	status.UpstreamFECCount = interpretIntValueError(values, "farendpath1fec", "farendpath0fec")
+	var val models.IntValue
 
-	status.DownstreamCRCCount = interpretIntValueError(values, "nearendpath1crc", "nearendpath0crc")
-	status.UpstreamCRCCount = interpretIntValueError(values, "farendpath1crc", "farendpath0crc")
+	if val = interpretIntValueError(values, "nearendpath1fec", "nearendpath0fec"); val.Valid {
+		status.DownstreamFECCount = val
+	}
+	if val = interpretIntValueError(values, "farendpath1fec", "farendpath0fec"); val.Valid {
+		status.UpstreamFECCount = val
+	}
+
+	if val = interpretIntValueError(values, "nearendpath1crc", "nearendpath0crc"); val.Valid {
+		status.DownstreamCRCCount = val
+	}
+	if val = interpretIntValueError(values, "farendpath1crc", "farendpath0crc"); val.Valid {
+		status.UpstreamCRCCount = val
+	}
 
 	status.DownstreamESCount = interpretIntValueError(values, "nearenderrsec")
 	status.UpstreamESCount = interpretIntValueError(values, "farenderrsec")
@@ -375,11 +385,19 @@ func parseExtendedStatusRetransmission(status *models.Status, values map[string]
 }
 
 func parseExtendedStatusINPDelay(status *models.Status, valuesMgcnt, valuesPmsPmdRx, valuesPmsPmdTx map[string]string) {
-	status.DownstreamImpulseNoiseProtection.FloatValue = interpretFloatValueINPSumWAN(
-		valuesPmsPmdRx, valuesMgcnt, "inp", "nearendactshinevalue")
-	status.UpstreamImpulseNoiseProtection.FloatValue = interpretFloatValueINPSumWAN(
-		valuesPmsPmdTx, valuesMgcnt, "inp", "farendactshinevalue")
+	var val models.FloatValue
 
-	status.DownstreamInterleavingDelay.FloatValue = interpretFloatValue(valuesPmsPmdRx, " (ms)", "delay")
-	status.UpstreamInterleavingDelay.FloatValue = interpretFloatValue(valuesPmsPmdTx, " (ms)", "delay")
+	if val = interpretFloatValueINPSumWAN(valuesPmsPmdRx, valuesMgcnt, "inp", "nearendactshinevalue"); val.Valid {
+		status.DownstreamImpulseNoiseProtection.FloatValue = val
+	}
+	if val = interpretFloatValueINPSumWAN(valuesPmsPmdTx, valuesMgcnt, "inp", "farendactshinevalue"); val.Valid {
+		status.UpstreamImpulseNoiseProtection.FloatValue = val
+	}
+
+	if val = interpretFloatValue(valuesPmsPmdRx, " (ms)", "delay"); val.Valid {
+		status.DownstreamInterleavingDelay.FloatValue = val
+	}
+	if val = interpretFloatValue(valuesPmsPmdTx, " (ms)", "delay"); val.Valid {
+		status.UpstreamInterleavingDelay.FloatValue = val
+	}
 }
