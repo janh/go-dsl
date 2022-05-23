@@ -34,6 +34,12 @@ func NewTelnetClient(config TelnetConfig) (dsl.Client, error) {
 				Password: "Password:",
 				Command:  "# ",
 			},
+			// ZTE (from ZXHN H168N V3)
+			telnet.Prompts{
+				Account:  "Login: ",
+				Password: "Password: ",
+				Command:  "# ",
+			},
 		},
 	}
 	c.client, err = telnet.NewClient(clientConfig, config.Host, user, config.Password)
