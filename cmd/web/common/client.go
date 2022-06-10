@@ -115,7 +115,7 @@ func (c *Client) SetPassphrase(passphrase string) error {
 	case c.setPassphrase <- passphrase:
 		return nil
 	default:
-		return errors.New("no password required")
+		return errors.New("no passphrase required")
 	}
 }
 
@@ -241,7 +241,7 @@ func (c *Client) update() {
 	if clientDesc.SupportedAuthTypes&dsl.AuthTypePrivateKeys != 0 {
 		c.config.AuthPrivateKeys.Passphrase = func(fingerprint string) (string, error) {
 			if c.passphrase[fingerprint] == "" {
-				c.changeState <- StateChange{State: StatePasswordRequired, Fingerprint: fingerprint}
+				c.changeState <- StateChange{State: StatePassphraseRequired, Fingerprint: fingerprint}
 
 				select {
 				case <-c.cancel:
