@@ -42,12 +42,12 @@ type overviewDataLegacy struct {
 	} `json:"line"`
 }
 
-func parseOverview(status *models.Status, dslOverview, dslOverviewData string) {
-	if len(dslOverview) > 0 && dslOverview[0] == '{' {
-		parseOverviewJSON(status, dslOverview)
+func parseOverview(status *models.Status, d *rawDataOverview) {
+	if !d.Legacy {
+		parseOverviewJSON(status, d.Data)
 	} else {
-		parseOverviewLegacy(status, dslOverview)
-		parseOverviewDataLegacy(status, dslOverviewData)
+		parseOverviewLegacy(status, d.Data)
+		parseOverviewDataLegacy(status, d.UpdateData)
 	}
 }
 

@@ -13,12 +13,12 @@ import (
 	"3e8.eu/go/dsl/models"
 )
 
-func parseSupportData(status *models.Status, bins *models.Bins, supportData string) {
-	if status.State != models.StateShowtime || supportData == "" {
+func parseSupportData(status *models.Status, bins *models.Bins, d *rawDataSupport) {
+	if status.State != models.StateShowtime || d.Data == "" {
 		return
 	}
 
-	values := parseSupportDataValues(supportData)
+	values := parseSupportDataValues(d.Data)
 
 	if status.DownstreamRetransmissionEnabled.Bool {
 		status.DownstreamRTXTXCount = interpretSupportDataIntValue(values, "US RTX retransmitted DTUs")

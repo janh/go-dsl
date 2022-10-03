@@ -5,10 +5,6 @@
 package fritzbox
 
 import (
-	"fmt"
-	"net/url"
-	"strings"
-
 	"3e8.eu/go/dsl"
 	"3e8.eu/go/dsl/models"
 )
@@ -48,98 +44,45 @@ func (c *client) Bins() models.Bins {
 }
 
 func (c *client) UpdateData() (err error) {
-	// contains HTML for version < 7.19, JSON for version >= 7.19
-	data := url.Values{}
-	data.Add("lang", "de")
-	data.Add("page", "dslOv")
-	data.Add("xhr", "1")
-	dslOverview, err := c.session.loadPost("/data.lua", data)
+	var d rawData
+
+	err = c.updateOverview(&d.Overview)
 	if err != nil {
 		return err
 	}
 
-	// only for version < 7.19: contains JSON
-	var dslOverviewData string
-	if len(dslOverview) == 0 || dslOverview[0] != '{' {
-		data = url.Values{}
-		data.Add("action", "get_data")
-		data.Add("myXhr", "1")
-		data.Add("useajax", "1")
-		data.Add("xhr", "1")
-		dslOverviewData, err = c.session.loadGet("/internet/dsl_overview.lua", data)
-		if err != nil {
-			return err
-		}
-	}
-
-	data = url.Values{}
-	data.Add("update", "mainDiv")
-	data.Add("useajax", "1")
-	data.Add("xhr", "1")
-	dslStats, err := c.session.loadGet("/internet/dsl_stats_tab.lua", data)
+	err = c.updateStats(&d.Stats)
 	if err != nil {
 		return err
 	}
 
-	data = url.Values{}
-	data.Add("myXhr", "1")
-	data.Add("useajax", "1")
-	data.Add("xhr", "1")
-	dslSpectrum, err := c.session.loadGet("/internet/dsl_spectrum.lua", data)
+	err = c.updateSpectrum(&d.Spectrum)
 	if err != nil {
 		return err
 	}
 
-	interfaceConfigInfo, err := c.session.loadTR064(
-		"/upnp/control/wandslifconfig1",
-		"urn:dslforum-org:service:WANDSLInterfaceConfig:1",
-		"GetInfo")
+	err = c.updateTR064(&d.TR064)
 	if err != nil {
 		return err
 	}
 
-	interfaceConfigStatisticsTotal, err := c.session.loadTR064(
-		"/upnp/control/wandslifconfig1",
-		"urn:dslforum-org:service:WANDSLInterfaceConfig:1",
-		"GetStatisticsTotal")
-	if err != nil {
-		return err
-	}
-
-	var supportData string
 	if c.loadSupportData {
-		supportData, err = c.session.loadSupportData()
+		err = c.updateSupportData(&d.SupportData)
 		if err != nil {
 			return err
 		}
 	}
 
 	c.status = models.Status{}
-	parseOverview(&c.status, dslOverview, dslOverviewData)
-	parseStats(&c.status, dslStats)
-	parseTR064Data(&c.status, interfaceConfigInfo, interfaceConfigStatisticsTotal)
-
 	c.bins = models.Bins{}
-	parseSpectrum(&c.bins, &c.status, dslSpectrum)
-	parseSupportData(&c.status, &c.bins, supportData)
 
-	var b strings.Builder
-	fmt.Fprintln(&b, "////// DSL Overview\n")
-	fmt.Fprintln(&b, dslOverview+"\n")
-	fmt.Fprintln(&b, "////// DSL Overview data\n")
-	fmt.Fprintln(&b, dslOverviewData+"\n")
-	fmt.Fprintln(&b, "////// DSL Stats\n")
-	fmt.Fprintln(&b, dslStats+"\n")
-	fmt.Fprintln(&b, "////// DSL Spectrum\n")
-	fmt.Fprintln(&b, dslSpectrum+"\n")
-	fmt.Fprintln(&b, "////// Interface Config Info\n")
-	fmt.Fprintln(&b, interfaceConfigInfo+"\n")
-	fmt.Fprintln(&b, "////// Interface Config Statistics Total\n")
-	fmt.Fprintln(&b, interfaceConfigStatisticsTotal+"\n")
-	fmt.Fprintln(&b, "////// Support Data\n")
-	fmt.Fprintln(&b, supportData+"\n")
-	fmt.Fprintln(&b)
-	c.rawData = []byte(b.String())
+	parseOverview(&c.status, &d.Overview)
+	parseStats(&c.status, &d.Stats)
+	parseSpectrum(&c.bins, &c.status, &d.Spectrum)
+	parseTR064Data(&c.status, &d.TR064)
+	parseSupportData(&c.status, &c.bins, &d.SupportData)
+
+	c.rawData = []byte(d.String())
 
 	return
 }

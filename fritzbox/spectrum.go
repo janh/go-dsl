@@ -33,11 +33,11 @@ type spectrumDataBandItem struct {
 	Last  int `json:"last"`
 }
 
-func parseSpectrum(bins *models.Bins, status *models.Status, dslSpectrum string) {
+func parseSpectrum(bins *models.Bins, status *models.Status, d *rawDataSpectrum) {
 	bins.Mode = status.Mode
 
 	var data spectrumData
-	json.Unmarshal([]byte(dslSpectrum), &data)
+	json.Unmarshal([]byte(d.Data), &data)
 
 	if len(data.Ports) < 1 {
 		return

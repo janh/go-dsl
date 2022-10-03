@@ -17,9 +17,9 @@ import (
 
 var regexpFilterCharacters = regexp.MustCompile(`\P{L}+`)
 
-func parseStats(status *models.Status, dslStats string) {
-	parseStatsConnection(status, dslStats)
-	parseStatsErrors(status, dslStats)
+func parseStats(status *models.Status, d *rawDataStats) {
+	parseStatsConnection(status, d.Data)
+	parseStatsErrors(status, d.Data)
 }
 
 func parseStatsConnection(status *models.Status, dslStats string) {

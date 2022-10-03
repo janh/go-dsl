@@ -28,9 +28,9 @@ type interfaceConfigStatisticsTotalType struct {
 	} `xml:"Body>GetStatisticsTotalResponse"`
 }
 
-func parseTR064Data(status *models.Status, interfaceConfigInfo, interfaceConfigStatisticsTotal string) {
+func parseTR064Data(status *models.Status, d *rawDataTR064) {
 	var info interfaceConfigInfoType
-	err := xml.Unmarshal([]byte(interfaceConfigInfo), &info)
+	err := xml.Unmarshal([]byte(d.InterfaceConfigInfo), &info)
 
 	if err == nil {
 		if info.Data.NewUpstreamPower != 0 {
@@ -52,7 +52,7 @@ func parseTR064Data(status *models.Status, interfaceConfigInfo, interfaceConfigS
 	}
 
 	var statistics interfaceConfigStatisticsTotalType
-	err = xml.Unmarshal([]byte(interfaceConfigStatisticsTotal), &statistics)
+	err = xml.Unmarshal([]byte(d.InterfaceConfigStatisticsTotal), &statistics)
 
 	if err == nil {
 		status.DownstreamFECCount.Int = statistics.Data.NewFECErrors
