@@ -11,21 +11,29 @@ import (
 	"3e8.eu/go/dsl/models"
 )
 
-type spectrumData struct {
-	Ports []map[string]struct {
-		BitBandconfig []spectrumDataBandItem `json:"BIT_BANDCONFIG"`
+type spectrumDataWrapper struct {
+	Data struct {
+		Ports spectrumData `json:"ports"`
+	} `json:"data"`
+}
 
-		PilotValues []int `json:"PILOT_VALUES"`
-		Pilot       int   `json:"PILOT"`
+type spectrumDataWrapperLegacy struct {
+	Ports spectrumData `json:"port"`
+}
 
-		TonesPerBATValue int   `json:"TONES_PER_BAT_VALUE"`
-		MaxBATTone       int   `json:"MAX_BAT_TONE"`
-		ActualBITValues  []int `json:"ACT_BIT_VALUES"`
+type spectrumData []map[string]struct {
+	BitBandconfig []spectrumDataBandItem `json:"BIT_BANDCONFIG"`
 
-		TonesPerSNRValue int   `json:"TONES_PER_SNR_VALUE"`
-		MaxSNRTone       int   `json:"MAX_SNR_TONE"`
-		ActualSNRValues  []int `json:"ACT_SNR_VALUES"`
-	} `json:"port"`
+	PilotValues []int `json:"PILOT_VALUES"`
+	Pilot       int   `json:"PILOT"`
+
+	TonesPerBATValue int   `json:"TONES_PER_BAT_VALUE"`
+	MaxBATTone       int   `json:"MAX_BAT_TONE"`
+	ActualBITValues  []int `json:"ACT_BIT_VALUES"`
+
+	TonesPerSNRValue int   `json:"TONES_PER_SNR_VALUE"`
+	MaxSNRTone       int   `json:"MAX_SNR_TONE"`
+	ActualSNRValues  []int `json:"ACT_SNR_VALUES"`
 }
 
 type spectrumDataBandItem struct {
@@ -37,13 +45,21 @@ func parseSpectrum(bins *models.Bins, status *models.Status, d *rawDataSpectrum)
 	bins.Mode = status.Mode
 
 	var data spectrumData
-	json.Unmarshal([]byte(d.Data), &data)
+	if !d.Legacy {
+		var dataWrapper spectrumDataWrapper
+		json.Unmarshal([]byte(d.Data), &dataWrapper)
+		data = dataWrapper.Data.Ports
+	} else {
+		var dataWrapper spectrumDataWrapperLegacy
+		json.Unmarshal([]byte(d.Data), &dataWrapper)
+		data = dataWrapper.Ports
+	}
 
-	if len(data.Ports) < 1 {
+	if len(data) < 1 {
 		return
 	}
 
-	if portData, ok := data.Ports[0]["us"]; ok {
+	if portData, ok := data[0]["us"]; ok {
 		processPilotTones(&bins.PilotTones, portData.TonesPerBATValue, portData.PilotValues, portData.Pilot)
 		processSpectrumBits(&bins.Bits, portData.BitBandconfig, portData.TonesPerBATValue, portData.MaxBATTone, portData.ActualBITValues)
 		processSpectrumSNR(&bins.SNR, portData.BitBandconfig, portData.TonesPerSNRValue, portData.MaxSNRTone, portData.ActualSNRValues)

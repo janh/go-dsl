@@ -5,8 +5,22 @@
 package fritzbox
 
 import (
+	"encoding/json"
 	"net/url"
 )
+
+func checkPageID(data, page string) bool {
+	var decoded struct {
+		PageID string `json:"pid"`
+	}
+
+	err := json.Unmarshal([]byte(data), &decoded)
+	if err != nil {
+		return false
+	}
+
+	return decoded.PageID == page
+}
 
 func (c *client) updateOverview(d *rawDataOverview) (err error) {
 	// contains HTML for version < 7.19, JSON for version >= 7.19
@@ -38,26 +52,56 @@ func (c *client) updateOverview(d *rawDataOverview) (err error) {
 }
 
 func (c *client) updateStats(d *rawDataStats) (err error) {
+	// version >= 7.39
 	data := url.Values{}
-	data.Add("update", "mainDiv")
-	data.Add("useajax", "1")
+	data.Add("lang", "de")
+	data.Add("page", "dslStat")
 	data.Add("xhr", "1")
-	d.Data, err = c.session.loadGet("/internet/dsl_stats_tab.lua", data)
+	d.Data, err = c.session.loadPost("/data.lua", data)
 	if err != nil {
 		return
+	}
+
+	if !checkPageID(d.Data, "dslStat") {
+		// version < 7.39
+		d.Legacy = true
+
+		data = url.Values{}
+		data.Add("update", "mainDiv")
+		data.Add("useajax", "1")
+		data.Add("xhr", "1")
+		d.Data, err = c.session.loadGet("/internet/dsl_stats_tab.lua", data)
+		if err != nil {
+			return
+		}
 	}
 
 	return
 }
 
 func (c *client) updateSpectrum(d *rawDataSpectrum) (err error) {
+	// version >= 7.39
 	data := url.Values{}
-	data.Add("myXhr", "1")
-	data.Add("useajax", "1")
+	data.Add("lang", "de")
+	data.Add("page", "dslSpectrum")
 	data.Add("xhr", "1")
-	d.Data, err = c.session.loadGet("/internet/dsl_spectrum.lua", data)
+	d.Data, err = c.session.loadPost("/data.lua", data)
 	if err != nil {
 		return
+	}
+
+	if !checkPageID(d.Data, "dslSpectrum") {
+		// version < 7.39
+		d.Legacy = true
+
+		data = url.Values{}
+		data.Add("myXhr", "1")
+		data.Add("useajax", "1")
+		data.Add("xhr", "1")
+		d.Data, err = c.session.loadGet("/internet/dsl_spectrum.lua", data)
+		if err != nil {
+			return
+		}
 	}
 
 	return

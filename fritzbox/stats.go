@@ -5,6 +5,7 @@
 package fritzbox
 
 import (
+	"encoding/json"
 	"regexp"
 	"strconv"
 	"strings"
@@ -17,14 +18,44 @@ import (
 
 var regexpFilterCharacters = regexp.MustCompile(`\P{L}+`)
 
-func parseStats(status *models.Status, d *rawDataStats) {
-	parseStatsConnection(status, d.Data)
-	parseStatsErrors(status, d.Data)
+type statsItemValue struct {
+	Upstream   string `json:"us"`
+	Downstream string `json:"ds"`
 }
 
-func parseStatsConnection(status *models.Status, dslStats string) {
-	values := parseStatsTableValues(dslStats)
+type statsItem struct {
+	Title string            `json:"title"`
+	Val   []json.RawMessage `json:"val"`
+}
 
+type statsJSON struct {
+	Data struct {
+		NegotiatedValues []statsItem `json:"negotiatedValues"`
+		ErrorCounters    []statsItem `json:"errorCounters"`
+	} `json:"data"`
+}
+
+func parseStats(status *models.Status, d *rawDataStats) {
+	var valuesConnection map[string][2]string
+
+	if !d.Legacy {
+		var data statsJSON
+		json.Unmarshal([]byte(d.Data), &data)
+
+		valuesConnection = parseStatsTableValues(data.Data.NegotiatedValues)
+
+		valuesErrors := parseStatsTableValues(data.Data.ErrorCounters)
+		interpretStatsErrors(status, valuesErrors)
+	} else {
+		valuesConnection = parseStatsTableValuesLegacy(d.Data)
+
+		parseStatsErrorsLegacy(status, d.Data)
+	}
+
+	interpretStatsConnection(status, valuesConnection)
+}
+
+func interpretStatsConnection(status *models.Status, values map[string][2]string) {
 	status.DownstreamActualRate.IntValue, status.UpstreamActualRate.IntValue =
 		interpretStatsIntValues(values, "aktuelledatenrate")
 	status.DownstreamAttainableRate.IntValue, status.UpstreamAttainableRate.IntValue =
@@ -54,7 +85,15 @@ func parseStatsConnection(status *models.Status, dslStats string) {
 		interpretStatsFloatValues(values, "störabstandsmarge")
 }
 
-func parseStatsErrors(status *models.Status, dslStats string) {
+func interpretStatsErrors(status *models.Status, values map[string][2]string) {
+	status.DownstreamESCount, status.UpstreamESCount =
+		interpretStatsIntValues(values, "fehlernes")
+
+	status.DownstreamSESCount, status.UpstreamSESCount =
+		interpretStatsIntValues(values, "fehlernses")
+}
+
+func parseStatsErrorsLegacy(status *models.Status, dslStats string) {
 	doc, err := html.Parse(strings.NewReader(dslStats))
 	if err != nil {
 		return
@@ -102,7 +141,29 @@ func parseStatsErrors(status *models.Status, dslStats string) {
 	}
 }
 
-func parseStatsTableValues(dslStats string) map[string][2]string {
+func parseStatsTableValues(items []statsItem) map[string][2]string {
+	data := make(map[string][2]string)
+
+	for _, item := range items {
+		if len(item.Val) < 1 {
+			continue
+		}
+
+		var val statsItemValue
+		err := json.Unmarshal(item.Val[0], &val)
+		if err != nil {
+			// the value may also be a single string, we are not interested in those
+			continue
+		}
+
+		key := strings.ToLower(regexpFilterCharacters.ReplaceAllString(item.Title, ""))
+		data[key] = [2]string{val.Downstream, val.Upstream}
+	}
+
+	return data
+}
+
+func parseStatsTableValuesLegacy(dslStats string) map[string][2]string {
 	doc, err := html.Parse(strings.NewReader(dslStats))
 	if err != nil {
 		return nil
@@ -171,7 +232,7 @@ func interpretStatsFloatValues(values map[string][2]string, key string) (downstr
 }
 
 func interpetStatsInterleavingDelay(val string) (out models.ValueMilliseconds) {
-	if val == "fast" {
+	if val == "fast" || val == "< 1" {
 		out.FloatValue.Valid = true
 	} else if strings.HasSuffix(val, "ms") {
 		val = strings.TrimSpace(val[0 : len(val)-2])
