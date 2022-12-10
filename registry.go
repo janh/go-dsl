@@ -23,6 +23,8 @@ func init() {
 	registryItems = make(map[ClientType]registryItem)
 }
 
+// RegisterClient registers a new device client. This function is not intended for use from external
+// packages.
 func RegisterClient(identifier ClientType, newFunc func(config Config) (Client, error), desc ClientDesc) {
 	registryMutex.Lock()
 	defer registryMutex.Unlock()
