@@ -132,6 +132,11 @@ func main() {
 
 	if device.Valid {
 		config.Config.DeviceType = dsl.ClientType(device.String())
+
+		config.Config.User = ""
+		for k := range config.Config.Options {
+			delete(config.Config.Options, k)
+		}
 	}
 
 	if flagSet.Arg(0) != "" {
@@ -151,7 +156,11 @@ func main() {
 	}
 
 	for k, v := range options {
-		config.Config.Options[k] = v
+		if v != "" {
+			config.Config.Options[k] = v
+		} else {
+			delete(config.Config.Options, k)
+		}
 	}
 
 	if gui.Enabled && (startGUI || len(os.Args) == 1) {
