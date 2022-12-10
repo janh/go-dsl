@@ -75,13 +75,13 @@
 		if (clientDesc.RequiresUser == TRISTATE_NO) {
 			configUser.value = "";
 		}
-		configUser.parentElement.classList.toggle("hide", clientDesc.RequiresUser == TRISTATE_NO);
+		configUser.closest("p").classList.toggle("hide", clientDesc.RequiresUser == TRISTATE_NO);
 
 		let hidePrivateKey = !(clientDesc.SupportedAuthTypes & AuthTypePrivateKeys);
-		configPrivateKey.parentElement.classList.toggle("hide", hidePrivateKey);
+		configPrivateKey.closest("p").classList.toggle("hide", hidePrivateKey);
 
 		let hideKnownHosts = !clientDesc.RequiresKnownHosts;
-		configKnownHosts.parentElement.classList.toggle("hide", hideKnownHosts);
+		configKnownHosts.closest("p").classList.toggle("hide", hideKnownHosts);
 
 		let hideOptions = !clientDesc.OptionDescriptions;
 		configOptions.classList.toggle("hide", hideOptions);
@@ -105,9 +105,12 @@
 				item.dataset.desc = descText;
 
 				let label = document.createElement("label");
-				label.htmlFor = id;
-				label.innerText = option + ":";
 				item.appendChild(label);
+
+				let title = document.createElement("span");
+				title.classList.add("title");
+				title.innerText = option + ":";
+				label.appendChild(title);
 
 				let input = document.createElement("input");
 				input.type = "text";
@@ -115,11 +118,12 @@
 				input.name = option;
 				input.autocomplete = "off";
 				input.spellcheck = false;
-				item.appendChild(input);
+				label.appendChild(input);
 
 				let desc = document.createElement("span");
+				desc.classList.add("desc");
 				desc.innerText = descText;
-				item.appendChild(desc);
+				label.appendChild(desc);
 			}
 
 			configOptions.appendChild(item);

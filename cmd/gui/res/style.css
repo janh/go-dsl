@@ -125,15 +125,17 @@ header a.disabled {
 	top: .35em;
 }
 #overlay-connect p {
+	margin: 0;
+}
+#overlay-connect label, #overlay-connect p.button {
 	display: flex;
 	flex-direction: row;
 	flex-wrap: wrap;
 	align-items: center;
-	margin: 0;
-}
-#overlay-connect label {
-	width: 10em;
 	margin-bottom: 0;
+}
+#overlay-connect span.title {
+	width: 10em;
 }
 #overlay-connect input, #overlay-connect select {
 	width: auto;
@@ -142,12 +144,12 @@ header a.disabled {
 #overlay-connect input[type="checkbox"] {
 	flex-grow: 0;
 }
-#overlay-connect input[type="checkbox"] + label {
+#overlay-connect input[type="checkbox"] + span.title {
 	padding-left: .5em;
 	width: auto;
 	flex-grow: 1;
 }
-#overlay-connect span {
+#overlay-connect span.desc {
 	color: #444;
 	font-size: .9em;
 	margin: .1em 0 0 10rem;

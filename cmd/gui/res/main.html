@@ -68,38 +68,50 @@
 				<form id="overlay-connect">
 					<fieldset>
 						<p>
-							<label for="config-device-type">Device type:</label>
-							<select id="config-device-type"></select>
+							<label>
+								<span class="title">Device type:</span>
+								<select id="config-device-type"></select>
+							</label>
 						</p>
 					</fieldset>
 					<fieldset>
 						<p>
-							<label for="config-host">Host:</label>
-							<input type="text" id="config-host" autocomplete="off" spellcheck="false" />
+							<label>
+								<span class="title">Host:</span>
+								<input type="text" id="config-host" autocomplete="off" spellcheck="false" />
+							</label>
 						</p>
 						<p>
-							<label for="config-user">User:</label>
-							<input type="text" id="config-user" autocomplete="off" spellcheck="false" />
+							<label>
+								<span class="title">User:</span>
+								<input type="text" id="config-user" autocomplete="off" spellcheck="false" />
+							</label>
 						</p>
 					</fieldset>
 					<fieldset id="config-advanced" class="collapsed">
 						<legend>Advanced options</legend>
 						<p>
-							<label for="config-private-key">Private key path:</label>
-							<input type="text" id="config-private-key" autocomplete="off" spellcheck="false" />
+							<label>
+								<span class="title">Private key path:</span>
+								<input type="text" id="config-private-key" autocomplete="off" spellcheck="false" />
+							</label>
 						</p>
 						<p>
-							<label for="config-known-hosts">Known hosts path:</label>
-							<input type="text" id="config-known-hosts" autocomplete="off" spellcheck="false" />
+							<label>
+								<span class="title">Known hosts path:</span>
+								<input type="text" id="config-known-hosts" autocomplete="off" spellcheck="false" />
+							</label>
 						</p>
 						<div id="config-options"></div>
 					</fieldset>
 					<fieldset>
 						<p>
-							<input type="checkbox" id="config-remember" />
-							<label for="config-remember">Remember configuration</label>
+							<label>
+								<input type="checkbox" id="config-remember" />
+								<span class="title">Remember configuration</span>
+							</label>
 						</p>
-						<p>
+						<p class="button">
 							<input type="submit" value="Connect" />
 						</p>
 					</fieldset>
