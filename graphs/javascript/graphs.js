@@ -20,7 +20,7 @@ var DSLGraphs = DSLGraphs || (function () {
 		}
 
 		toString() {
-			var a = Math.round(this.a*1000) / 1000
+			var a = Math.round(this.a*1000) / 1000;
 			return `rgba(${this.r}, ${this.g}, ${this.b}, ${a})`;
 		}
 

@@ -38,6 +38,7 @@ function updateState(newState, data) {
 
 			case STATE_ERROR:
 				overlayError.innerText = data;
+				break;
 
 		}
 	}

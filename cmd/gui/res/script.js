@@ -187,6 +187,7 @@
 
 				case STATE_ERROR:
 					overlayError.innerText = data;
+					break;
 
 			}
 		}
