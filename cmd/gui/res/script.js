@@ -17,6 +17,9 @@
 	const AuthTypePassword = 1 << 0;
 	const AuthTypePrivateKeys = 1 << 1;
 
+	const OptionTypeString = 0;
+	const OptionTypeBool = 1;
+
 	var state;
 	var clientDescs;
 
@@ -54,7 +57,11 @@
 			let id = "config-option-" + option;
 			let input = document.getElementById(id);
 			if (input) {
-				input.value = config.Options[option];
+				if (input.type == "checkbox") {
+					input.checked = config.Options[option] == "1";
+				} else {
+					input.value = config.Options[option];
+				}
 			}
 		}
 	}
@@ -68,7 +75,7 @@
 				"RequiresUser": TRISTATE_MAYBE,
 				"SupportedAuthTypes": 0,
 				"RequiresKnownHosts": false,
-				"OptionDescriptions": null
+				"Options": null
 			};
 		}
 
@@ -83,7 +90,7 @@
 		let hideKnownHosts = !clientDesc.RequiresKnownHosts;
 		configKnownHosts.closest("p").classList.toggle("hide", hideKnownHosts);
 
-		let hideOptions = !clientDesc.OptionDescriptions;
+		let hideOptions = !clientDesc.Options;
 		configOptions.classList.toggle("hide", hideOptions);
 
 		configAdvanced.classList.toggle("hide", hidePrivateKey && hideKnownHosts && hideOptions);
@@ -93,16 +100,17 @@
 			let item = configOptions.removeChild(configOptions.firstChild);
 			existingOptionItems[item.dataset.option] = item;
 		}
-		for (let option in clientDesc.OptionDescriptions) {
-			let descText = clientDesc.OptionDescriptions[option];
+		for (let option in clientDesc.Options) {
+			let params = clientDesc.Options[option];
+			let unique = JSON.stringify(params);
 
 			let item = existingOptionItems[option];
-			if (!item || item.dataset.desc != descText) {
+			if (!item || item.dataset.unique != unique) {
 				let id = "config-option-" + option;
 
 				item = document.createElement("p");
 				item.dataset.option = option;
-				item.dataset.desc = descText;
+				item.dataset.unique = unique;
 
 				let label = document.createElement("label");
 				item.appendChild(label);
@@ -112,17 +120,30 @@
 				title.innerText = option + ":";
 				label.appendChild(title);
 
-				let input = document.createElement("input");
-				input.type = "text";
+				let input;
+
+				switch (params.Type) {
+
+					case OptionTypeBool:
+						input = document.createElement("input");
+						input.type = "checkbox";
+						break;
+
+					default:
+						input = document.createElement("input");
+						input.type = "text";
+						input.autocomplete = "off";
+						input.spellcheck = false;
+
+				}
+
 				input.id = id;
 				input.name = option;
-				input.autocomplete = "off";
-				input.spellcheck = false;
 				label.appendChild(input);
 
 				let desc = document.createElement("span");
 				desc.classList.add("desc");
-				desc.innerText = descText;
+				desc.innerText = params.Description;
 				label.appendChild(desc);
 			}
 
@@ -142,8 +163,14 @@
 
 		let optionInputs = configOptions.getElementsByTagName("input");
 		for (let input of optionInputs) {
-			if (input.value.length) {
-				data.Options[input.name] = input.value;
+			if (input.type == "checkbox") {
+				if (input.checked) {
+					data.Options[input.name] = "1";
+				}
+			} else {
+				if (input.value.length) {
+					data.Options[input.name] = input.value;
+				}
 			}
 		}
 

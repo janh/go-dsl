@@ -23,9 +23,15 @@ func init() {
 		Title:              "FRITZ!Box",
 		RequiresUser:       dsl.TristateMaybe,
 		SupportedAuthTypes: dsl.AuthTypePassword,
-		OptionDescriptions: map[string]string{
-			"LoadSupportData": "load more details from support data if set to 1",
-			"TLSSkipVerify":   "skip verification of TLS certificates if set to 1",
+		Options: map[string]dsl.Option{
+			"LoadSupportData": dsl.Option{
+				Description: "load more details from support data",
+				Type:        dsl.OptionTypeBool,
+			},
+			"TLSSkipVerify": dsl.Option{
+				Description: "skip verification of TLS certificates",
+				Type:        dsl.OptionTypeBool,
+			},
 		},
 	}
 	dsl.RegisterClient("fritzbox", newFunc, clientDesc)

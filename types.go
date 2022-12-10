@@ -19,12 +19,24 @@ const (
 	AuthTypePrivateKeys
 )
 
+type OptionType int
+
+const (
+	OptionTypeString = iota
+	OptionTypeBool
+)
+
+type Option struct {
+	Description string
+	Type        OptionType
+}
+
 type ClientDesc struct {
 	Title              string
 	RequiresUser       Tristate
 	SupportedAuthTypes AuthTypes
 	RequiresKnownHosts bool
-	OptionDescriptions map[string]string
+	Options            map[string]Option
 }
 
 type ClientType string

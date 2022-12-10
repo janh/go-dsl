@@ -312,13 +312,19 @@ func printHelp() {
 	clientTypes := dsl.GetClientTypes()
 	for _, clientType := range clientTypes {
 		clientDesc := clientType.ClientDesc()
-		if len(clientDesc.OptionDescriptions) == 0 {
+		if len(clientDesc.Options) == 0 {
 			continue
 		}
 
 		fmt.Println("  " + clientType + ":")
 
-		for key, desc := range clientDesc.OptionDescriptions {
+		for key, option := range clientDesc.Options {
+			desc := option.Description
+			switch option.Type {
+			case dsl.OptionTypeBool:
+				desc += " (if set to 1)"
+			}
+
 			fmt.Println("    " + key)
 			fmt.Println(indentAndWordWrap(desc))
 		}

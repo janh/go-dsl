@@ -22,8 +22,11 @@ func init() {
 		Title:              "Sagemcom",
 		RequiresUser:       dsl.TristateMaybe,
 		SupportedAuthTypes: dsl.AuthTypePassword,
-		OptionDescriptions: map[string]string{
-			"TLSSkipVerify": "skip verification of TLS certificates if set to 1",
+		Options: map[string]dsl.Option{
+			"TLSSkipVerify": dsl.Option{
+				Description: "skip verification of TLS certificates",
+				Type:        dsl.OptionTypeBool,
+			},
 		},
 	}
 	dsl.RegisterClient("sagemcom", newFunc, clientDesc)

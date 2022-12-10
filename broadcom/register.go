@@ -9,8 +9,11 @@ import (
 )
 
 func init() {
-	options := map[string]string{
-		"Command": "name of the xdslctl command on the device",
+	options := map[string]dsl.Option{
+		"Command": dsl.Option{
+			Description: "name of the xdslctl command on the device",
+			Type:        dsl.OptionTypeString,
+		},
 	}
 
 	newTelnet := func(config dsl.Config) (dsl.Client, error) {
@@ -26,7 +29,7 @@ func init() {
 		Title:              "Broadcom (Telnet)",
 		RequiresUser:       dsl.TristateMaybe,
 		SupportedAuthTypes: dsl.AuthTypePassword,
-		OptionDescriptions: options,
+		Options:            options,
 	}
 	dsl.RegisterClient("broadcom_telnet", newTelnet, clientDescTelnet)
 
@@ -46,7 +49,7 @@ func init() {
 		RequiresUser:       dsl.TristateYes,
 		SupportedAuthTypes: dsl.AuthTypePassword | dsl.AuthTypePrivateKeys,
 		RequiresKnownHosts: true,
-		OptionDescriptions: options,
+		Options:            options,
 	}
 	dsl.RegisterClient("broadcom_ssh", newSSH, clientDescSSH)
 }

@@ -154,6 +154,9 @@ header a.disabled {
 	font-size: .9em;
 	margin: .1em 0 0 10rem;
 }
+#overlay-connect input[type="checkbox"] + span.desc {
+	margin: 0 0 0 .5em;
+}
 #overlay-connect .hide {
 	display: none;
 }

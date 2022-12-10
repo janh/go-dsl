@@ -128,7 +128,7 @@ func Validate() error {
 
 	for optionKey := range Config.Options {
 		valid := false
-		for option := range clientDesc.OptionDescriptions {
+		for option := range clientDesc.Options {
 			if optionKey == option {
 				valid = true
 				break
