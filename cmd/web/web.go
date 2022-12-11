@@ -101,11 +101,12 @@ func start(config dsl.Config) (addr string, err error) {
 }
 
 func wait() error {
-	return <-serverErr
+	err := <-serverErr
+	c.Close()
+	return err
 }
 
 func stop() {
-	c.Close()
 	serverErr <- server.Shutdown(context.Background())
 }
 
