@@ -12,6 +12,7 @@ import (
 	"net/http"
 	"os"
 	"os/signal"
+	"sync"
 	"syscall"
 
 	"3e8.eu/go/dsl"
@@ -24,9 +25,11 @@ import (
 var files embed.FS
 
 var (
-	c         *common.Client
-	server    http.Server
-	serverErr chan error
+	c                 *common.Client
+	server            http.Server
+	serverErr         chan error
+	shutdownReceivers map[chan bool]bool
+	shutdownMutex     sync.Mutex
 )
 
 func Run(config dsl.Config) {
@@ -88,6 +91,9 @@ func start(config dsl.Config) (addr string, err error) {
 
 	c = common.NewClient(config)
 
+	shutdownReceivers = make(map[chan bool]bool)
+	server.RegisterOnShutdown(handleOnShutdown)
+
 	serverErr = make(chan error, 1)
 
 	go func() {
@@ -108,6 +114,29 @@ func wait() error {
 
 func stop() {
 	serverErr <- server.Shutdown(context.Background())
+}
+
+func registerOnShutdown(receiver chan bool) {
+	shutdownMutex.Lock()
+	defer shutdownMutex.Unlock()
+
+	shutdownReceivers[receiver] = true
+}
+
+func unregisterOnShutdown(receiver chan bool) {
+	shutdownMutex.Lock()
+	defer shutdownMutex.Unlock()
+
+	delete(shutdownReceivers, receiver)
+}
+
+func handleOnShutdown() {
+	shutdownMutex.Lock()
+	defer shutdownMutex.Unlock()
+
+	for receiver := range shutdownReceivers {
+		receiver <- true
+	}
 }
 
 func handleRoot(w http.ResponseWriter, req *http.Request) {
@@ -144,11 +173,10 @@ func handleEvents(w http.ResponseWriter, req *http.Request) {
 
 	shutdown := make(chan bool, 1)
 
-	server.RegisterOnShutdown(func() {
-		shutdown <- true
-	})
+	registerOnShutdown(shutdown)
 
 	defer func() {
+		unregisterOnShutdown(shutdown)
 		c.UnregisterReceiver(receiver)
 		writer.Close()
 	}()
