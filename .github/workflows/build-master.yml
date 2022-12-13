@@ -26,11 +26,12 @@ jobs:
 
       - name: Determine version and archive name
         id: vars
+        shell: bash
         env:
           TZ: UTC0
         run: |
-          echo "::set-output name=version::master-$(git log -1 --format='%cd-%h' --date='format-local:%Y-%m-%d')"
-          echo "::set-output name=archivename::dsl-master-$(git log -1 --format='%cd-%h' --date='format-local:%Y-%m-%d')-${{ matrix.target }}"
+          echo "version=master-$(git log -1 --format='%cd-%h' --date='format-local:%Y-%m-%d')" >> $GITHUB_OUTPUT
+          echo "archivename=dsl-master-$(git log -1 --format='%cd-%h' --date='format-local:%Y-%m-%d')-${{ matrix.target }}" >> $GITHUB_OUTPUT
 
       - name: Set up Go
         uses: actions/setup-go@v3
@@ -121,10 +122,11 @@ jobs:
 
       - name: Determine commit time
         id: vars
+        shell: bash
         env:
           TZ: UTC0
         run: |
-          echo "::set-output name=time::$(git log -1 --format='%cd' --date='format-local:%Y-%m-%d %H:%M:%S UTC')"
+          echo "time=$(git log -1 --format='%cd' --date='format-local:%Y-%m-%d %H:%M:%S UTC')" >> $GITHUB_OUTPUT
 
       - name: Download artifacts
         uses: actions/download-artifact@v3
