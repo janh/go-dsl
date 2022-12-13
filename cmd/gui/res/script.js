@@ -19,6 +19,7 @@
 
 	const OptionTypeString = 0;
 	const OptionTypeBool = 1;
+	const OptionTypeEnum = 2;
 
 	var state;
 	var clientDescs;
@@ -129,6 +130,13 @@
 						input.type = "checkbox";
 						break;
 
+					case OptionTypeEnum:
+						input = document.createElement("select");
+						for (let val of params.Values) {
+							input.appendChild(new Option(val.Title, val.Value));
+						}
+						break;
+
 					default:
 						input = document.createElement("input");
 						input.type = "text";
@@ -161,7 +169,7 @@
 			"Options": {}
 		};
 
-		let optionInputs = configOptions.getElementsByTagName("input");
+		let optionInputs = configOptions.querySelectorAll("input,select");
 		for (let input of optionInputs) {
 			if (input.type == "checkbox") {
 				if (input.checked) {

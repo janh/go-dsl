@@ -24,11 +24,18 @@ type OptionType int
 const (
 	OptionTypeString = iota
 	OptionTypeBool
+	OptionTypeEnum
 )
+
+type OptionValue struct {
+	Value string
+	Title string
+}
 
 type Option struct {
 	Description string
 	Type        OptionType
+	Values      []OptionValue
 }
 
 type ClientDesc struct {

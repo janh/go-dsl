@@ -334,6 +334,14 @@ func printHelp(flagSet *flag.FlagSet) {
 			switch option.Type {
 			case dsl.OptionTypeBool:
 				desc += " (if set to 1)"
+			case dsl.OptionTypeEnum:
+				values := make([]string, 0, len(option.Values))
+				for _, val := range option.Values {
+					if val.Value != "" {
+						values = append(values, val.Value)
+					}
+				}
+				desc += " (valid values: " + strings.Join(values, ", ") + ")"
 			}
 
 			fmt.Println("    " + key)
