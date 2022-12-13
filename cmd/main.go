@@ -107,14 +107,18 @@ func main() {
 		flagSet.Lookup("gui").DefValue = ""
 	}
 
+	var help bool
+	flagSet.BoolVar(&help, "help", false, "print information about available options")
+	flagSet.Lookup("help").DefValue = ""
+
 	err := flagSet.Parse(os.Args[1:])
 	if err != nil {
-		if err == flag.ErrHelp {
-			printHelp()
-			os.Exit(0)
-		} else {
-			os.Exit(2)
-		}
+		os.Exit(2)
+	}
+
+	if help {
+		printHelp(flagSet)
+		os.Exit(0)
 	}
 
 	if flagSet.NArg() > 1 {
@@ -264,6 +268,11 @@ func indentAndWordWrap(str string) string {
 }
 
 func printUsage(flagSet *flag.FlagSet) {
+	fmt.Printf(`Run "%s -help" for more information.`, flagSet.Name())
+	fmt.Println()
+}
+
+func printHelp(flagSet *flag.FlagSet) {
 	fmt.Print("\nUsage:")
 	if len(flagSet.Name()) > 20 {
 		fmt.Println()
@@ -277,12 +286,6 @@ func printUsage(flagSet *flag.FlagSet) {
 	flagSet.VisitAll(func(flag *flag.Flag) {
 		flags = append(flags, flag)
 	})
-
-	helpFlag := flag.Flag{
-		Name:  "help",
-		Usage: "print information about available options",
-	}
-	flags = append(flags, &helpFlag)
 
 	sort.Slice(flags, func(i, j int) bool {
 		return flags[i].Name < flags[j].Name
@@ -301,9 +304,7 @@ func printUsage(flagSet *flag.FlagSet) {
 
 		fmt.Println()
 	}
-}
 
-func printHelp() {
 	fmt.Println()
 
 	fmt.Println("Device-specific options:")
