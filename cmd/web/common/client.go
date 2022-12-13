@@ -16,11 +16,12 @@ import (
 type State string
 
 const (
-	StateReady              State = "ready"
-	StatePasswordRequired   State = "password"
-	StatePassphraseRequired State = "passphrase"
-	StateLoading            State = "loading"
-	StateError              State = "error"
+	StateReady                        State = "ready"
+	StatePasswordRequired             State = "password"
+	StatePassphraseRequired           State = "passphrase"
+	StateEncryptionPassphraseRequired State = "encryption-passphrase"
+	StateLoading                      State = "loading"
+	StateError                        State = "error"
 )
 
 const (
@@ -43,12 +44,13 @@ type StateChange struct {
 }
 
 type Client struct {
-	setPassword        chan string
-	setPassphrase      chan string
-	changeState        chan StateChange
-	registerReceiver   chan chan StateChange
-	unregisterReceiver chan chan StateChange
-	stopDistribute     chan bool
+	setPassword             chan string
+	setPassphrase           chan string
+	setEncryptionPassphrase chan string
+	changeState             chan StateChange
+	registerReceiver        chan chan StateChange
+	unregisterReceiver      chan chan StateChange
+	stopDistribute          chan bool
 
 	receivers       map[chan StateChange]bool
 	lastStateChange StateChange
@@ -64,27 +66,29 @@ type Client struct {
 
 	errCount int
 
-	config     dsl.Config
-	password   string
-	passphrase map[string]string
+	config               dsl.Config
+	password             string
+	passphrase           map[string]string
+	encryptionPassphrase string
 }
 
 func NewClient(config dsl.Config) *Client {
 	c := &Client{
-		setPassword:        make(chan string),
-		setPassphrase:      make(chan string),
-		changeState:        make(chan StateChange),
-		registerReceiver:   make(chan chan StateChange),
-		unregisterReceiver: make(chan chan StateChange),
-		stopDistribute:     make(chan bool),
-		receivers:          make(map[chan StateChange]bool),
-		lastStateChange:    StateChange{State: StateLoading},
-		interval:           intervalDefault,
-		intervalChanged:    make(chan bool),
-		cancel:             make(chan bool),
-		done:               make(chan bool),
-		config:             config,
-		passphrase:         make(map[string]string),
+		setPassword:             make(chan string),
+		setPassphrase:           make(chan string),
+		setEncryptionPassphrase: make(chan string),
+		changeState:             make(chan StateChange),
+		registerReceiver:        make(chan chan StateChange),
+		unregisterReceiver:      make(chan chan StateChange),
+		stopDistribute:          make(chan bool),
+		receivers:               make(map[chan StateChange]bool),
+		lastStateChange:         StateChange{State: StateLoading},
+		interval:                intervalDefault,
+		intervalChanged:         make(chan bool),
+		cancel:                  make(chan bool),
+		done:                    make(chan bool),
+		config:                  config,
+		passphrase:              make(map[string]string),
 	}
 
 	go c.distribute()
@@ -116,6 +120,15 @@ func (c *Client) SetPassphrase(passphrase string) error {
 		return nil
 	default:
 		return errors.New("no passphrase required")
+	}
+}
+
+func (c *Client) SetEncryptionPassphrase(encryptionPassphrase string) error {
+	select {
+	case c.setEncryptionPassphrase <- encryptionPassphrase:
+		return nil
+	default:
+		return errors.New("no encryption passphrase required")
 	}
 }
 
@@ -193,6 +206,7 @@ func (c *Client) connect() {
 		if errors.As(err, &authErr) {
 			c.password = ""
 			c.passphrase = make(map[string]string)
+			c.encryptionPassphrase = ""
 
 			if authErr.WaitTime > interval {
 				interval = authErr.WaitTime
@@ -255,6 +269,26 @@ func (c *Client) update() {
 			}
 
 			return c.passphrase[fingerprint], nil
+		}
+	}
+
+	if clientDesc.SupportsEncryptionPassphrase && c.config.EncryptionPassphrase == nil {
+		c.config.EncryptionPassphrase = func() (string, error) {
+			if c.encryptionPassphrase == "" {
+				c.changeState <- StateChange{State: StateEncryptionPassphraseRequired}
+
+				select {
+				case <-c.cancel:
+					c.canceled = true
+					return "", errors.New("canceled")
+				case encryptionPassphrase := <-c.setEncryptionPassphrase:
+					c.encryptionPassphrase = encryptionPassphrase
+				}
+
+				c.changeState <- StateChange{State: StateLoading}
+			}
+
+			return c.encryptionPassphrase, nil
 		}
 	}
 

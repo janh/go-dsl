@@ -22,12 +22,19 @@ func PrivateKey(key string, passphrase string) PrivateKeysCallback {
 	}
 }
 
+type EncryptionPassphraseCallback func() (string, error)
+
+func EncryptionPassphrase(passphrase string) EncryptionPassphraseCallback {
+	return func() (string, error) { return passphrase, nil }
+}
+
 type Config struct {
-	Type            ClientType
-	Host            string
-	User            string
-	AuthPassword    PasswordCallback
-	AuthPrivateKeys PrivateKeysCallback
-	KnownHosts      string
-	Options         map[string]string
+	Type                 ClientType
+	Host                 string
+	User                 string
+	AuthPassword         PasswordCallback
+	AuthPrivateKeys      PrivateKeysCallback
+	EncryptionPassphrase EncryptionPassphraseCallback
+	KnownHosts           string
+	Options              map[string]string
 }

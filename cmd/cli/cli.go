@@ -54,6 +54,15 @@ func LoadData(config dsl.Config) {
 		}
 	}
 
+	if clientDesc.SupportsEncryptionPassphrase && config.EncryptionPassphrase == nil {
+		config.EncryptionPassphrase = func() (string, error) {
+			fmt.Println(" encryption passphrase required")
+			password := readPassword("Encryption passphrase: ")
+			fmt.Print("Authenticating…")
+			return password, nil
+		}
+	}
+
 	client, err := dsl.NewClient(config)
 	if err != nil {
 		fmt.Println(" failed:", err)

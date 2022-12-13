@@ -15,6 +15,7 @@ var (
 type SecretsData struct {
 	Password             string
 	PrivateKeyPassphrase string
+	EncryptionPassphrase string
 }
 
 func LoadSecrets(path string) error {

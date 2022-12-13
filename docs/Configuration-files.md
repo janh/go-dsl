@@ -72,3 +72,6 @@ Any non-empty value means that the application won't ask for that type of secret
 
 - **PrivateKeyPassphrase**:  
   Passphrase to use for decryption of SSH private key, if required.
+
+- **EncryptionPassphrase**:  
+  Passphrase to use for encryption (e.g. SNMPv3 privacy password), if required.

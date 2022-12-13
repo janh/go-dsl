@@ -39,11 +39,12 @@ type Option struct {
 }
 
 type ClientDesc struct {
-	Title              string
-	RequiresUser       Tristate
-	SupportedAuthTypes AuthTypes
-	RequiresKnownHosts bool
-	Options            map[string]Option
+	Title                        string
+	RequiresUser                 Tristate
+	SupportedAuthTypes           AuthTypes
+	RequiresKnownHosts           bool
+	SupportsEncryptionPassphrase bool
+	Options                      map[string]Option
 }
 
 type ClientType string

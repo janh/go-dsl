@@ -4,6 +4,7 @@
 	const STATE_READY = "ready";
 	const STATE_PASSWORD = "password";
 	const STATE_PASSPHRASE = "passphrase";
+	const STATE_ENCRYPTION_PASSPHRASE = "encryption-passphrase";
 	const STATE_ERROR = "error";
 	const STATE_LOADING = "loading";
 	const STATE_INITIALIZING = "initializing";
@@ -30,10 +31,10 @@
 	var summary, graphs;
 	var graphBitsCanvas, graphSNRCanvas, graphQLNCanvas, graphHlogCanvas;
 	var graphBits, graphSNR, graphQLN, graphHlog;
-	var overlay, overlayPassword, overlayPassphrase, overlayError, overlayLoading, overlayDisconnecting, overlayConnect;
+	var overlay, overlayPassword, overlayPassphrase, overlayEncryptionPassphrase, overlayError, overlayLoading, overlayDisconnecting, overlayConnect;
 	var configAdvanced, configDeviceType, configHost, configUser, configPrivateKey, configKnownHosts, configOptions, configRemember;
 	var messages;
-	var fingerprint, inputPassword, inputPassphrase;
+	var fingerprint, inputPassword, inputPassphrase, inputEncryptionPassphrase;
 
 	function setConfig(config, clients) {
 		clientDescs = clients;
@@ -249,11 +250,12 @@
 
 			setLinkDisabled(buttonSave, state != STATE_READY);
 			setLinkDisabled(buttonDisconnect,
-				state != STATE_READY && state != STATE_PASSWORD && state != STATE_PASSPHRASE && state != STATE_ERROR && state != STATE_LOADING);
+				state != STATE_READY && state != STATE_PASSWORD && state != STATE_PASSPHRASE && state != STATE_ENCRYPTION_PASSPHRASE && state != STATE_ERROR && state != STATE_LOADING);
 
 			overlay.classList.toggle("visible", state != STATE_READY);
 			overlayPassword.classList.toggle("visible", state == STATE_PASSWORD);
 			overlayPassphrase.classList.toggle("visible", state == STATE_PASSPHRASE);
+			overlayEncryptionPassphrase.classList.toggle("visible", state == STATE_ENCRYPTION_PASSPHRASE);
 			overlayError.classList.toggle("visible", state == STATE_ERROR);
 			overlayLoading.classList.toggle("visible", state == STATE_LOADING || state == STATE_INITIALIZING);
 			overlayDisconnecting.classList.toggle("visible", state == STATE_DISCONNECTING);
@@ -263,6 +265,8 @@
 				inputPassword.focus();
 			} else if (state == STATE_PASSPHRASE) {
 				inputPassphrase.focus();
+			} else if (state == STATE_ENCRYPTION_PASSPHRASE) {
+				inputEncryptionPassphrase.focus();
 			}
 		}
 	}
@@ -301,7 +305,7 @@
 	}
 
 	function initForms() {
-		let forms = document.querySelectorAll("#overlay-password, #overlay-passphrase");
+		let forms = document.querySelectorAll("#overlay-password, #overlay-passphrase, #overlay-encryption-passphrase");
 
 		for (let form of forms) {
 			form.addEventListener("submit", sendForm);
@@ -396,6 +400,7 @@
 		overlay = document.getElementById("overlay");
 		overlayPassword = document.getElementById("overlay-password");
 		overlayPassphrase = document.getElementById("overlay-passphrase");
+		overlayEncryptionPassphrase = document.getElementById("overlay-encryption-passphrase");
 		overlayError = document.getElementById("overlay-error");
 		overlayLoading = document.getElementById("overlay-loading");
 		overlayDisconnecting = document.getElementById("overlay-disconnecting");
@@ -415,6 +420,7 @@
 		fingerprint = document.getElementById("fingerprint");
 		inputPassword = document.getElementById("password");
 		inputPassphrase = document.getElementById("passphrase");
+		inputEncryptionPassphrase = document.getElementById("encryption-passphrase");
 
 		updateState(STATE_INITIALIZING);
 

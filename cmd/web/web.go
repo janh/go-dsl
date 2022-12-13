@@ -90,6 +90,7 @@ func start(clientConfig dsl.Config) (addr string, err error) {
 	if !config.DisableInteractiveAuth {
 		http.HandleFunc("/password", handlePassword)
 		http.HandleFunc("/passphrase", handlePassphrase)
+		http.HandleFunc("/encryption-passphrase", handleEncryptionPassphrase)
 	}
 
 	listener, err := net.Listen("tcp", config.ListenAddress)
@@ -177,7 +178,8 @@ func getStateMessage(change common.StateChange) (msg common.Message) {
 
 	case config.DisableInteractiveAuth &&
 		(change.State == common.StatePasswordRequired ||
-			change.State == common.StatePassphraseRequired):
+			change.State == common.StatePassphraseRequired ||
+			change.State == common.StateEncryptionPassphraseRequired):
 
 		msg.State = string(common.StateError)
 		msg.Data = "failed to load data from device: interactive authentication required but not allowed"
@@ -283,6 +285,23 @@ func handlePassphrase(w http.ResponseWriter, req *http.Request) {
 	passphrase := req.PostFormValue("data")
 
 	err := c.SetPassphrase(passphrase)
+	if err != nil {
+		http.Error(w, "403 forbidden", http.StatusForbidden)
+		return
+	}
+
+	w.WriteHeader(http.StatusNoContent)
+}
+
+func handleEncryptionPassphrase(w http.ResponseWriter, req *http.Request) {
+	if req.Method != http.MethodPost {
+		http.Error(w, "405 method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+
+	encryptionPassphrase := req.PostFormValue("data")
+
+	err := c.SetEncryptionPassphrase(encryptionPassphrase)
 	if err != nil {
 		http.Error(w, "403 forbidden", http.StatusForbidden)
 		return

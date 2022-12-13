@@ -96,14 +96,22 @@ func ClientConfig() (dsl.Config, error) {
 		}
 	}
 
+	var encryptionPassphraseCallback dsl.EncryptionPassphraseCallback
+	if clientDesc.SupportsEncryptionPassphrase {
+		if Secrets.EncryptionPassphrase != "" {
+			encryptionPassphraseCallback = dsl.EncryptionPassphrase(Secrets.EncryptionPassphrase)
+		}
+	}
+
 	clientConfig := dsl.Config{
-		Type:            Config.DeviceType,
-		Host:            Config.Host,
-		User:            Config.User,
-		AuthPassword:    passwordCallback,
-		AuthPrivateKeys: privateKeysCallback,
-		KnownHosts:      knownHosts,
-		Options:         Config.Options,
+		Type:                 Config.DeviceType,
+		Host:                 Config.Host,
+		User:                 Config.User,
+		AuthPassword:         passwordCallback,
+		AuthPrivateKeys:      privateKeysCallback,
+		EncryptionPassphrase: encryptionPassphraseCallback,
+		KnownHosts:           knownHosts,
+		Options:              Config.Options,
 	}
 
 	return clientConfig, nil

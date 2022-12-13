@@ -328,6 +328,20 @@ func setPassphrase(data string) {
 	}
 }
 
+func setEncryptionPassphrase(data string) {
+	mutex.Lock()
+	defer mutex.Unlock()
+
+	if lastMessage.State != string(common.StateEncryptionPassphraseRequired) {
+		return
+	}
+
+	err := c.SetEncryptionPassphrase(data)
+	if err != nil {
+		fmt.Println("setting encryption passphrase failed:", err)
+	}
+}
+
 func connect(cfg json.RawMessage, remember bool) {
 	mutex.Lock()
 	defer mutex.Unlock()
@@ -387,6 +401,7 @@ func disconnect() {
 	if lastMessage.State != string(common.StateReady) &&
 		lastMessage.State != string(common.StatePasswordRequired) &&
 		lastMessage.State != string(common.StatePassphraseRequired) &&
+		lastMessage.State != string(common.StateEncryptionPassphraseRequired) &&
 		lastMessage.State != string(common.StateError) &&
 		lastMessage.State != string(common.StateLoading) {
 
@@ -421,6 +436,7 @@ func startWebView() {
 	w.Bind("goSave", save)
 	w.Bind("goSetPassword", setPassword)
 	w.Bind("goSetPassphrase", setPassphrase)
+	w.Bind("goSetEncryptionPassphrase", setEncryptionPassphrase)
 	w.Bind("goConnect", connect)
 	w.Bind("goDisconnect", disconnect)
 

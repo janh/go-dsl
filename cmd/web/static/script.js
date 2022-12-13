@@ -3,6 +3,7 @@
 const STATE_READY = "ready";
 const STATE_PASSWORD = "password";
 const STATE_PASSPHRASE = "passphrase";
+const STATE_ENCRYPTION_PASSPHRASE = "encryption-passphrase";
 const STATE_ERROR = "error";
 const STATE_LOADING = "loading";
 
@@ -13,8 +14,8 @@ var eventSource;
 var summary, graphs;
 var graphBitsCanvas, graphSNRCanvas, graphQLNCanvas, graphHlogCanvas;
 var graphBits, graphSNR, graphQLN, graphHlog;
-var overlay, overlayPassword, overlayPassphrase, overlayError, overlayLoading;
-var fingerprint, inputPassword, inputPassphrase;
+var overlay, overlayPassword, overlayPassphrase, overlayEncryptionPassphrase, overlayError, overlayLoading;
+var fingerprint, inputPassword, inputPassphrase, inputEncryptionPassphrase;
 
 function updateState(newState, data) {
 	let oldState = state;
@@ -49,6 +50,7 @@ function updateState(newState, data) {
 		overlay.classList.toggle("visible", state != STATE_READY);
 		overlayPassword.classList.toggle("visible", state == STATE_PASSWORD);
 		overlayPassphrase.classList.toggle("visible", state == STATE_PASSPHRASE);
+		overlayEncryptionPassphrase.classList.toggle("visible", state == STATE_ENCRYPTION_PASSPHRASE);
 		overlayError.classList.toggle("visible", state == STATE_ERROR);
 		overlayLoading.classList.toggle("visible", state == STATE_LOADING);
 
@@ -56,6 +58,8 @@ function updateState(newState, data) {
 			inputPassword.focus();
 		} else if (state == STATE_PASSPHRASE) {
 			inputPassphrase.focus();
+		} else if (state == STATE_ENCRYPTION_PASSPHRASE) {
+			inputEncryptionPassphrase.focus();
 		}
 	}
 }
@@ -192,12 +196,14 @@ function loaded(event) {
 	overlay = document.getElementById("overlay");
 	overlayPassword = document.getElementById("overlay-password");
 	overlayPassphrase = document.getElementById("overlay-passphrase");
+	overlayEncryptionPassphrase = document.getElementById("overlay-encryption-passphrase");
 	overlayError = document.getElementById("overlay-error");
 	overlayLoading = document.getElementById("overlay-loading");
 
 	fingerprint = document.getElementById("fingerprint");
 	inputPassword = document.getElementById("password");
 	inputPassphrase = document.getElementById("passphrase");
+	inputEncryptionPassphrase = document.getElementById("encryption-passphrase");
 
 	updateState("loading");
 
