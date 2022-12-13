@@ -42,6 +42,24 @@ However, note that this will significantly increase loading times.
 
 	./dsl -d fritzbox -o LoadSupportData=0 fritz.box
 
+## LANCOM (manufacturer)
+
+*Device type: `lancom_snmpv3`*
+
+SNMP access needs to be configured on the device beforehand.
+To do so, go to "Configuration > Logging/Monitoring > Protocols" and follow these steps:
+
+1. Create a new view with access to the OID subtree "1.3.6.1.4.1.2356.11.1.75".
+2. Create new access rights and select the just created view as read-only view.
+   Configure the security model as "SNMPv3 (USM)" and choose the desired security level.
+3. Create a new user with the desired security options.
+4. Create a new group and select the just created access rights and user.
+   Configure the security model as "SNMPv3 (USM)".
+
+The options `AuthProtocol` and `PrivacyProtocol` need to be specified in the client, and must match the configuration on the device.
+
+	./dsl -d lancom_snmpv3 -u user -o AuthProtocol=sha -o PrivacyProtocol=aes256 172.23.56.254
+
 ## Lantiq, Infineon, Intel, MaxLinear (chipset vendor)
 
 *Device types: `lantiq_ssh`, `lantiq_telnet`*
