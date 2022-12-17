@@ -103,37 +103,15 @@ func readShowbinsBin(binsBits *models.BinsBits, snrData []float64, maxSNRIndex, 
 }
 
 func handleShowbinsSNR(binsSNR *models.BinsFloat, snrData []float64, maxSNRIndex, maxBitsIndex int) {
-	if maxSNRIndex == 0 {
-		return
-	}
+	binsSNR.GroupSize = helpers.GuessSNRGroupSize(maxSNRIndex, maxBitsIndex, len(snrData))
 
-	if maxBitsIndex > 512 {
-
-		// The SNR data of the entire frequency range is stored in the bins 0-511, with all others being zero.
-
-		maxFactor := len(snrData) / maxSNRIndex
-		var factor int
-		for factor = 1; factor < maxFactor; factor *= 2 {
-			// after applying factor, maxSNRIndex should be at most 10% lower than maxBitsIndex, because:
-			// - maxSNRIndex > maxBitsIndex is common when SNR is too low to allocate bits
-			// - maxSNRIndex < maxBitsIndex unlikely, as SNR value needed to allocate bins
-			if float64(maxSNRIndex*factor)/float64(maxBitsIndex) > 0.9 {
-				break
-			}
-		}
-
-		binsSNR.GroupSize = factor
-		binsSNR.Data = make([]float64, len(snrData)/factor)
-
+	if binsSNR.GroupSize == 1 {
+		binsSNR.Data = snrData
+	} else {
+		binsSNR.Data = make([]float64, len(snrData)/binsSNR.GroupSize)
 		for num := 0; num <= maxSNRIndex; num++ {
 			binsSNR.Data[num] = snrData[num]
 		}
-
-	} else {
-
-		binsSNR.GroupSize = 1
-		binsSNR.Data = snrData
-
 	}
 }
 
