@@ -7,6 +7,11 @@ html, body {
 	margin: 0;
 }
 
+::selection {
+	color: #fff;
+	background-color: #39f;
+}
+
 body {
 	display: grid;
 	grid-template-rows: auto 1fr;
@@ -40,7 +45,7 @@ header a {
 	user-select: none;
 	-webkit-user-select: none;
 }
-header a:hover {
+header a:hover, header a:focus-visible {
 	background: #e8e8e8;
 	color: #39f;
 }
@@ -78,6 +83,10 @@ header a.disabled {
 
 #overlaycontent #overlay-connect {
 	width: 30em;
+}
+#overlay-connect label, #overlay-connect span, #overlay-connect legend {
+	user-select: none;
+	-webkit-user-select: none;
 }
 #overlay-connect fieldset {
 	border: none;
@@ -142,12 +151,9 @@ header a.disabled {
 	width: auto;
 	flex-grow: 1;
 }
-#overlay-connect input[type="checkbox"] {
-	flex-grow: 0;
-}
-#overlay-connect input[type="checkbox"] + span.title {
-	padding-left: .5em;
-	width: auto;
+#overlay-connect input[type="checkbox"] + span.title,
+#overlay-connect input[type="checkbox"] + span.desc {
+	flex-basis: 0;
 	flex-grow: 1;
 }
 #overlay-connect span.desc {
@@ -156,18 +162,111 @@ header a.disabled {
 	margin: .1em 0 0 10rem;
 }
 #overlay-connect input[type="checkbox"] + span.desc {
-	margin: 0 0 0 .5em;
-	flex-basis: 0;
-	flex-grow: 1;
+	margin: 0;
 }
 #overlay-connect .hide {
 	display: none;
 }
-#overlay-connect select {
-	min-height: 1.7em;
+
+legend, select, input, header a {
+	outline: none;
 }
-#overlay-connect input[type="submit"] {
-	appearance: button;
+select, input[type="text"], input[type="password"], input[type="submit"] {
+	appearance: none;
+	color: #000;
+	border: 1px solid #dadada;
+	border-radius: 2px;
+	box-shadow: 0 0 5px rgba(0,0,0,.05);
+}
+select:active, input[type="text"]:active, input[type="password"]:active, input[type="submit"]:active,
+select:focus, input[type="text"]:focus, input[type="password"]:focus, input[type="submit"]:focus {
+	margin: -1px;
+	border: 2px solid #39f;
+	box-shadow: 0 0 5px rgba(51,153,255,.3);
+}
+input[type="text"], input[type="password"] {
+	background: #fff;
+}
+select, input[type="submit"] {
+	background-color: #eee;
+}
+select:hover, input[type="submit"]:hover {
+	background-color: #f4f4f4;
+}
+select:active, input[type="submit"]:active {
+	background-color: #e0e0e0;
+}
+select {
+	padding: .2em 1.6em .2em .4em;
+	background-image: url("data:image/svg+xml,%3Csvg%20version%3D%221.1%22%20viewBox%3D%220%200%2016%2016%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%3E%3Cpath%20d%3D%22m11.5%205.5-3.5-3.5-3.5%203.5m0%205%203.5%203.5%203.5-3.5%22%20fill%3D%22none%22%20stroke%3D%22%23000%22%20stroke-width%3D%221.5%22%2F%3E%3C%2Fsvg%3E");
+	background-repeat: no-repeat;
+	background-size: 1em 1em;
+	background-position: calc(100% - .3em) 50%;
+}
+option {
+	background: #fff;
+	color: #000;
+}
+input[type="checkbox"] {
+	position: absolute;
+	margin: 0;
+	padding: 0;
+	width: 1px;
+	height: 1px;
+	opacity: 0;
+	text-indent: -100000em;
+}
+input[type="checkbox"] + span {
+	display: flex;
+	flex-direction: row;
+	align-items: center;
+}
+input[type="checkbox"] + span::before {
+	content: " ";
+	display: inline-block;
+	flex-shrink: 0;
+	font-size: .8rem;
+	box-sizing: border-box;
+	width: 1em;
+	height: 1em;
+	background-color: #fff;
+	border: 2px solid #ccc;
+	border-radius: 2px;
+	box-shadow: 0 0 5px rgba(0,0,0,.05);
+	margin-right: .4rem;
+}
+input[type="checkbox"]:active + span::before {
+	background-color: #eee;
+}
+input[type="checkbox"]:checked + span::before {
+	background-color: #39f;
+	border: none;
+	background-image: url("data:image/svg+xml,%3Csvg%20version%3D%221.1%22%20viewBox%3D%220%200%2016%2016%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%3E%3Cpath%20d%3D%22m18%200.5-9%2011-5.5-4.5%22%20fill%3D%22none%22%20stroke%3D%22%23fff%22%20stroke-width%3D%223%22%2F%3E%3C%2Fsvg%3E");
+	background-repeat: no-repeat;
+	background-size: 1em 1em;
+}
+input[type="checkbox"]:checked:active + span::before {
+	background-image: none;
+}
+input[type="checkbox"] + span, legend, header a {
+	position: relative;
+}
+input[type="checkbox"]:active + span::after, legend:active::after,
+input[type="checkbox"]:focus + span::after, legend:focus::after,
+header a:focus-visible::after {
+	content: "";
+	position: absolute;
+	top: 0;
+	bottom: 0;
+	left: 0;
+	right: 0;
+	border: 2px solid #39f;
+	border-radius: 2px;
+	box-shadow: 0 0 5px rgba(51,153,255,.3);
+}
+input[type="checkbox"]:active + span::after, legend:active::after,
+input[type="checkbox"]:focus + span::after, legend:focus::after {
+	margin: -2px -4px;
 }
 
 #messages {
