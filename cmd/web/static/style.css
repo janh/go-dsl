@@ -28,6 +28,7 @@ header a {
 	color: #007fff;
 	text-decoration: underline;
 	user-select: none;
+	-webkit-user-select: none;
 }
 header a:hover {
 	color: #39f;

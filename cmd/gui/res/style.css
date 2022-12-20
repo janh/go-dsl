@@ -38,6 +38,7 @@ header a {
 	color: #007fff;
 	text-decoration: none;
 	user-select: none;
+	-webkit-user-select: none;
 }
 header a:hover {
 	background: #e8e8e8;
