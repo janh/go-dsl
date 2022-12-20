@@ -157,6 +157,8 @@ header a.disabled {
 }
 #overlay-connect input[type="checkbox"] + span.desc {
 	margin: 0 0 0 .5em;
+	flex-basis: 0;
+	flex-grow: 1;
 }
 #overlay-connect .hide {
 	display: none;
