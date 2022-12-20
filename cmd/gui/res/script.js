@@ -184,6 +184,13 @@
 	function toggleFieldset(event) {
 		let fieldset = event.target.parentElement;
 		fieldset.classList.toggle("collapsed");
+		event.preventDefault();
+	}
+
+	function toggleFieldsetKeyboard(event) {
+		if (event.keyCode == 13 || event.keyCode == 32) {
+			return toggleFieldset(event);
+		}
 	}
 
 	function initConfig() {
@@ -193,7 +200,13 @@
 		let legends = overlayConnect.getElementsByTagName("legend");
 		for (let legend of legends) {
 			legend.addEventListener("click", toggleFieldset);
+			legend.addEventListener("keydown", toggleFieldsetKeyboard);
 		}
+	}
+
+	function setLinkDisabled(element, disabled) {
+		element.classList.toggle("disabled", disabled);
+		element.tabIndex = disabled ? -1 : 0;
 	}
 
 	function updateState(newState, data) {
@@ -226,8 +239,8 @@
 		if (newState != oldState) {
 			state = newState;
 
-			buttonSave.classList.toggle("disabled", state != STATE_READY);
-			buttonDisconnect.classList.toggle("disabled",
+			setLinkDisabled(buttonSave, state != STATE_READY);
+			setLinkDisabled(buttonDisconnect,
 				state != STATE_READY && state != STATE_PASSWORD && state != STATE_PASSPHRASE && state != STATE_ERROR && state != STATE_LOADING);
 
 			overlay.classList.toggle("visible", state != STATE_READY);
