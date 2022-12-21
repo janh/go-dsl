@@ -35,7 +35,7 @@ func LoadData(config dsl.Config) {
 	fmt.Println()
 	fmt.Print("Connecting…")
 
-	if clientDesc.SupportedAuthTypes&dsl.AuthTypePassword != 0 {
+	if clientDesc.SupportedAuthTypes&dsl.AuthTypePassword != 0 && config.AuthPassword == nil {
 		config.AuthPassword = func() (string, error) {
 			fmt.Println(" password required")
 			password := readPassword("Password: ")
@@ -44,7 +44,7 @@ func LoadData(config dsl.Config) {
 		}
 	}
 
-	if clientDesc.SupportedAuthTypes&dsl.AuthTypePrivateKeys != 0 {
+	if clientDesc.SupportedAuthTypes&dsl.AuthTypePrivateKeys != 0 && config.AuthPrivateKeys.Passphrase == nil {
 		config.AuthPrivateKeys.Passphrase = func(fingerprint string) (string, error) {
 			fmt.Println(" passphrase required")
 			fmt.Println("Fingerprint: " + fingerprint)

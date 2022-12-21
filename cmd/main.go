@@ -80,6 +80,9 @@ func main() {
 	var configPath string
 	flagSet.StringVar(&configPath, "config", config.DefaultConfigPath, "path to configuration file")
 
+	var secretsPath string
+	flagSet.StringVar(&secretsPath, "secrets", "", "path to secrets file")
+
 	var device stringFlag
 	flagSet.Var(&device, "d", "device type (valid options: "+deviceTypeOptions+")")
 
@@ -132,6 +135,13 @@ func main() {
 	err = config.Load(configPath)
 	if err != nil {
 		fmt.Println(err)
+	}
+
+	if secretsPath != "" {
+		err = config.LoadSecrets(secretsPath)
+		if err != nil {
+			fmt.Println(err)
+		}
 	}
 
 	if device.Valid {

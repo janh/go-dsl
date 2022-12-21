@@ -218,7 +218,7 @@ func (c *Client) connect() {
 func (c *Client) update() {
 	clientDesc := c.config.Type.ClientDesc()
 
-	if clientDesc.SupportedAuthTypes&dsl.AuthTypePassword != 0 {
+	if clientDesc.SupportedAuthTypes&dsl.AuthTypePassword != 0 && c.config.AuthPassword == nil {
 		c.config.AuthPassword = func() (string, error) {
 			if c.password == "" {
 				c.changeState <- StateChange{State: StatePasswordRequired}
@@ -238,7 +238,7 @@ func (c *Client) update() {
 		}
 	}
 
-	if clientDesc.SupportedAuthTypes&dsl.AuthTypePrivateKeys != 0 {
+	if clientDesc.SupportedAuthTypes&dsl.AuthTypePrivateKeys != 0 && c.config.AuthPrivateKeys.Passphrase == nil {
 		c.config.AuthPrivateKeys.Passphrase = func(fingerprint string) (string, error) {
 			if c.passphrase[fingerprint] == "" {
 				c.changeState <- StateChange{State: StatePassphraseRequired, Fingerprint: fingerprint}
