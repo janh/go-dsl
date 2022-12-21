@@ -11,7 +11,7 @@ import (
 	"3e8.eu/go/dsl/graphs"
 )
 
-func WriteArchive(w io.Writer, filenameBase string, state StateChange) (err error) {
+func WriteArchive(w io.Writer, filenameBase string, state StateChange, rawData bool) (err error) {
 	archive := zip.NewWriter(w)
 	defer func() {
 		if closeErr := archive.Close(); closeErr != nil {
@@ -30,13 +30,15 @@ func WriteArchive(w io.Writer, filenameBase string, state StateChange) (err erro
 		return
 	}
 
-	fileWriter, err = archive.Create(filenameBase + "_raw.txt")
-	if err != nil {
-		return
-	}
-	_, err = fileWriter.Write(state.RawData)
-	if err != nil {
-		return
+	if rawData {
+		fileWriter, err = archive.Create(filenameBase + "_raw.txt")
+		if err != nil {
+			return
+		}
+		_, err = fileWriter.Write(state.RawData)
+		if err != nil {
+			return
+		}
 	}
 
 	fileWriter, err = archive.Create(filenameBase + "_bits.svg")

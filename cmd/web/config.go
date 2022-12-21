@@ -9,7 +9,10 @@ import (
 )
 
 type Config struct {
-	ListenAddress string `toml:",omitempty"`
+	ListenAddress          string `toml:",omitempty"`
+	HideErrorMessages      bool   `toml:",omitempty"`
+	DisableInteractiveAuth bool   `toml:",omitempty"`
+	HideRawData            bool   `toml:",omitempty"`
 }
 
 func (c Config) EncodeTOMLTable(enc *toml.Encoder) error {

@@ -231,7 +231,7 @@ func writeArchive(state common.StateChange) (path string, err error) {
 
 	defer f.Close()
 
-	err = common.WriteArchive(f, filenameBase, state)
+	err = common.WriteArchive(f, filenameBase, state, true)
 	return
 }
 

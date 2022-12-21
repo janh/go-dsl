@@ -8,6 +8,7 @@ import (
 	"context"
 	"embed"
 	"fmt"
+	"log"
 	"net"
 	"net/http"
 	"os"
@@ -86,8 +87,10 @@ func start(clientConfig dsl.Config) (addr string, err error) {
 
 	http.HandleFunc("/download", handleDownload)
 
-	http.HandleFunc("/password", handlePassword)
-	http.HandleFunc("/passphrase", handlePassphrase)
+	if !config.DisableInteractiveAuth {
+		http.HandleFunc("/password", handlePassword)
+		http.HandleFunc("/passphrase", handlePassphrase)
+	}
 
 	listener, err := net.Listen("tcp", config.ListenAddress)
 	if err != nil {
@@ -163,6 +166,30 @@ func handleRoot(w http.ResponseWriter, req *http.Request) {
 	w.Write(data)
 }
 
+func getStateMessage(change common.StateChange) (msg common.Message) {
+	switch {
+
+	case config.HideErrorMessages && change.State == common.StateError:
+		log.Println(change.Err)
+
+		msg.State = string(change.State)
+		msg.Data = "failed to load data from device: see log message for details"
+
+	case config.DisableInteractiveAuth &&
+		(change.State == common.StatePasswordRequired ||
+			change.State == common.StatePassphraseRequired):
+
+		msg.State = string(common.StateError)
+		msg.Data = "failed to load data from device: interactive authentication required but not allowed"
+
+	default:
+		msg = common.GetStateMessage(change)
+
+	}
+
+	return
+}
+
 func handleEvents(w http.ResponseWriter, req *http.Request) {
 	if req.Method != http.MethodGet {
 		http.Error(w, "405 method not allowed", http.StatusMethodNotAllowed)
@@ -192,7 +219,7 @@ func handleEvents(w http.ResponseWriter, req *http.Request) {
 		select {
 
 		case change := <-receiver:
-			msg := common.GetStateMessage(change)
+			msg := getStateMessage(change)
 
 			err = writer.WriteMessage(string(msg.JSON()))
 			if err != nil {
@@ -227,7 +254,7 @@ func handleDownload(w http.ResponseWriter, req *http.Request) {
 	w.Header().Set("Content-Disposition", `attachment; filename="`+filenameBase+`.zip"`)
 	w.Header().Set("Cache-Control", "no-cache")
 
-	common.WriteArchive(w, filenameBase, state)
+	common.WriteArchive(w, filenameBase, state, !config.HideRawData)
 }
 
 func handlePassword(w http.ResponseWriter, req *http.Request) {
