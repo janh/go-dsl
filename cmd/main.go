@@ -182,7 +182,7 @@ func main() {
 		}
 
 		if startWebServer {
-			web.Run(clientConfig)
+			web.Run(clientConfig, config.Config.Web)
 		} else {
 			cli.LoadData(clientConfig)
 		}

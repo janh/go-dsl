@@ -30,10 +30,17 @@ var (
 	serverErr         chan error
 	shutdownReceivers map[chan bool]bool
 	shutdownMutex     sync.Mutex
+	config            Config
 )
 
-func Run(config dsl.Config) {
-	addr, err := start(config)
+func Run(clientConfig dsl.Config, webConfig Config) {
+	config = webConfig
+
+	if config.ListenAddress == "" {
+		config.ListenAddress = "[::1]:0"
+	}
+
+	addr, err := start(clientConfig)
 	if err != nil {
 		fmt.Println("failed to start web server:", err)
 		os.Exit(1)
@@ -66,7 +73,7 @@ func Run(config dsl.Config) {
 	}
 }
 
-func start(config dsl.Config) (addr string, err error) {
+func start(clientConfig dsl.Config) (addr string, err error) {
 	http.HandleFunc("/", handleRoot)
 
 	static := &staticHandler{}
@@ -82,14 +89,14 @@ func start(config dsl.Config) (addr string, err error) {
 	http.HandleFunc("/password", handlePassword)
 	http.HandleFunc("/passphrase", handlePassphrase)
 
-	listener, err := net.Listen("tcp", "[::1]:0")
+	listener, err := net.Listen("tcp", config.ListenAddress)
 	if err != nil {
 		return
 	}
 
 	addr = "http://" + listener.Addr().String()
 
-	c = common.NewClient(config)
+	c = common.NewClient(clientConfig)
 
 	shutdownReceivers = make(map[chan bool]bool)
 	server.RegisterOnShutdown(handleOnShutdown)

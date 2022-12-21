@@ -15,6 +15,7 @@ import (
 	"github.com/adrg/xdg"
 
 	"3e8.eu/go/dsl"
+	"3e8.eu/go/dsl/cmd/web"
 )
 
 var (
@@ -35,6 +36,7 @@ type ConfigData struct {
 	PrivateKeyPath string
 	KnownHostsPath string
 	Options        map[string]string
+	Web            web.Config
 }
 
 func Load(path string) error {
@@ -103,6 +105,11 @@ func Save() error {
 	}
 
 	err = enc.Encode(map[string]map[string]string{"Options": Config.Options})
+	if err != nil {
+		return err
+	}
+
+	err = Config.Web.EncodeTOMLTable(enc)
 	if err != nil {
 		return err
 	}
