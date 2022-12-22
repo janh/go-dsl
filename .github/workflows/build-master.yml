@@ -51,6 +51,7 @@ jobs:
           cp LICENSE ./${{ steps.vars.outputs.archivename }}/
           cp ./cmd/LICENSE-3RD-PARTY ./${{ steps.vars.outputs.archivename }}/
           cp README.md ./${{ steps.vars.outputs.archivename }}/
+          cp ./cmd/README-config.md ./${{ steps.vars.outputs.archivename }}/
 
       - name: Build CLI (non-Windows)
         if: matrix.target != 'windows'
