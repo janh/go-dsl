@@ -158,7 +158,7 @@ func parseBinsDELT(data string, bands []models.Band) (rawItems []string, groupSi
 		return
 	}
 	// apparently the group size is sometimes not reported correctly, try to calculate it
-	if groupSize == 1 && len(bands) != 0 {
+	if groupSize == 1 && len(bands) != 0 && numData != 0 {
 		lastBin := bands[len(bands)-1].End
 		for numData*groupSize < lastBin+1 {
 			groupSize *= 2
