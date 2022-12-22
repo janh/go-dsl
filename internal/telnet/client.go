@@ -42,6 +42,10 @@ func NewClient(config ClientConfig, host, username string, password dsl.Password
 }
 
 func (c *Client) writeLine(data string, isSensitive bool) error {
+	if strings.ContainsAny(data, "\r\n") {
+		return errors.New("only input without newline character is supported for Telnet")
+	}
+
 	if !isSensitive {
 		c.lastWrittenLine = data
 	} else {
