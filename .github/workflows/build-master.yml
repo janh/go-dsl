@@ -24,15 +24,6 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v3
 
-      - name: Determine version and archive name
-        id: vars
-        shell: bash
-        env:
-          TZ: UTC0
-        run: |
-          echo "version=master-$(git log -1 --format='%cd-%h' --date='format-local:%Y-%m-%d')" >> $GITHUB_OUTPUT
-          echo "archivename=dsl-master-$(git log -1 --format='%cd-%h' --date='format-local:%Y-%m-%d')-${{ matrix.target }}" >> $GITHUB_OUTPUT
-
       - name: Set up Go
         uses: actions/setup-go@v3
         with:
@@ -44,47 +35,38 @@ jobs:
           sudo apt update
           sudo apt install -y libgtk-3-dev libwebkit2gtk-4.0-dev
 
-      - name: Prepare
-        run: |
-          mkdir ${{ steps.vars.outputs.archivename }}
-          echo "${{ steps.vars.outputs.version }}" > ./${{ steps.vars.outputs.archivename }}/VERSION
-          cp LICENSE ./${{ steps.vars.outputs.archivename }}/
-          cp ./cmd/LICENSE-3RD-PARTY ./${{ steps.vars.outputs.archivename }}/
-          cp README.md ./${{ steps.vars.outputs.archivename }}/
-          cp ./cmd/README-config.md ./${{ steps.vars.outputs.archivename }}/
-
       - name: Build CLI (non-Windows)
         if: matrix.target != 'windows'
         env:
           CGO_ENABLED: 0
         run: |
-          go build -o ./${{ steps.vars.outputs.archivename }}/dsl ./cmd
+          go build -o ./build/dsl ./cmd
 
       - name: Build CLI (Windows)
         if: matrix.target == 'windows'
         env:
           CGO_ENABLED: 0
         run: |
-          go build -o .\${{ steps.vars.outputs.archivename }}\dsl.exe .\cmd
+          go build -o .\build\dsl.exe .\cmd
 
       - name: Build GUI (Linux)
         if: matrix.target == 'linux'
         run: |
-          go build -tags gui -o ./${{ steps.vars.outputs.archivename }}/dsl-gui ./cmd
+          go build -tags gui -o ./build/dsl-gui ./cmd
 
       - name: Build GUI (Windows)
         if: matrix.target == 'windows'
         run: |
-          go build -tags gui -ldflags="-H windowsgui" -o .\${{ steps.vars.outputs.archivename }}\dsl-gui.exe .\cmd
+          go build -tags gui -ldflags="-H windowsgui" -o .\build\dsl-gui.exe .\cmd
           Copy-Item -Recurse "$(go env GOPATH)\pkg\mod\github.com\webview\webview@*\" webview
           Remove-Item -Recurse -Force .\webview\dll
           .\webview\script\build.bat
-          Copy-Item .\webview\dll\x64\*.dll .\${{ steps.vars.outputs.archivename }}\
+          Copy-Item .\webview\dll\x64\*.dll .\build\
 
       - name: Build GUI (macOS)
         if: matrix.target == 'macos'
         run: |
-          mkdir -p ./${{ steps.vars.outputs.archivename }}/dsl-gui.app/Contents/MacOS
+          mkdir -p ./build/dsl-gui.app/Contents/MacOS
           echo '<?xml version="1.0" encoding="UTF-8"?>
           <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
           <plist version="1.0">
@@ -94,24 +76,26 @@ jobs:
             <key>CFBundleIdentifier</key>
             <string>eu.3e8.go.dsl</string>
           </dict>
-          </plist>' > ./${{ steps.vars.outputs.archivename }}/dsl-gui.app/Contents/Info.plist
-          go build -tags gui -o ./${{ steps.vars.outputs.archivename }}/dsl-gui.app/Contents/MacOS/dsl-gui ./cmd
+          </plist>' > ./build/dsl-gui.app/Contents/Info.plist
+          go build -tags gui -o ./build/dsl-gui.app/Contents/MacOS/dsl-gui ./cmd
 
-      - name: Package (non-Windows)
+      - name: Zip (non-Windows)
         if: matrix.target != 'windows'
         run: |
-          zip -r ${{ steps.vars.outputs.archivename }}.zip ${{ steps.vars.outputs.archivename }}
+          cd ./build
+          zip -0 -r build.zip ./*
 
-      - name: Package (Windows)
+      - name: Zip (Windows)
         if: matrix.target == 'windows'
         run: |
-          Compress-Archive ${{ steps.vars.outputs.archivename }} ${{ steps.vars.outputs.archivename }}.zip
+          Set-Location .\build
+          Compress-Archive -CompressionLevel NoCompression .\* build.zip
 
       - name: Upload artifact
         uses: actions/upload-artifact@v3
         with:
           name: ${{ matrix.target }}
-          path: ${{ steps.vars.outputs.archivename }}.zip
+          path: ./build/build.zip
 
   release:
     runs-on: ubuntu-latest
@@ -121,16 +105,40 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v3
 
-      - name: Determine commit time
+      - name: Determine variables
         id: vars
         shell: bash
         env:
           TZ: UTC0
         run: |
+          echo "version=master-$(git log -1 --format='%cd-%h' --date='format-local:%Y-%m-%d')" >> $GITHUB_OUTPUT
+          echo "archivename=dsl-master-$(git log -1 --format='%cd-%h' --date='format-local:%Y-%m-%d')" >> $GITHUB_OUTPUT
           echo "time=$(git log -1 --format='%cd' --date='format-local:%Y-%m-%d %H:%M:%S UTC')" >> $GITHUB_OUTPUT
+
+      - name: Prepare common files
+        run: |
+          mkdir -p ./build/template
+          echo "${{ steps.vars.outputs.version }}" > ./build/template/VERSION
+          cp LICENSE ./build/template/
+          cp ./cmd/LICENSE-3RD-PARTY ./build/template/
+          cp README.md ./build/template/
+          cp ./cmd/README-config.md ./build/template/
 
       - name: Download artifacts
         uses: actions/download-artifact@v3
+        with:
+          path: ./artifacts
+
+      - name: Build archives
+        shell: bash
+        run: |
+          cd ./build
+          for artifact in ../artifacts/*/; do
+            target="$(basename "$artifact")"
+            cp -r ./template "./${{ steps.vars.outputs.archivename }}-$target"
+            unzip "../artifacts/$target/build.zip" -d "./${{ steps.vars.outputs.archivename }}-$target/"
+            zip -r "${{ steps.vars.outputs.archivename }}-$target.zip" "${{ steps.vars.outputs.archivename }}-$target"
+          done
 
       - name: Create release
         uses: ncipollo/release-action@v1
@@ -140,7 +148,7 @@ jobs:
           prerelease: true
           allowUpdates: true
           removeArtifacts: true
-          artifacts: "*/*.zip"
+          artifacts: "./build/*.zip"
           artifactContentType: application/zip
           name: Auto-built binaries
           body: |
