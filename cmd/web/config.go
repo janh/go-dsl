@@ -17,7 +17,7 @@ type Config struct {
 
 func (c Config) EncodeTOMLTable(enc *toml.Encoder) error {
 	data := struct {
-		Web  Config `toml:",omitempty"`
+		Web Config `toml:",omitempty"`
 	}{
 		Web: c,
 	}
