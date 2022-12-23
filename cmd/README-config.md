@@ -1,6 +1,6 @@
 # Configuration files
 
-The applications uses two different config files for the main configuration and secrets.
+The application uses two different config files for the main configuration and secrets.
 Both config files use the TOML format, supported options are described in the sections below.
 
 ## Main configuration
@@ -11,12 +11,13 @@ Alternatively, a path can be specified using the `-config` command line option.
 This file is also used to persist configuration from the graphical user interface.
 
 - **DeviceType**:  
-  Which kind of device to connect to, use the `-help` command line option to see a list of available options.  
-  *(equivalent to the `-d` command line option)*
+  Which kind of device to connect to.
+  Use the `-help` command line option for a list of available options.  
+  *(equivalent to `-d` command line option)*
 
 - **Host**:  
   Host name to connect to.  
-  *(equivalent to the last argument on the command line)*
+  *(equivalent to last argument on the command line)*
 
 - **User**:  
   User name to use if required for the selected device type.  
@@ -33,8 +34,9 @@ This file is also used to persist configuration from the graphical user interfac
 
 ### Options table
 
-All device-specific options are specified in a table called **Option**, which is equivalent to the `-o` command line options.
-The value always needs to be a quoted string.
+All device-specific options are specified in a table called **Options** *(equivalent to `-o` command line options)*.
+
+For all options, the value needs to be a quoted string.
 For details about the available options, run the application with the `-help` option.
 
 ### Web table
@@ -62,7 +64,7 @@ There are no equivalent command line options for these settings.
 ## Secrets configuration
 
 A separate file can be used for secrets such as passwords or passphrases.
-It is only used if its is specified on the command line using the `-secrets` option.
+It is only used when specified on the command line using the `-secrets` option.
 Any non-empty value means that the application won't ask for that type of secret interactively.
 
 - **Password**:  
