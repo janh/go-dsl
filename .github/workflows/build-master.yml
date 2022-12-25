@@ -122,48 +122,17 @@ jobs:
           cp LICENSE ./build/template/
           cp ./cmd/LICENSE-3RD-PARTY ./build/template/
           cp README.md ./build/template/
-          cp ./cmd/README-config.md ./build/template/
+          mkdir ./build/template/docs
+          cp ./docs/*.md ./build/template/docs/
 
       - name: Install pandoc
         run: |
           sudo apt update
           sudo apt install -y pandoc
 
-      - name: Convert Markdown to HTML
+      - name: Build HTML documentation
         run: |
-          echo '<!DOCTYPE html>
-          <html>
-          <head>
-            <meta charset="utf-8" />
-            <meta name="viewport" content="width=device-width, initial-scale=1" />
-            <title>$pagetitle$</title>
-            <style type="text/css">
-            html { margin: 0 2em; background: #fff; color: #000; }
-            body { line-height: 1.6; max-width: 45em; margin: 3em auto; font-size: 17px;
-                   font-family: Georgia, Palatino, Cambria, serif; }
-            a { color: #07f; text-decoration: none; }
-            a:hover { text-decoration: underline; }
-            pre, code { background: #f0f0f0; border-radius: .5em; }
-            pre { padding: .75em 1em; overflow-x: auto; }
-            code { padding: .2em .3em; font-size: 80%;
-                   font-family: Menlo, Monaco, "Lucida Console", Consolas, monospace; }
-            pre code { padding: 0; }
-            li { margin: .5em 0; }
-            @media (prefers-color-scheme: dark) {
-              html { background: #000; color: #ddd; }
-              a { color: #39f; }
-              pre, code { background: #2f2f2f; }
-            }
-            </style>
-          </head>
-          <body>
-          $body$
-          </body>
-          </html>' > ./build/pandoc.html
-          for doc in ./build/template/*.md; do
-            out="${doc%.*}.html"
-            pandoc "$doc" -f markdown -t html5 --template=./build/pandoc.html -o "$out"
-          done
+          ./docs/build.sh ./build/template
 
       - name: Download artifacts
         uses: actions/download-artifact@v3

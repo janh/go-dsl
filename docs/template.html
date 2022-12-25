@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>$pagetitle$</title>
+  <style type="text/css">
+  html { margin: 0 2em; background: #fff; color: #000; }
+  body { line-height: 1.6; max-width: 45em; margin: 3em auto; font-size: 17px;
+         font-family: Georgia, Palatino, Cambria, serif; }
+  a { color: #07f; text-decoration: none; }
+  a:hover { text-decoration: underline; }
+  pre, code { background: #f0f0f0; border-radius: .5em; }
+  pre { margin: 1.2em 0; padding: .75em 1em; overflow-x: auto; }
+  code { padding: .2em .3em; font-size: 80%;
+         font-family: Menlo, Monaco, "Lucida Console", Consolas, monospace; }
+  pre code { padding: 0; }
+  hr { margin: 1.2em 0; border: none; height: 1px; background: #aaa; }
+  h1, h2, h3, h4, h5 { margin: 1.6rem 0 1rem 0; }
+  pre + h1, pre + h2, pre + h3, pre + h4, pre + h6, pre + h6 { margin-top: 1.8rem; }
+  p, ul, ol { margin: 1em 0; }
+  ul, ol { padding-left: 1.5em; }
+  li { margin: .5em 0; }
+  p.nav { margin-bottom: 0; }
+  p.nav + h1 { margin-top: 0; }
+  h2.device { margin-bottom: 0; }
+  h2.device + p { margin-top: 0; }
+  @media (prefers-color-scheme: dark) {
+    html { background: #000; color: #ddd; }
+    a { color: #4af; }
+    pre, code { background: #2f2f2f; }
+    hr { background: #666; }
+  }
+  </style>
+</head>
+<body>
+$if(homelink)$
+<p class="nav"><a href="$homelink$">Back to overview</a></p>
+$endif$
+$body$
+</body>
+</html>

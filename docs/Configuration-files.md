@@ -12,11 +12,11 @@ This file is also used to persist configuration from the graphical user interfac
 
 - **DeviceType**:  
   Which kind of device to connect to.
-  Use the `-help` command line option for a list of available options.  
+  Use the `-help` command line option or see the [supported devices list](Supported-devices.md) for available options.  
   *(equivalent to `-d` command line option)*
 
 - **Host**:  
-  Host name to connect to.  
+  Host name or IP address to connect to.  
   *(equivalent to last argument on the command line)*
 
 - **User**:  
@@ -37,7 +37,7 @@ This file is also used to persist configuration from the graphical user interfac
 All device-specific options are specified in a table called **Options** *(equivalent to `-o` command line options)*.
 
 For all options, the value needs to be a quoted string.
-For details about the available options, run the application with the `-help` option.
+For details about the available options, run the application with the `-help` option, or check the [supported devices list](Supported-devices.md) for additional information.
 
 ### Web table
 
