@@ -95,3 +95,29 @@ func EncodeBinsHistory(binsHistory models.BinsHistory) json.RawMessage {
 	data, _ := json.Marshal(historyMap)
 	return json.RawMessage(data)
 }
+
+// EncodeErrorsHistory returns errors history data in JSON format for use with the Javascript library.
+// The exact structure is not fixed and may change at any time in the future.
+func EncodeErrorsHistory(errorsHistory models.ErrorsHistory) json.RawMessage {
+	historyMap := map[string]interface{}{
+		"PeriodLength":         errorsHistory.PeriodLength.Seconds(),
+		"PeriodCount":          errorsHistory.PeriodCount,
+		"DownstreamRTXTXCount": encodeListIntValue(errorsHistory.DownstreamRTXTXCount),
+		"UpstreamRTXTXCount":   encodeListIntValue(errorsHistory.UpstreamRTXTXCount),
+		"DownstreamRTXCCount":  encodeListIntValue(errorsHistory.DownstreamRTXCCount),
+		"UpstreamRTXCCount":    encodeListIntValue(errorsHistory.UpstreamRTXCCount),
+		"DownstreamRTXUCCount": encodeListIntValue(errorsHistory.DownstreamRTXUCCount),
+		"UpstreamRTXUCCount":   encodeListIntValue(errorsHistory.UpstreamRTXUCCount),
+		"DownstreamFECCount":   encodeListIntValue(errorsHistory.DownstreamFECCount),
+		"UpstreamFECCount":     encodeListIntValue(errorsHistory.UpstreamFECCount),
+		"DownstreamCRCCount":   encodeListIntValue(errorsHistory.DownstreamCRCCount),
+		"UpstreamCRCCount":     encodeListIntValue(errorsHistory.UpstreamCRCCount),
+		"DownstreamESCount":    encodeListIntValue(errorsHistory.DownstreamESCount),
+		"UpstreamESCount":      encodeListIntValue(errorsHistory.UpstreamESCount),
+		"DownstreamSESCount":   encodeListIntValue(errorsHistory.DownstreamSESCount),
+		"UpstreamSESCount":     encodeListIntValue(errorsHistory.UpstreamSESCount),
+	}
+
+	data, _ := json.Marshal(historyMap)
+	return json.RawMessage(data)
+}

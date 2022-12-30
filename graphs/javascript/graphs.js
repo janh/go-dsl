@@ -150,7 +150,7 @@ var DSLGraphs = DSLGraphs || (function () {
 
 			if (cmd == 'r') {
 				for (var i = 0; i < num; i++) {
-					out.push(lastVal/10);
+					out.push(lastVal != null ? lastVal/10 : null);
 				}
 				continue;
 			}
@@ -166,9 +166,10 @@ var DSLGraphs = DSLGraphs || (function () {
 				case 'q': val = lastVal + num; break;
 				case 'n': val = lastVal - num * 10 - frac; break;
 				case 'o': val = lastVal - num; break;
+				case 'e': val = null; break;
 			}
 
-			out.push(val / 10);
+			out.push(val != null ? val/10 : null);
 			lastVal = val;
 		}
 
@@ -194,6 +195,25 @@ var DSLGraphs = DSLGraphs || (function () {
 		data.SNR.Downstream.Max = decodeList(data.SNR.Downstream.Max);
 		data.SNR.Upstream.Min = decodeList(data.SNR.Upstream.Min);
 		data.SNR.Upstream.Max = decodeList(data.SNR.Upstream.Max);
+		return data;
+	}
+
+
+	function decodeErrorsHistory(data) {
+		data.DownstreamRTXTXCount = decodeList(data.DownstreamRTXTXCount);
+		data.UpstreamRTXTXCount = decodeList(data.UpstreamRTXTXCount);
+		data.DownstreamRTXCCount = decodeList(data.DownstreamRTXCCount);
+		data.UpstreamRTXCCount = decodeList(data.UpstreamRTXCCount);
+		data.DownstreamRTXUCCount = decodeList(data.DownstreamRTXUCCount);
+		data.UpstreamRTXUCCount = decodeList(data.UpstreamRTXUCCount);
+		data.DownstreamFECCount = decodeList(data.DownstreamFECCount);
+		data.UpstreamFECCount = decodeList(data.UpstreamFECCount);
+		data.DownstreamCRCCount = decodeList(data.DownstreamCRCCount);
+		data.UpstreamCRCCount = decodeList(data.UpstreamCRCCount);
+		data.DownstreamESCount = decodeList(data.DownstreamESCount);
+		data.UpstreamESCount = decodeList(data.UpstreamESCount);
+		data.DownstreamSESCount = decodeList(data.DownstreamSESCount);
+		data.UpstreamSESCount = decodeList(data.UpstreamSESCount);
 		return data;
 	}
 
@@ -1324,6 +1344,7 @@ var DSLGraphs = DSLGraphs || (function () {
 	return {
 		decodeBins: decodeBins,
 		decodeBinsHistory: decodeBinsHistory,
+		decodeErrorsHistory: decodeErrorsHistory,
 		Color: Color,
 		GraphParams: GraphParams,
 		BitsGraph: BitsGraph,
