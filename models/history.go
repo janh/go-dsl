@@ -4,6 +4,10 @@
 
 package models
 
+import (
+	"time"
+)
+
 type BinsHistory struct {
 	SNR BinsFloatMinMaxDownUp
 }
@@ -18,4 +22,31 @@ type BinsFloatMinMax struct {
 type BinsFloatMinMaxDownUp struct {
 	Downstream BinsFloatMinMax
 	Upstream   BinsFloatMinMax
+}
+
+type ErrorsHistory struct {
+	EndTime      time.Time
+	PeriodLength time.Duration
+	PeriodCount  int
+
+	DownstreamRTXTXCount []IntValue
+	UpstreamRTXTXCount   []IntValue
+
+	DownstreamRTXCCount []IntValue
+	UpstreamRTXCCount   []IntValue
+
+	DownstreamRTXUCCount []IntValue
+	UpstreamRTXUCCount   []IntValue
+
+	DownstreamFECCount []IntValue
+	UpstreamFECCount   []IntValue
+
+	DownstreamCRCCount []IntValue
+	UpstreamCRCCount   []IntValue
+
+	DownstreamESCount []IntValue
+	UpstreamESCount   []IntValue
+
+	DownstreamSESCount []IntValue
+	UpstreamSESCount   []IntValue
 }
