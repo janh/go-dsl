@@ -14,9 +14,9 @@ import (
 )
 
 var (
-	colorUpstream   = Color{96, 192, 0, .75}
-	colorDownstream = Color{0, 127, 255, .75}
-	colorPilotTones = Color{204, 94, 82, .75}
+	colorGreen = Color{96, 192, 0, .75}
+	colorBlue  = Color{0, 127, 255, .75}
+	colorRed   = Color{204, 94, 82, .75}
 )
 
 func getGraphColors(background, foreground Color) (colorGraph, colorGrid, colorNeutralFill, colorNeutralStroke Color) {
@@ -91,13 +91,13 @@ func getBaseModel(spec graphSpec) baseModel {
 	m.ColorGraph, m.ColorGrid, m.ColorNeutralFill, m.ColorNeutralStroke =
 		getGraphColors(spec.ColorBackground, spec.ColorForeground)
 
-	m.ColorMinStroke = colorDownstream
-	m.ColorMaxStroke = colorUpstream
+	m.ColorMinStroke = colorBlue
+	m.ColorMaxStroke = colorGreen
 
-	m.ColorUpstream = colorUpstream
-	m.ColorDownstream = colorDownstream
+	m.ColorUpstream = colorGreen
+	m.ColorDownstream = colorBlue
 
-	m.ColorPilotTones = colorPilotTones
+	m.ColorPilotTones = colorRed
 
 	if spec.ScaleFactor > 1.0 {
 		m.StrokeWidthBase = math.Round(spec.ScaleFactor)
@@ -168,8 +168,8 @@ func getBaseModel(spec graphSpec) baseModel {
 
 func setBandsData(m *baseModel, data models.Bins, useColor bool) {
 	if useColor {
-		m.ColorBandsDownstream = colorDownstream
-		m.ColorBandsUpstream = colorUpstream
+		m.ColorBandsDownstream = colorBlue
+		m.ColorBandsUpstream = colorGreen
 	} else {
 		m.ColorBandsDownstream = m.ColorNeutralFill
 		m.ColorBandsUpstream = m.ColorNeutralFill

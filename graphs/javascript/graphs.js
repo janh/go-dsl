@@ -113,9 +113,9 @@ var DSLGraphs = DSLGraphs || (function () {
 	Object.defineProperty(GraphSpec.prototype, 'legendYTop', {writable: true});
 
 
-	const COLOR_UPSTREAM = Object.freeze(new Color(96, 192, 0, .75));
-	const COLOR_DOWNSTREAM = Object.freeze(new Color(0, 127, 255, .75));
-	const COLOR_PILOT_TONES = Object.freeze(new Color(204, 94, 82, .75));
+	const COLOR_GREEN = Object.freeze(new Color(96, 192, 0, .75));
+	const COLOR_BLUE = Object.freeze(new Color(0, 127, 255, .75));
+	const COLOR_RED = Object.freeze(new Color(204, 94, 82, .75));
 
 
 	function decodeList(list) {
@@ -298,13 +298,13 @@ var DSLGraphs = DSLGraphs || (function () {
 			this.colorNeutralFill = colors.colorNeutralFill;
 			this.colorNeutralStroke = colors.colorNeutralStroke;
 
-			this.colorMinStroke = COLOR_DOWNSTREAM;
-			this.colorMaxStroke = COLOR_UPSTREAM;
+			this.colorMinStroke = COLOR_BLUE;
+			this.colorMaxStroke = COLOR_GREEN;
 
-			this.colorUpstream = COLOR_UPSTREAM;
-			this.colorDownstream = COLOR_DOWNSTREAM;
+			this.colorUpstream = COLOR_GREEN;
+			this.colorDownstream = COLOR_BLUE;
 
-			this.colorPilotTones = COLOR_PILOT_TONES;
+			this.colorPilotTones = COLOR_RED;
 
 			if (spec.scaleFactor > 1.0) {
 				this.strokeWidthBase = Math.round(spec.scaleFactor);
