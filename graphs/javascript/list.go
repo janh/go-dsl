@@ -9,6 +9,8 @@ import (
 	"encoding/json"
 	"fmt"
 	"math"
+
+	"3e8.eu/go/dsl/models"
 )
 
 // List encoding format:
@@ -22,6 +24,7 @@ import (
 // q: relative value, positive, only fractional part
 // n: relative value, negative
 // o: relative value, negative, only fractional part
+// e: invalid value (null)
 
 func formatListValFloat64(prefixPositive, prefixNegative byte, val int64) (valStr string) {
 	var prefix byte
@@ -133,6 +136,70 @@ func encodeListInt8(list []int8) json.RawMessage {
 			fmt.Fprint(&buf, abs)
 		} else {
 			fmt.Fprint(&buf, rel)
+		}
+
+		lastVal = val
+	}
+
+	if count > 0 {
+		buf.WriteByte('r')
+		fmt.Fprintf(&buf, "%d", count)
+	}
+
+	buf.WriteByte('"')
+
+	return json.RawMessage(buf.Bytes())
+}
+
+func formatListValInt64(prefixPositive, prefixNegative byte, val int64) (valStr string) {
+	var prefix byte
+	if val >= 0 {
+		prefix = prefixPositive
+	} else {
+		prefix = prefixNegative
+		val = -val
+	}
+
+	valStr = fmt.Sprintf("%s%d", string(prefix), val)
+
+	return
+}
+
+func encodeListIntValue(list []models.IntValue) json.RawMessage {
+	var buf bytes.Buffer
+
+	buf.WriteByte('"')
+
+	var lastVal = models.IntValue{Valid: true, Int: 0}
+	var count int
+
+	for _, val := range list {
+		if !val.Valid {
+			val.Int = 0
+		}
+		if val == lastVal {
+			count++
+			continue
+		}
+		if count > 0 {
+			buf.WriteByte('r')
+			fmt.Fprintf(&buf, "%d", count)
+			count = 0
+		}
+
+		if !val.Valid {
+			buf.WriteByte('e')
+		} else {
+			abs := formatListValInt64('P', 'N', val.Int)
+
+			diff := val.Int - lastVal.Int
+			rel := formatListValInt64('p', 'n', diff)
+
+			if !lastVal.Valid || len(abs) <= len(rel) {
+				fmt.Fprint(&buf, abs)
+			} else {
+				fmt.Fprint(&buf, rel)
+			}
 		}
 
 		lastVal = val
