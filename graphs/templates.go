@@ -25,6 +25,9 @@ var templateQLN string
 //go:embed templates/hlog.tmpl
 var templateHlog string
 
+//go:embed templates/errors.tmpl
+var templateErrors string
+
 func writeTemplate(w io.Writer, data interface{}, templates ...string) error {
 	t := template.New("")
 	for _, tpl := range templates {
