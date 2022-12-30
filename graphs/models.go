@@ -83,3 +83,15 @@ type hlogModel struct {
 	Transform   transform
 	Path        path
 }
+
+type coloredPath struct {
+	Color Color
+	Path  path
+}
+
+type errorsModel struct {
+	baseModel
+	StrokeWidth float64
+	Transform   transform
+	Paths       []coloredPath
+}

@@ -1341,6 +1341,372 @@ var DSLGraphs = DSLGraphs || (function () {
 	}
 
 
+	function formatLegendXLabelErrors(val, step, start, end) {
+		if (step%(60*24) == 0) {
+			return (val/(60*24)).toFixed(0) + "\u202Fd";
+		} else if (step%(60*12) == 0) {
+			return (val/(60*24)).toFixed(1) + "\u202Fd";
+		} else if (step%60 == 0) {
+			return (val/60).toFixed(0) + "\u202Fh";
+		} else if (step < 30) {
+			return val.toFixed(0) + "\u202Fmin";
+		} else if (step < 60) {
+			return (val/60).toFixed(1) + "\u202Fh";
+		} else {
+			return "?";
+		}
+	}
+
+
+	function formatLegendYLabelErrors(val, step, start, end) {
+		if (val == 0) {
+			return "0";
+		}
+
+		if (end >= 1000000) {
+			if (val%1000000 == 0) {
+				return (val/1000000).toFixed(0) + "\u202FM";
+			} else if (val%100000 == 0) {
+				return (val/1000000).toFixed(1) + "\u202FM";
+			} else {
+				return (val/1000000).toFixed(2) + "\u202FM";
+			}
+		}
+
+		if (end >= 1000) {
+			if (val%1000 == 0) {
+				return (val/1000).toFixed(0) + "\u202Fk";
+			} else if (val%100 == 0) {
+				return (val/1000).toFixed(1) + "\u202Fk";
+			} else {
+				return (val/1000).toFixed(2) + "\u202Fk";
+			}
+		}
+
+		return val.toString();
+	}
+
+
+	function getErrorsHistoryLegendX(data) {
+		var res = {};
+
+		var totalDuration;
+		if (data && data.PeriodCount != 0) {
+			totalDuration = data.PeriodCount * data.PeriodLength;
+		} else {
+			totalDuration = 24 * 60 * 60;
+		}
+
+		res.max = totalDuration / 60;
+
+		res.steps = [1, 2, 5, 10, 20, 30, 1 * 60, 2 * 60, 3 * 60, 6 * 60, 12 * 60, 24 * 60];
+
+		return res;
+	}
+
+
+	function getErrorsHistoryLegendY(items) {
+		var res = {};
+
+		var maxValue = 0;
+		for (var item of items) {
+			for (var val of item.data) {
+				if (val != null && val > maxValue) {
+					maxValue = val;
+				}
+			}
+		}
+
+		if (maxValue < 5) {
+			maxValue = 5
+		}
+
+		res.max = 1.05 * maxValue;
+		res.end = Math.floor(res.max);
+
+		res.steps = [1, 2, 4, 10, 20, 50];
+
+		for (var i = 2; i < 8; i++) {
+			var factor = Math.pow(10, i);
+			for (var j of [1, 2.5, 5]) {
+				var val = j * factor;
+				res.steps.push(Math.round(val));
+			}
+		}
+
+		return res;
+	}
+
+
+	function buildErrorsPath(path, data, scaleY, maxY, postScaleY) {
+		var lastDrawn = false;
+		var last = null;
+		var lastPosY = 0.0;
+
+		var count = data.length;
+		for (var i = 0; i < count; i++) {
+			var val = data[i];
+			var changed = last != val;
+			var drawn = false;
+
+			var posX = i + 0.5;
+			var posY = Math.min(maxY, val)*scaleY - 0.5;
+
+			if (last != null && val == null) {
+				path.lineTo(posX-0.5, lastPosY*postScaleY);
+			}
+			if (last == null && val != null) {
+				path.moveTo(posX-0.5, posY*postScaleY);
+				lastPosY = posY;
+			}
+			if (val != null && changed) {
+				if (last != null) {
+					if (!lastDrawn) {
+						path.lineTo(posX-1, lastPosY*postScaleY);
+					}
+					path.lineTo(posX, posY*postScaleY);
+					drawn = true;
+				}
+				lastPosY = posY;
+			}
+
+			lastDrawn = drawn;
+			last = val;
+		}
+
+		if (last != null) {
+			path.lineTo(count, lastPosY*postScaleY);
+		}
+	}
+
+
+	class ErrorsGraph {
+
+		constructor(canvas, params, data) {
+			this._canvas = canvas;
+			this._canvasPaths = document.createElement("canvas");
+
+			this._base = new BaseGraphHelper();
+
+			this._spec = new GraphSpec();
+			this._spec.legendXMax = 0;
+			this._spec.legendXLabelStart = 0;
+			this._spec.legendXLabelFormatFunc = formatLegendXLabelErrors;
+			this._spec.legendXLabelDigits = 5.5;
+			this._spec.legendYBottom = 0;
+			this._spec.legendYLabelStart = 0;
+			this._spec.legendYLabelFormatFunc = formatLegendYLabelErrors;
+			this._spec.legendYLabelDigits = 5.0;
+
+			this._specChanged = true;
+
+			this._setParams(params);
+			this._setData(data, history);
+
+			this._draw();
+		}
+
+		_getItems(data) {
+			return [];
+		}
+
+		_draw() {
+			if (this._specChanged) {
+				this._base.setSpec(this._spec);
+				this._specChanged = false;
+			}
+
+			var ctx = this._canvas.getContext("2d", {alpha: false});
+			var ctxPaths = this._canvasPaths.getContext("2d");
+
+			this._base.draw(ctx);
+
+			if (!this._data) {
+				return;
+			}
+
+			var x = this._base.graphX;
+			var y = this._base.graphY;
+			var w = this._base.graphWidth;
+			var h = this._base.graphHeight;
+
+			var scaleX = w / this._data.PeriodCount;
+			var scaleY = h / this._spec.legendYTop;
+
+			var paths = [];
+			for (var item of this._getItems(this._data)) {
+				var p = {};
+
+				p.color = item.color;
+
+				p.path = new Path2D();
+				buildErrorsPath(p.path, item.data, scaleY, this._spec.legendYTop, 1/scaleX);
+
+				paths.push(p);
+			}
+
+			if (ctxPaths.canvas.width != w || ctxPaths.canvas.height != h + 1) {
+				ctxPaths.canvas.width = w;
+				ctxPaths.canvas.height = h + 1;
+			}
+
+			ctxPaths.clearRect(0, 0, w, h + 1);
+
+			// scaling of y by scaleX in order to not distort the lines
+			ctxPaths.translate(0, h);
+			ctxPaths.scale(scaleX, -scaleX);
+
+			ctxPaths.lineWidth = this._spec.scaleFactor / scaleX;
+			ctxPaths.lineCap = "butt";
+			ctxPaths.lineJoin = "round";
+
+			for (var i = 0; i < paths.length; i++) {
+				ctxPaths.globalCompositeOperation = (i == 0) ? "source-over" : "multiply";
+				ctxPaths.strokeStyle = paths[i].color.toString();
+				ctxPaths.stroke(paths[i].path);
+			}
+
+			ctxPaths.resetTransform();
+
+			ctx.drawImage(ctxPaths.canvas, x, y);
+		}
+
+		_setParams(params) {
+			this._spec.width = params.width;
+			this._spec.height =  params.height;
+			this._spec.scaleFactor = params.scaleFactor;
+			this._spec.fontSize = params.fontSize;
+			this._spec.colorBackground = params.colorBackground;
+			this._spec.colorForeground = params.colorForeground;
+
+			this._specChanged = true;
+		}
+
+		setParams(params) {
+			this._setParams(params);
+			this._draw();
+		}
+
+		_setData(data) {
+			var legendXData = getErrorsHistoryLegendX(data);
+			var legendYData = getErrorsHistoryLegendY(this._getItems(data));
+
+			if (this._data === undefined || !this._data != !data || (this._data && data &&
+					(this._spec.legendXMin != legendXData.max || this._spec.legendYTop != legendYData.max))) {
+
+				this._spec.legendXMin = legendXData.max;
+				this._spec.legendXLabelEnd = Math.floor(legendXData.max);
+				this._spec.legendXLabelSteps = legendXData.steps;
+				this._spec.legendYTop = legendYData.max;
+				this._spec.legendYLabelEnd = legendYData.end;
+				this._spec.legendYLabelSteps = legendYData.steps;
+
+				this._specChanged = true;
+			}
+
+			this._data = data;
+		}
+
+		setData(data) {
+			this._setData(data);
+			this._draw();
+		}
+
+	}
+
+
+	class DownstreamRetransmissionGraph extends ErrorsGraph {
+
+		_getItems(data) {
+			if (data) {
+				return [
+					{data: data.DownstreamRTXTXCount, color: COLOR_GREEN},
+					{data: data.DownstreamRTXCCount, color: COLOR_BLUE},
+					{data: data.DownstreamRTXUCCount, color: COLOR_RED}
+				];
+			}
+			return [];
+		}
+
+	}
+
+
+	class UpstreamRetransmissionGraph extends ErrorsGraph {
+
+		_getItems(data) {
+			if (data) {
+				return [
+					{data: data.UpstreamRTXTXCount, color: COLOR_GREEN},
+					{data: data.UpstreamRTXCCount, color: COLOR_BLUE},
+					{data: data.UpstreamRTXUCCount, color: COLOR_RED}
+				];
+			}
+			return [];
+		}
+
+	}
+
+
+	class DownstreamErrorsGraph extends ErrorsGraph {
+
+		_getItems(data) {
+			if (data) {
+				return [
+					{data: data.DownstreamFECCount, color: COLOR_BLUE},
+					{data: data.DownstreamCRCCount, color: COLOR_RED}
+				];
+			}
+			return [];
+		}
+
+	}
+
+
+	class UpstreamErrorsGraph extends ErrorsGraph {
+
+		_getItems(data) {
+			if (data) {
+				return [
+					{data: data.UpstreamFECCount, color: COLOR_BLUE},
+					{data: data.UpstreamCRCCount, color: COLOR_RED}
+				];
+			}
+			return [];
+		}
+
+	}
+
+
+	class DownstreamErrorSecondsGraph extends ErrorsGraph {
+
+		_getItems(data) {
+			if (data) {
+				return [
+					{data: data.DownstreamESCount, color: COLOR_BLUE},
+					{data: data.DownstreamSESCount, color: COLOR_RED}
+				];
+			}
+			return [];
+		}
+
+	}
+
+
+	class UpstreamErrorSecondsGraph extends ErrorsGraph {
+
+		_getItems(data) {
+			if (data) {
+				return [
+					{data: data.UpstreamESCount, color: COLOR_BLUE},
+					{data: data.UpstreamSESCount, color: COLOR_RED}
+				];
+			}
+			return [];
+		}
+
+	}
+
+
 	return {
 		decodeBins: decodeBins,
 		decodeBinsHistory: decodeBinsHistory,
@@ -1350,7 +1716,13 @@ var DSLGraphs = DSLGraphs || (function () {
 		BitsGraph: BitsGraph,
 		SNRGraph: SNRGraph,
 		QLNGraph: QLNGraph,
-		HlogGraph: HlogGraph
+		HlogGraph: HlogGraph,
+		DownstreamRetransmissionGraph: DownstreamRetransmissionGraph,
+		UpstreamRetransmissionGraph: UpstreamRetransmissionGraph,
+		DownstreamErrorsGraph: DownstreamErrorsGraph,
+		UpstreamErrorsGraph: UpstreamErrorsGraph,
+		DownstreamErrorSecondsGraph: DownstreamErrorSecondsGraph,
+		UpstreamErrorSecondsGraph: UpstreamErrorSecondsGraph
 	}
 
 })();
