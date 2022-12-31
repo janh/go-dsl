@@ -15,10 +15,13 @@ type graphSpec struct {
 	ColorBackground Color
 	ColorForeground Color
 
-	LegendXStep   int
-	LegendXMax    float64
-	LegendXFactor float64
-	LegendXFormat string
+	LegendXLabelStep   int
+	LegendXLabelStart  int
+	LegendXLabelEnd    int
+	LegendXLabelFactor float64
+	LegendXLabelFormat string
+	LegendXMin         float64
+	LegendXMax         float64
 
 	LegendYLabelStep  int
 	LegendYLabelStart int
