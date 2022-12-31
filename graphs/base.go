@@ -112,25 +112,32 @@ func getBaseModel(spec graphSpec) baseModel {
 	ff := fontFactor
 	s := m.StrokeWidthBase
 
+	loopSteps := func(start, end, step int, callback func(int)) {
+		count := ((end - start) / step) + 1
+		for i := 0; i < count; i++ {
+			callback(start + i*step)
+		}
+	}
+
 	// legend for x-axis
-	legendXStep := float64(spec.LegendXStep)
-	for w*legendXStep/spec.LegendXMax < m.FontSize*2.5 {
-		legendXStep *= 2
+	legendXLabelStep := spec.LegendXLabelStep
+	for w*math.Abs(float64(legendXLabelStep))/math.Abs(spec.LegendXMax-spec.LegendXMin) < m.FontSize*2.5 {
+		legendXLabelStep *= 2
 	}
 	m.PathLegend.MoveTo(x-0.5*s, y+h+0.5*s)
 	m.PathLegend.LineTo(x-0.5*s+w, y+h+0.5*s)
-	for i := 0.0; i <= spec.LegendXMax; i += legendXStep {
-		frac := i / spec.LegendXMax
+	loopSteps(spec.LegendXLabelStart, spec.LegendXLabelEnd, legendXLabelStep, func(i int) {
+		frac := (float64(i) - spec.LegendXMin) / (spec.LegendXMax - spec.LegendXMin)
 		pos := x - 0.5*s + math.Round(w*frac)
 		m.PathLegend.MoveTo(pos, y+h+math.Round(2*f)+0.5*s)
 		m.PathLegend.LineTo(pos, y+h+math.Round(1*f)+0.5*s)
-		text := fmt.Sprintf(spec.LegendXFormat, i*spec.LegendXFactor)
+		text := fmt.Sprintf(spec.LegendXLabelFormat, float64(i)*spec.LegendXLabelFactor)
 		m.LabelsX = append(m.LabelsX, label{X: pos, Y: y + h + (2+8*ff)*f + textOffset, Text: text})
-	}
+	})
 
 	// legend for y-axis
 	legendYLabelStep := spec.LegendYLabelStep
-	for h*float64(legendYLabelStep)/(spec.LegendYTop-spec.LegendYBottom) < m.FontSize {
+	for h*math.Abs(float64(legendYLabelStep))/math.Abs(spec.LegendYTop-spec.LegendYBottom) < m.FontSize {
 		legendYLabelStep *= 2
 	}
 	if math.Max(math.Abs(float64(spec.LegendYLabelStart)), math.Abs(float64(spec.LegendYLabelEnd))) >= 100 {
@@ -140,13 +147,13 @@ func getBaseModel(spec graphSpec) baseModel {
 	}
 	m.PathLegend.MoveTo(x-0.5*s, y+0.5*s)
 	m.PathLegend.LineTo(x-0.5*s, y+h+0.5*s)
-	for i := spec.LegendYLabelStart + legendYLabelStep/2; i <= spec.LegendYLabelEnd; i += legendYLabelStep {
+	loopSteps(spec.LegendYLabelStart+legendYLabelStep/2, spec.LegendYLabelEnd, legendYLabelStep, func(i int) {
 		frac := (float64(i) - spec.LegendYBottom) / (spec.LegendYTop - spec.LegendYBottom)
 		pos := y + h + 0.5*s - math.Round(h*frac)
 		m.PathLegend.MoveTo(x-math.Round(2*f)-0.5*s, pos)
 		m.PathLegend.LineTo(x-math.Round(1*f)-0.5*s, pos)
-	}
-	for i := spec.LegendYLabelStart; i <= spec.LegendYLabelEnd; i += legendYLabelStep {
+	})
+	loopSteps(spec.LegendYLabelStart, spec.LegendYLabelEnd, legendYLabelStep, func(i int) {
 		frac := (float64(i) - spec.LegendYBottom) / (spec.LegendYTop - spec.LegendYBottom)
 		pos := y + h + 0.5*s - math.Round(h*frac)
 		m.PathLegend.MoveTo(x-math.Round(4*f)-0.5*s, pos)
@@ -157,7 +164,7 @@ func getBaseModel(spec graphSpec) baseModel {
 		}
 		text := fmt.Sprintf("%d", i)
 		m.LabelsY = append(m.LabelsY, label{X: x - (5+5.5*ff)*f, Y: pos + textOffset, Text: text})
-	}
+	})
 
 	return m
 }
