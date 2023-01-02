@@ -23,7 +23,8 @@ func (m Message) JSON() []byte {
 }
 
 type MessageData struct {
-	Summary string          `json:"summary"`
-	Bins    json.RawMessage `json:"bins"`
-	History json.RawMessage `json:"history"`
+	Summary       string          `json:"summary"`
+	Bins          json.RawMessage `json:"bins"`
+	BinsHistory   json.RawMessage `json:"bins_history"`
+	ErrorsHistory json.RawMessage `json:"errors_history"`
 }

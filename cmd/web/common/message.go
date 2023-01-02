@@ -28,9 +28,10 @@ func GetStateMessage(change StateChange) Message {
 
 	case StateReady:
 		msg.Data = MessageData{
-			Summary: getSummaryString(change.Status),
-			Bins:    jsgraphs.EncodeBins(change.Bins),
-			History: jsgraphs.EncodeBinsHistory(change.BinsHistory),
+			Summary:       getSummaryString(change.Status),
+			Bins:          jsgraphs.EncodeBins(change.Bins),
+			BinsHistory:   jsgraphs.EncodeBinsHistory(change.BinsHistory),
+			ErrorsHistory: jsgraphs.EncodeErrorsHistory(change.ErrorsHistory),
 		}
 
 	case StatePassphraseRequired:
