@@ -11,9 +11,15 @@ var state;
 
 var eventSource;
 
-var summary, graphs;
-var graphBitsCanvas, graphSNRCanvas, graphQLNCanvas, graphHlogCanvas;
-var graphBits, graphSNR, graphQLN, graphHlog;
+var summary, graphs, errors;
+var graphBitsCanvas, graphSNRCanvas, graphQLNCanvas, graphHlogCanvas,
+	graphRetransmissionDownCanvas, graphRetransmissionUpCanvas,
+	graphErrorsDownCanvas, graphErrorsUpCanvas,
+	graphErrorSecondsDownCanvas, graphErrorSecondsUpCanvas;
+var graphBits, graphSNR, graphQLN, graphHlog,
+	graphRetransmissionDown, graphRetransmissionUp,
+	graphErrorsDown, graphErrorsUp,
+	graphErrorSecondsDown, graphErrorSecondsUp;
 var overlay, overlayPassword, overlayPassphrase, overlayEncryptionPassphrase, overlayError, overlayLoading;
 var fingerprint, inputPassword, inputPassphrase, inputEncryptionPassphrase;
 
@@ -29,12 +35,19 @@ function updateState(newState, data) {
 
 			case STATE_READY:
 				var bins = DSLGraphs.decodeBins(data["bins"]);
-				var history = DSLGraphs.decodeBinsHistory(data["history"]);
+				var binsHistory = DSLGraphs.decodeBinsHistory(data["bins_history"]);
+				var errorsHistory = DSLGraphs.decodeErrorsHistory(data["errors_history"]);
 				summary.innerHTML = data["summary"];
 				graphBits.setData(bins);
-				graphSNR.setData(bins, history);
+				graphSNR.setData(bins, binsHistory);
 				graphQLN.setData(bins);
 				graphHlog.setData(bins);
+				graphRetransmissionDown.setData(errorsHistory);
+				graphRetransmissionUp.setData(errorsHistory);
+				graphErrorsDown.setData(errorsHistory);
+				graphErrorsUp.setData(errorsHistory);
+				graphErrorSecondsDown.setData(errorsHistory);
+				graphErrorSecondsUp.setData(errorsHistory);
 				break;
 
 			case STATE_ERROR:
@@ -159,11 +172,40 @@ function applyGraphParams(params) {
 	graphHlogCanvas.style.width = width;
 }
 
+function applyErrorsGraphParams(params) {
+	var width = (params.width / params.scaleFactor).toString() + "px";
+
+	graphRetransmissionDown.setParams(params);
+	graphRetransmissionDownCanvas.style.width = width;
+
+	graphRetransmissionUp.setParams(params);
+	graphRetransmissionUpCanvas.style.width = width;
+
+	graphErrorsDown.setParams(params);
+	graphErrorsDownCanvas.style.width = width;
+
+	graphErrorsUp.setParams(params);
+	graphErrorsUpCanvas.style.width = width;
+
+	graphErrorSecondsDown.setParams(params);
+	graphErrorSecondsDownCanvas.style.width = width;
+
+	graphErrorSecondsUp.setParams(params);
+	graphErrorSecondsUpCanvas.style.width = width;
+}
+
 function initGraphs() {
 	graphBitsCanvas = document.getElementById("graph_bits");
 	graphSNRCanvas = document.getElementById("graph_snr");
 	graphQLNCanvas = document.getElementById("graph_qln");
 	graphHlogCanvas = document.getElementById("graph_hlog");
+
+	graphRetransmissionDownCanvas = document.getElementById("graph_retransmission_ds");
+	graphRetransmissionUpCanvas = document.getElementById("graph_retransmission_us");
+	graphErrorsDownCanvas = document.getElementById("graph_errors_ds");
+	graphErrorsUpCanvas = document.getElementById("graph_errors_us");
+	graphErrorSecondsDownCanvas = document.getElementById("graph_errorseconds_ds");
+	graphErrorSecondsUpCanvas = document.getElementById("graph_errorseconds_us");
 
 	var defaultParams = new DSLGraphs.GraphParams();
 
@@ -172,20 +214,40 @@ function initGraphs() {
 	graphQLN = new DSLGraphs.QLNGraph(graphQLNCanvas, defaultParams);
 	graphHlog = new DSLGraphs.HlogGraph(graphHlogCanvas, defaultParams);
 
+	graphRetransmissionDown = new DSLGraphs.DownstreamRetransmissionGraph(graphRetransmissionDownCanvas, defaultParams);
+	graphRetransmissionUp = new DSLGraphs.UpstreamRetransmissionGraph(graphRetransmissionUpCanvas, defaultParams);
+	graphErrorsDown = new DSLGraphs.DownstreamErrorsGraph(graphErrorsDownCanvas, defaultParams);
+	graphErrorsUp = new DSLGraphs.UpstreamErrorsGraph(graphErrorsUpCanvas, defaultParams);
+	graphErrorSecondsDown = new DSLGraphs.DownstreamErrorSecondsGraph(graphErrorSecondsDownCanvas, defaultParams);
+	graphErrorSecondsUp = new DSLGraphs.UpstreamErrorSecondsGraph(graphErrorSecondsUpCanvas, defaultParams);
+
 	var lastDevicePixelRatio = 0;
 	var lastWidth = 0;
+	var lastWidthErrors = 0;
 
 	var updateGraphs = function() {
 		var devicePixelRatio = window.devicePixelRatio;
-		var width = graphs.offsetWidth;
 
+		var width = graphs.offsetWidth;
 		if (devicePixelRatio != lastDevicePixelRatio || width != lastWidth) {
-			lastDevicePixelRatio = devicePixelRatio;
 			lastWidth = width;
 
 			var params = getGraphParams(width, devicePixelRatio);
 			applyGraphParams(params);
 		}
+
+		var widthErrors = errors.offsetWidth;
+		if (widthErrors > 1000) {
+			widthErrors = Math.floor(widthErrors/2) - 1;
+		}
+		if (devicePixelRatio != lastDevicePixelRatio || widthErrors != lastWidthErrors) {
+			lastWidthErrors = widthErrors;
+
+			var paramsErrors = getGraphParams(widthErrors, devicePixelRatio);
+			applyErrorsGraphParams(paramsErrors);
+		}
+
+		lastDevicePixelRatio = devicePixelRatio;
 	};
 
 	updateGraphs();
@@ -195,6 +257,7 @@ function initGraphs() {
 function loaded(event) {
 	summary = document.getElementById("summary");
 	graphs = document.getElementById("graphs");
+	errors = document.getElementById("errors");
 
 	overlay = document.getElementById("overlay");
 	overlayPassword = document.getElementById("overlay-password");

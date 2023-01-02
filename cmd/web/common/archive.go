@@ -86,5 +86,59 @@ func WriteArchive(w io.Writer, filenameBase string, state StateChange, rawData b
 		return
 	}
 
+	fileWriter, err = archive.Create(filenameBase + "_errors_retransmission_ds.svg")
+	if err != nil {
+		return
+	}
+	err = graphs.DrawDownstreamRetransmissionGraph(fileWriter, state.ErrorsHistory, graphs.DefaultGraphParams)
+	if err != nil {
+		return
+	}
+
+	fileWriter, err = archive.Create(filenameBase + "_errors_retransmission_us.svg")
+	if err != nil {
+		return
+	}
+	err = graphs.DrawUpstreamRetransmissionGraph(fileWriter, state.ErrorsHistory, graphs.DefaultGraphParams)
+	if err != nil {
+		return
+	}
+
+	fileWriter, err = archive.Create(filenameBase + "_errors_general_ds.svg")
+	if err != nil {
+		return
+	}
+	err = graphs.DrawDownstreamErrorsGraph(fileWriter, state.ErrorsHistory, graphs.DefaultGraphParams)
+	if err != nil {
+		return
+	}
+
+	fileWriter, err = archive.Create(filenameBase + "_errors_general_us.svg")
+	if err != nil {
+		return
+	}
+	err = graphs.DrawUpstreamErrorsGraph(fileWriter, state.ErrorsHistory, graphs.DefaultGraphParams)
+	if err != nil {
+		return
+	}
+
+	fileWriter, err = archive.Create(filenameBase + "_errors_seconds_ds.svg")
+	if err != nil {
+		return
+	}
+	err = graphs.DrawDownstreamErroredSecondsGraph(fileWriter, state.ErrorsHistory, graphs.DefaultGraphParams)
+	if err != nil {
+		return
+	}
+
+	fileWriter, err = archive.Create(filenameBase + "_errors_seconds_us.svg")
+	if err != nil {
+		return
+	}
+	err = graphs.DrawUpstreamErroredSecondsGraph(fileWriter, state.ErrorsHistory, graphs.DefaultGraphParams)
+	if err != nil {
+		return
+	}
+
 	return
 }
