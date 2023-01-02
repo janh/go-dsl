@@ -32,11 +32,12 @@ const (
 type StateChange struct {
 	State State
 
-	Time        time.Time
-	RawData     []byte
-	Status      models.Status
-	Bins        models.Bins
-	BinsHistory models.BinsHistory
+	Time          time.Time
+	RawData       []byte
+	Status        models.Status
+	Bins          models.Bins
+	BinsHistory   models.BinsHistory
+	ErrorsHistory models.ErrorsHistory
 
 	Fingerprint string
 
@@ -292,7 +293,12 @@ func (c *Client) update() {
 		}
 	}
 
-	history, err := history.NewBins(history.DefaultBinsConfig)
+	binsHistory, err := history.NewBins(history.DefaultBinsConfig)
+	if err != nil {
+		panic(err)
+	}
+
+	errorsHistory, err := history.NewErrors(history.DefaultErrorsConfig)
 	if err != nil {
 		panic(err)
 	}
@@ -313,15 +319,17 @@ mainloop:
 
 				now := time.Now()
 
-				history.Update(c.client.Status(), c.client.Bins(), now)
+				binsHistory.Update(c.client.Status(), c.client.Bins(), now)
+				errorsHistory.Update(c.client.Status(), now)
 
 				c.changeState <- StateChange{
-					State:       StateReady,
-					Time:        now,
-					RawData:     c.client.RawData(),
-					Status:      c.client.Status(),
-					Bins:        c.client.Bins(),
-					BinsHistory: history.Data(),
+					State:         StateReady,
+					Time:          now,
+					RawData:       c.client.RawData(),
+					Status:        c.client.Status(),
+					Bins:          c.client.Bins(),
+					BinsHistory:   binsHistory.Data(),
+					ErrorsHistory: errorsHistory.Data(),
 				}
 
 				c.errCount = 0
