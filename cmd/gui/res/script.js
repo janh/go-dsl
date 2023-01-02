@@ -330,33 +330,39 @@
 		return params;
 	}
 
-	function setCanvasWidths(params) {
+	function applyGraphParams(params) {
 		var width = (params.width / params.scaleFactor).toString() + "px";
+
+		graphBits.setParams(params);
 		graphBitsCanvas.style.width = width;
+
+		graphSNR.setParams(params);
 		graphSNRCanvas.style.width = width;
+
+		graphQLN.setParams(params);
 		graphQLNCanvas.style.width = width;
+
+		graphHlog.setParams(params);
 		graphHlogCanvas.style.width = width;
 	}
 
 	function initGraphs() {
-		var lastDevicePixelRatio = window.devicePixelRatio;
-		var lastWidth = graphs.offsetWidth;
-
-		var params = getGraphParams(lastWidth, lastDevicePixelRatio);
-
 		graphBitsCanvas = document.getElementById("graph_bits");
 		graphSNRCanvas = document.getElementById("graph_snr");
 		graphQLNCanvas = document.getElementById("graph_qln");
 		graphHlogCanvas = document.getElementById("graph_hlog");
 
-		graphBits = new DSLGraphs.BitsGraph(graphBitsCanvas, params);
-		graphSNR = new DSLGraphs.SNRGraph(graphSNRCanvas, params);
-		graphQLN = new DSLGraphs.QLNGraph(graphQLNCanvas, params);
-		graphHlog = new DSLGraphs.HlogGraph(graphHlogCanvas, params);
+		var defaultParams = new DSLGraphs.GraphParams();
 
-		setCanvasWidths(params);
+		graphBits = new DSLGraphs.BitsGraph(graphBitsCanvas, defaultParams);
+		graphSNR = new DSLGraphs.SNRGraph(graphSNRCanvas, defaultParams);
+		graphQLN = new DSLGraphs.QLNGraph(graphQLNCanvas, defaultParams);
+		graphHlog = new DSLGraphs.HlogGraph(graphHlogCanvas, defaultParams);
 
-		window.addEventListener("resize", function() {
+		var lastDevicePixelRatio = 0;
+		var lastWidth = 0;
+
+		var updateGraphs = function() {
 			var devicePixelRatio = window.devicePixelRatio;
 			var width = graphs.offsetWidth;
 
@@ -365,15 +371,12 @@
 				lastWidth = width;
 
 				var params = getGraphParams(width, devicePixelRatio);
-
-				graphBits.setParams(params);
-				graphSNR.setParams(params);
-				graphQLN.setParams(params);
-				graphHlog.setParams(params);
-
-				setCanvasWidths(params);
+				applyGraphParams(params);
 			}
-		});
+		};
+
+		updateGraphs();
+		window.addEventListener("resize", updateGraphs);
 	}
 
 	function initVisibilityChange() {
