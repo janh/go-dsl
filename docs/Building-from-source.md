@@ -18,7 +18,7 @@ In the end the command should like like this:
 As the graphical user interface uses cgo, additional build tools are required in addition to the Go toolchain:
 
 - Linux: basic C build tools, headers for `gtk+-3.0` and `webkit2gtk-4.0`
-- Windows: a C compiler such as TDM-GCC, for building the webview dependency additionally Visual Studio C/C++
+- Windows: MinGW-w64 toolchain and WebView2 SDK, see documentation of the Go package [github.com/webview/webview](https://github.com/webview/webview) for details
 - macOS: Xcode command line developer tools (the system should automatically offer to install them)
 
 ## Documentation

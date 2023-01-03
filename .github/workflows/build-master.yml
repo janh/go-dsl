@@ -57,11 +57,16 @@ jobs:
       - name: Build GUI (Windows)
         if: matrix.target == 'windows'
         run: |
+          $WebView2Version = "1.0.1462.37"
+          New-Item -ItemType Directory .\libs\webview2
+          Invoke-WebRequest "https://www.nuget.org/api/v2/package/Microsoft.Web.WebView2/$WebView2Version" -OutFile .\libs\webview2.zip
+          Expand-Archive .\libs\webview2.zip .\libs\webview2
+          New-Item -Force -ItemType Directory .\build
+          Copy-Item .\libs\webview2\build\native\x64\WebView2Loader.dll .\build\
+          $Env:Path = "$Env:ProgramData\chocolatey\lib\mingw\tools\install\mingw64\bin;$Env:Path"
+          $Env:CGO_CXXFLAGS = "-I$PWD\libs\webview2\build\native\include"
+          $Env:CGO_LDFLAGS = "-L$PWD\libs\webview2\build\native\x64"
           go build -tags gui -ldflags="-H windowsgui" -o .\build\dsl-gui.exe .\cmd
-          Copy-Item -Recurse "$(go env GOPATH)\pkg\mod\github.com\webview\webview@*\" webview
-          Remove-Item -Recurse -Force .\webview\dll
-          .\webview\script\build.bat
-          Copy-Item .\webview\dll\x64\*.dll .\build\
 
       - name: Build GUI (macOS)
         if: matrix.target == 'macos'
