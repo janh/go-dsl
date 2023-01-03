@@ -364,6 +364,20 @@
 		});
 	}
 
+	function initVisibilityChange() {
+		var visibilityChangeListener = function() {
+			goVisibilityChanged(document.visibilityState === "visible");
+		};
+
+		window.addEventListener("visibilitychange", visibilityChangeListener);
+
+		window.addEventListener("beforeunload", function() {
+			window.removeEventListener("visibilitychange", visibilityChangeListener);
+		});
+
+		visibilityChangeListener();
+	}
+
 	function loaded(event) {
 		buttonSave = document.getElementById("button-save");
 		buttonDisconnect = document.getElementById("button-disconnect");
@@ -411,6 +425,7 @@
 		initConfig();
 		initForms();
 		initGraphs();
+		initVisibilityChange();
 		goInitialized();
 	}
 

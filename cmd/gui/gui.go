@@ -44,14 +44,17 @@ const (
 var resources embed.FS
 
 var (
-	c             *common.Client
-	w             webview.WebView
-	stop          chan bool
-	stopDone      chan bool
-	isInitialized bool
-	lastMessage   common.Message
-	mutex         sync.Mutex
-	mutexClient   sync.Mutex
+	c              *common.Client
+	w              webview.WebView
+	startReceive   chan bool
+	startDone      chan bool
+	stopReceive    chan bool
+	stopDone       chan bool
+	inhibitReceive chan bool
+	isInitialized  bool
+	lastMessage    common.Message
+	mutex          sync.Mutex
+	mutexClient    sync.Mutex
 )
 
 func Run() {
@@ -69,6 +72,7 @@ func Run() {
 		stopWebView()
 	}()
 
+	initReceive()
 	startWebView()
 
 	go func() {
@@ -88,20 +92,16 @@ func clientConnect(clientConfig dsl.Config) {
 
 	c = common.NewClient(clientConfig)
 
-	stop = make(chan bool)
-	stopDone = make(chan bool)
-
-	go receive()
+	startReceive <- true
+	<-startDone
 }
 
 func clientStopEvents() {
 	mutexClient.Lock()
 	defer mutexClient.Unlock()
 
-	if stop != nil {
-		stop <- true
-		<-stopDone
-	}
+	stopReceive <- true
+	<-stopDone
 }
 
 func clientDisconnect() {
@@ -131,14 +131,23 @@ func getMainDataURI() string {
 	return "data:text/html;charset=utf-8;base64," + base64.StdEncoding.EncodeToString(buf.Bytes())
 }
 
+func initReceive() {
+	startReceive = make(chan bool)
+	startDone = make(chan bool)
+
+	stopReceive = make(chan bool)
+	stopDone = make(chan bool)
+
+	inhibitReceive = make(chan bool)
+
+	go receive()
+}
+
 func receive() {
+	enabled := false
+	inhibited := false
+
 	receiver := make(chan common.StateChange, 10)
-
-	c.RegisterReceiver(receiver)
-
-	defer func() {
-		c.UnregisterReceiver(receiver)
-	}()
 
 	for {
 		select {
@@ -148,10 +157,32 @@ func receive() {
 			updateState(common.GetStateMessage(change))
 			mutex.Unlock()
 
-		case <-stop:
-			stop = nil
+		case <-startReceive:
+			if !enabled && !inhibited {
+				c.RegisterReceiver(receiver)
+				enabled = true
+			}
+			startDone <- true
+
+		case <-stopReceive:
+			if enabled && !inhibited {
+				c.UnregisterReceiver(receiver)
+				enabled = false
+			}
 			stopDone <- true
-			return
+
+		case inhibit := <-inhibitReceive:
+			if inhibit {
+				if enabled {
+					c.UnregisterReceiver(receiver)
+				}
+				inhibited = true
+			} else {
+				if enabled {
+					c.RegisterReceiver(receiver)
+				}
+				inhibited = false
+			}
 
 		}
 	}
@@ -203,6 +234,13 @@ func initialized() {
 
 	setConfig()
 	updateState(lastMessage)
+}
+
+func visibilityChanged(visible bool) {
+	mutex.Lock()
+	defer mutex.Unlock()
+
+	inhibitReceive <- !visible
 }
 
 func writeArchive(state common.StateChange) (path string, err error) {
@@ -379,6 +417,7 @@ func startWebView() {
 	w.SetSize(620, 600, webview.HintNone)
 
 	w.Bind("goInitialized", initialized)
+	w.Bind("goVisibilityChanged", visibilityChanged)
 	w.Bind("goSave", save)
 	w.Bind("goSetPassword", setPassword)
 	w.Bind("goSetPassphrase", setPassphrase)
