@@ -77,7 +77,11 @@ func NewErrors(config ErrorsConfig) (*Errors, error) {
 }
 
 func (h *Errors) updatePeriod(now time.Time) {
-	currentPeriodStart := now.Truncate(h.config.PeriodLength)
+	periodTime := now
+	if !h.lastTime.IsZero() && now.After(h.lastTime) && now.Sub(h.lastTime) <= h.config.PeriodLength {
+		periodTime = now.Add(h.lastTime.Sub(now) / 2)
+	}
+	currentPeriodStart := periodTime.Truncate(h.config.PeriodLength)
 
 	if len(h.data) == 0 || h.periodStart.After(currentPeriodStart) {
 		h.data = make([]errorsHistoryItem, h.config.PeriodCount, h.config.PeriodCount)
@@ -95,7 +99,7 @@ func (h *Errors) updatePeriod(now time.Time) {
 }
 
 func (h *Errors) shouldRejectUpdate(status models.Status, now time.Time) bool {
-	if now.Round(0).Sub(h.lastTime) > h.config.PeriodLength {
+	if now.Sub(h.lastTime) > h.config.PeriodLength {
 		return true
 	}
 
@@ -116,6 +120,8 @@ func (h *Errors) shouldRejectUpdate(status models.Status, now time.Time) bool {
 }
 
 func (h *Errors) Update(status models.Status, now time.Time) {
+	now = now.Round(0)
+
 	defer func() {
 		h.lastTime = now
 		h.lastStatus = status
