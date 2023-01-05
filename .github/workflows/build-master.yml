@@ -38,7 +38,7 @@ jobs:
           for folder in "$PWD"/build/*/; do
             name="$(basename "$folder")"
             cd "$folder"
-            zip -0 -r "../$name.zip" ./*
+            zip -r "../$name.zip" ./*
           done
 
       - name: Upload artifact
@@ -83,7 +83,7 @@ jobs:
         run: |
           foreach ($folder in $(Get-ChildItem -Directory .\build)) {
             Set-Location $folder.FullName
-            Compress-Archive -CompressionLevel NoCompression .\* "..\$($folder.Name).zip"
+            Compress-Archive .\* "..\$($folder.Name).zip"
           }
 
       - name: Upload artifact
@@ -131,7 +131,7 @@ jobs:
           for folder in "$PWD"/build/*/; do
             name="$(basename "$folder")"
             cd "$folder"
-            zip -0 -r "../$name.zip" ./*
+            zip -r "../$name.zip" ./*
           done
 
       - name: Upload artifact
