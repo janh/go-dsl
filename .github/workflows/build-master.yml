@@ -27,22 +27,25 @@ jobs:
         env:
           CGO_ENABLED: 0
         run: |
-          go build -o ./build/dsl ./cmd
+          go build -o ./build/x86-64/dsl ./cmd
 
       - name: Build GUI
         run: |
-          go build -tags gui -o ./build/dsl-gui ./cmd
+          go build -tags gui -o ./build/x86-64/dsl-gui ./cmd
 
       - name: Zip
         run: |
-          cd ./build
-          zip -0 -r build.zip ./*
+          for folder in "$PWD"/build/*/; do
+            name="$(basename "$folder")"
+            cd "$folder"
+            zip -0 -r "../$name.zip" ./*
+          done
 
       - name: Upload artifact
         uses: actions/upload-artifact@v3
         with:
           name: linux
-          path: ./build/build.zip
+          path: ./build/*.zip
 
   build-windows:
     name: Build (Windows)
@@ -61,7 +64,7 @@ jobs:
         env:
           CGO_ENABLED: 0
         run: |
-          go build -o .\build\dsl.exe .\cmd
+          go build -o .\build\x86-64\dsl.exe .\cmd
 
       - name: Build GUI
         run: |
@@ -69,23 +72,25 @@ jobs:
           New-Item -ItemType Directory .\libs\webview2
           Invoke-WebRequest "https://www.nuget.org/api/v2/package/Microsoft.Web.WebView2/$WebView2Version" -OutFile .\libs\webview2.zip
           Expand-Archive .\libs\webview2.zip .\libs\webview2
-          New-Item -Force -ItemType Directory .\build
-          Copy-Item .\libs\webview2\build\native\x64\WebView2Loader.dll .\build\
+          New-Item -Force -ItemType Directory .\build\x86-64
+          Copy-Item .\libs\webview2\build\native\x64\WebView2Loader.dll .\build\x86-64\
           $Env:Path = "$Env:ProgramData\chocolatey\lib\mingw\tools\install\mingw64\bin;$Env:Path"
           $Env:CGO_CXXFLAGS = "-I$PWD\libs\webview2\build\native\include"
           $Env:CGO_LDFLAGS = "-L$PWD\libs\webview2\build\native\x64"
-          go build -tags gui -ldflags="-H windowsgui" -o .\build\dsl-gui.exe .\cmd
+          go build -tags gui -ldflags="-H windowsgui" -o .\build\x86-64\dsl-gui.exe .\cmd
 
       - name: Zip
         run: |
-          Set-Location .\build
-          Compress-Archive -CompressionLevel NoCompression .\* build.zip
+          foreach ($folder in $(Get-ChildItem -Directory .\build)) {
+            Set-Location $folder.FullName
+            Compress-Archive -CompressionLevel NoCompression .\* "..\$($folder.Name).zip"
+          }
 
       - name: Upload artifact
         uses: actions/upload-artifact@v3
         with:
           name: windows
-          path: ./build/build.zip
+          path: ./build/*.zip
 
   build-macos:
     name: Build (macOS)
@@ -104,11 +109,11 @@ jobs:
         env:
           CGO_ENABLED: 0
         run: |
-          go build -o ./build/dsl ./cmd
+          go build -o ./build/x86-64/dsl ./cmd
 
       - name: Build GUI
         run: |
-          mkdir -p ./build/dsl-gui.app/Contents/MacOS
+          mkdir -p ./build/x86-64/dsl-gui.app/Contents/MacOS
           echo '<?xml version="1.0" encoding="UTF-8"?>
           <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
           <plist version="1.0">
@@ -118,19 +123,22 @@ jobs:
             <key>CFBundleIdentifier</key>
             <string>eu.3e8.go.dsl</string>
           </dict>
-          </plist>' > ./build/dsl-gui.app/Contents/Info.plist
-          go build -tags gui -o ./build/dsl-gui.app/Contents/MacOS/dsl-gui ./cmd
+          </plist>' > ./build/x86-64/dsl-gui.app/Contents/Info.plist
+          go build -tags gui -o ./build/x86-64/dsl-gui.app/Contents/MacOS/dsl-gui ./cmd
 
       - name: Zip
         run: |
-          cd ./build
-          zip -0 -r build.zip ./*
+          for folder in "$PWD"/build/*/; do
+            name="$(basename "$folder")"
+            cd "$folder"
+            zip -0 -r "../$name.zip" ./*
+          done
 
       - name: Upload artifact
         uses: actions/upload-artifact@v3
         with:
           name: macos
-          path: ./build/build.zip
+          path: ./build/*.zip
 
   release:
     name: Package and release
@@ -182,11 +190,13 @@ jobs:
         shell: bash
         run: |
           cd ./build
-          for artifact in ../artifacts/*/; do
-            target="$(basename "$artifact")"
-            cp -r ./template "./${{ steps.vars.outputs.archivename }}-$target"
-            unzip "../artifacts/$target/build.zip" -d "./${{ steps.vars.outputs.archivename }}-$target/"
-            zip -r "${{ steps.vars.outputs.archivename }}-$target.zip" "${{ steps.vars.outputs.archivename }}-$target"
+          for artifact in ../artifacts/*/*.zip; do
+            target="$(basename "$(dirname "$artifact")")"
+            arch="$(basename -s ".zip" "$artifact")"
+            name="${{ steps.vars.outputs.archivename }}-$target-$arch"
+            cp -r ./template "./$name"
+            unzip "../artifacts/$target/$arch.zip" -d "./$name/"
+            zip -r "$name.zip" "$name"
           done
 
       - name: Create release
