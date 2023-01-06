@@ -45,9 +45,13 @@ header a {
 	user-select: none;
 	-webkit-user-select: none;
 }
-header a:hover, header a:focus-visible {
+header a:hover, header a:focus {
 	background: #e8e8e8;
 	color: #39f;
+}
+header a:focus:not(:focus-visible):not(:hover):not(:active):not(.disabled) {
+	background: initial;
+	color: #007fff;
 }
 header a:active {
 	background: #ccc;
@@ -173,6 +177,7 @@ legend, select, input, header a {
 }
 select, input[type="text"], input[type="password"], input[type="submit"] {
 	appearance: none;
+	-webkit-appearance: none;
 	color: #000;
 	border: 1px solid #dadada;
 	border-radius: 2px;
@@ -253,7 +258,7 @@ input[type="checkbox"] + span, legend, header a {
 }
 input[type="checkbox"]:active + span::after, legend:active::after,
 input[type="checkbox"]:focus + span::after, legend:focus::after,
-header a:focus-visible::after {
+header a:focus::after {
 	content: "";
 	position: absolute;
 	top: 0;
@@ -263,6 +268,9 @@ header a:focus-visible::after {
 	border: 2px solid #39f;
 	border-radius: 2px;
 	box-shadow: 0 0 5px rgba(51,153,255,.3);
+}
+header a:focus:not(:focus-visible)::after {
+	display: none;
 }
 input[type="checkbox"]:active + span::after, legend:active::after,
 input[type="checkbox"]:focus + span::after, legend:focus::after {
