@@ -130,8 +130,14 @@ jobs:
       - name: Build GUI
         run: |
           $WebView2Version = "1.0.1462.37"
+          $WebView2SHA256 = "8e310bb63a6770a0765d37fb5da98141dca2f79442a3913d6216753f5db3f1e1"
           New-Item -ItemType Directory .\libs\webview2
           Invoke-WebRequest "https://www.nuget.org/api/v2/package/Microsoft.Web.WebView2/$WebView2Version" -OutFile .\libs\webview2.zip
+          $actualSHA256 = Get-FileHash -Algorithm SHA256 .\libs\webview2.zip
+          if ($actualSHA256.Hash -ne $WebView2SHA256) {
+            Write-Output "WebView2 checksum does not match!"
+            exit 1
+          }
           Expand-Archive .\libs\webview2.zip .\libs\webview2
           New-Item -Force -ItemType Directory .\build\x86-64
           Copy-Item .\libs\webview2\build\native\x64\WebView2Loader.dll .\build\x86-64\
