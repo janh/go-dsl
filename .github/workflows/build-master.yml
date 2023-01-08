@@ -121,13 +121,43 @@ jobs:
         with:
           go-version: 1.19
 
-      - name: Build CLI
+      - name: Download toolchain
+        run: |
+          $ToolchainVersion = "20220906"
+          $ToolchainSHA256 = "06c8523447a369303f7a67dda1d2b66a6b2e460640126458f69f1d98afd3fdf1"
+          New-Item -ItemType Directory .\toolchain
+          $ProgressPreference = "SilentlyContinue"
+          Invoke-WebRequest "https://github.com/mstorsjo/llvm-mingw/releases/download/$ToolchainVersion/llvm-mingw-$ToolchainVersion-ucrt-x86_64.zip" -OutFile .\toolchain\llvm-mingw.zip
+          $actualSHA256 = Get-FileHash -Algorithm SHA256 .\toolchain\llvm-mingw.zip
+          if ($actualSHA256.Hash -ne $ToolchainSHA256) {
+            Write-Output "Toolchain checksum does not match!"
+            exit 1
+          }
+          Expand-Archive .\toolchain\llvm-mingw.zip .\toolchain
+          Move-Item ".\toolchain\llvm-mingw-$ToolchainVersion-ucrt-x86_64" .\toolchain\llvm-mingw
+
+      - name: Build CLI (x86-64)
         env:
           CGO_ENABLED: 0
+          GOARCH: amd64
         run: |
           go build -o .\build\x86-64\dsl.exe .\cmd
 
-      - name: Build GUI
+      - name: Build CLI (x86)
+        env:
+          CGO_ENABLED: 0
+          GOARCH: 386
+        run: |
+          go build -o .\build\x86\dsl.exe .\cmd
+
+      - name: Build CLI (arm64)
+        env:
+          CGO_ENABLED: 0
+          GOARCH: arm64
+        run: |
+          go build -o .\build\arm64\dsl.exe .\cmd
+
+      - name: Download WebView2 SDK
         run: |
           $WebView2Version = "1.0.1462.37"
           $WebView2SHA256 = "8e310bb63a6770a0765d37fb5da98141dca2f79442a3913d6216753f5db3f1e1"
@@ -139,12 +169,45 @@ jobs:
             exit 1
           }
           Expand-Archive .\libs\webview2.zip .\libs\webview2
+
+      - name: Build GUI (x86-64)
+        env:
+          CC: x86_64-w64-mingw32-clang
+          CXX: x86_64-w64-mingw32-clang++
+          CGO_ENABLED: 1
+          GOARCH: amd64
+        run: |
           New-Item -Force -ItemType Directory .\build\x86-64
           Copy-Item .\libs\webview2\build\native\x64\WebView2Loader.dll .\build\x86-64\
-          $Env:Path = "$Env:ProgramData\chocolatey\lib\mingw\tools\install\mingw64\bin;$Env:Path"
+          $Env:Path = "$PWD\toolchain\llvm-mingw\bin;$Env:Path"
           $Env:CGO_CXXFLAGS = "-I$PWD\libs\webview2\build\native\include"
-          $Env:CGO_LDFLAGS = "-L$PWD\libs\webview2\build\native\x64"
           go build -tags gui -ldflags="-H windowsgui" -o .\build\x86-64\dsl-gui.exe .\cmd
+
+      - name: Build GUI (x86)
+        env:
+          CC: i686-w64-mingw32-clang
+          CXX: i686-w64-mingw32-clang++
+          CGO_ENABLED: 1
+          GOARCH: 386
+        run: |
+          New-Item -Force -ItemType Directory .\build\x86
+          Copy-Item .\libs\webview2\build\native\x86\WebView2Loader.dll .\build\x86\
+          $Env:Path = "$PWD\toolchain\llvm-mingw\bin;$Env:Path"
+          $Env:CGO_CXXFLAGS = "-I$PWD\libs\webview2\build\native\include"
+          go build -tags gui -ldflags="-H windowsgui" -o .\build\x86\dsl-gui.exe .\cmd
+
+      - name: Build GUI (arm64)
+        env:
+          CC: aarch64-w64-mingw32-clang
+          CXX: aarch64-w64-mingw32-clang++
+          CGO_ENABLED: 1
+          GOARCH: arm64
+        run: |
+          New-Item -Force -ItemType Directory .\build\arm64
+          Copy-Item .\libs\webview2\build\native\arm64\WebView2Loader.dll .\build\arm64\
+          $Env:Path = "$PWD\toolchain\llvm-mingw\bin;$Env:Path"
+          $Env:CGO_CXXFLAGS = "-I$PWD\libs\webview2\build\native\include"
+          go build -tags gui -ldflags="-H windowsgui" -o .\build\arm64\dsl-gui.exe .\cmd
 
       - name: Zip
         run: |
