@@ -224,7 +224,7 @@ jobs:
 
   build-macos:
     name: Build (macOS)
-    runs-on: macos-10.15
+    runs-on: macos-11
 
     steps:
       - name: Checkout
@@ -239,12 +239,18 @@ jobs:
         env:
           CGO_ENABLED: 0
         run: |
-          go build -o ./build/x86-64/dsl ./cmd
+          GOARCH=amd64 go build -o ./build/universal/dsl-x86-64 ./cmd
+          GOARCH=arm64 go build -o ./build/universal/dsl-arm64 ./cmd
+          lipo -create -output ./build/universal/dsl ./build/universal/dsl-x86-64 ./build/universal/dsl-arm64
+          rm ./build/universal/dsl-x86-64 ./build/universal/dsl-arm64
 
       - name: Build GUI
+        env:
+          CGO_ENABLED: 1
         run: |
-          mkdir -p ./build/x86-64/dsl-gui.app/Contents/MacOS
-          echo '<?xml version="1.0" encoding="UTF-8"?>
+          mkdir -p ./build/universal/dsl-gui.app/Contents/MacOS
+          echo << EOF > ./build/universal/dsl-gui.app/Contents/Info.plist
+          <?xml version="1.0" encoding="UTF-8"?>
           <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
           <plist version="1.0">
           <dict>
@@ -253,8 +259,17 @@ jobs:
             <key>CFBundleIdentifier</key>
             <string>eu.3e8.go.dsl</string>
           </dict>
-          </plist>' > ./build/x86-64/dsl-gui.app/Contents/Info.plist
-          go build -tags gui -o ./build/x86-64/dsl-gui.app/Contents/MacOS/dsl-gui ./cmd
+          </plist>
+          EOF
+          sudo xcode-select -s /Applications/Xcode_11.7.app
+          GOARCH=amd64 SDKROOT="$(xcrun --sdk macosx10.15 --show-sdk-path)" \
+            go build -tags gui -o ./build/universal/dsl-gui-x86-64 ./cmd
+          sudo xcode-select -s /Applications/Xcode_12.4.app
+          GOARCH=arm64 SDKROOT="$(xcrun --sdk macosx11.1 --show-sdk-path)" \
+            go build -tags gui -o ./build/universal/dsl-gui-arm64 ./cmd
+          lipo -create -output ./build/universal/dsl-gui.app/Contents/MacOS/dsl-gui \
+            ./build/universal/dsl-gui-x86-64 ./build/universal/dsl-gui-arm64
+          rm ./build/universal/dsl-gui-x86-64 ./build/universal/dsl-gui-arm64
 
       - name: Zip
         run: |
