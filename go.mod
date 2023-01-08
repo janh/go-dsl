@@ -6,7 +6,7 @@ require (
 	github.com/BurntSushi/toml v1.2.1
 	github.com/adrg/xdg v0.4.0
 	github.com/andybalholm/brotli v1.0.4
-	github.com/webview/webview v0.0.0-20230102133235-36bbd1c79ac6
+	github.com/webview/webview v0.0.0-20230107193854-cb9496252dc6
 	github.com/ziutek/telnet v0.0.0-20180329124119-c3b780dc415b
 	golang.org/x/crypto v0.4.0
 	golang.org/x/net v0.3.0
