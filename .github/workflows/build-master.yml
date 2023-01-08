@@ -303,8 +303,7 @@ jobs:
         env:
           TZ: UTC0
         run: |
-          echo "version=master-$(git log -1 --format='%cd-%h' --date='format-local:%Y-%m-%d')" >> $GITHUB_OUTPUT
-          echo "archivename=dsl-master-$(git log -1 --format='%cd-%h' --date='format-local:%Y-%m-%d')" >> $GITHUB_OUTPUT
+          echo "version=$(git log -1 --format='%cd+%h' --date='format-local:%Y-%m-%d')" >> $GITHUB_OUTPUT
           echo "time=$(git log -1 --format='%cd' --date='format-local:%Y-%m-%d %H:%M:%S UTC')" >> $GITHUB_OUTPUT
 
       - name: Prepare common files
@@ -338,7 +337,7 @@ jobs:
           for artifact in ../artifacts/*/*.zip; do
             target="$(basename "$(dirname "$artifact")")"
             arch="$(basename -s ".zip" "$artifact")"
-            name="${{ steps.vars.outputs.archivename }}-$target-$arch"
+            name="dsl_${{ steps.vars.outputs.version }}_${target}_${arch}"
             cp -r ./template "./$name"
             unzip "../artifacts/$target/$arch.zip" -d "./$name/"
             zip -r "$name.zip" "$name"
