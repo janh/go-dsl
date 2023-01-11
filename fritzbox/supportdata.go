@@ -34,6 +34,10 @@ func parseSupportData(status *models.Status, bins *models.Bins, d *rawDataSuppor
 
 	batGroupSize, _ := strconv.Atoi(values["BAT Bins per Group"])
 
+	if val, ok := values["Pilot Array"]; ok {
+		parseSupportDataPilotTones(&bins.PilotTones, val, batGroupSize)
+	}
+
 	if val, ok := values["DS Bands"]; ok {
 		parseSupportDataBands(&bins.Bands.Downstream, val, batGroupSize)
 	}
@@ -85,6 +89,20 @@ func interpretSupportDataIntValue(values map[string]string, key string) (out mod
 		}
 	}
 	return
+}
+
+func parseSupportDataPilotTones(pilotTones *[]int, val string, groupSize int) {
+	data := strings.Split(val, ",")
+	if len(data) <= len(*pilotTones) || groupSize == 0 {
+		return
+	}
+
+	*pilotTones = make([]int, 0)
+
+	for _, item := range data {
+		itemInt, _ := strconv.Atoi(strings.TrimSpace(item))
+		*pilotTones = append(*pilotTones, itemInt*groupSize)
+	}
 }
 
 func parseSupportDataBands(bands *[]models.Band, val string, groupSize int) {
