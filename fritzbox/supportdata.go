@@ -19,6 +19,11 @@ func parseSupportData(status *models.Status, bins *models.Bins, d *rawDataSuppor
 
 	values := parseSupportDataValues(d.Data)
 
+	if status.FarEndInventory.Vendor == "" && status.FarEndInventory.Version == "" {
+		status.FarEndInventory.Vendor = values["ATUC Vendor ID"]
+		status.FarEndInventory.Version = values["ATUC Vendor Info"]
+	}
+
 	if status.DownstreamRetransmissionEnabled.Bool {
 		status.DownstreamRTXTXCount = interpretSupportDataIntValue(values, "US RTX retransmitted DTUs")
 		status.DownstreamRTXCCount = interpretSupportDataIntValue(values, "DS RTX corrected DTUs")
