@@ -250,10 +250,13 @@ var DSLGraphs = DSLGraphs || (function () {
 		switch (res.bins) {
 		case 3479:
 			res.step = 256;
+			break;
 		case 2783:
 			res.step = 192;
+			break;
 		case 1972:
 			res.step = 128;
+			break;
 		default:
 			res.step = res.bins / 16;
 		}
