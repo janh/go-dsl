@@ -13,6 +13,27 @@ import (
 	"3e8.eu/go/dsl/models"
 )
 
+func isCarrierOffice(inventory models.Inventory) bool {
+	switch {
+
+	case strings.HasPrefix(inventory.Version, "10."), strings.HasPrefix(inventory.Version, "11."):
+		// Platforms 10/11 are known to be used in DSLAMs (probably VINAX-CO)
+		return true
+
+	case strings.HasPrefix(inventory.Version, "9.7."):
+		// Platform 9 is VINAX which can run in both CPE and CO mode
+		// Feature set 7 has been seen only in CO firmware of NV-600L/ALL126AM2
+		return true
+
+	case strings.HasPrefix(inventory.Version, "14."):
+		// Platform 14 seems to be VRX618 in CO mode
+		return true
+
+	}
+
+	return false
+}
+
 func parseBasicStatus(data *data) models.Status {
 	var status models.Status
 
@@ -30,10 +51,17 @@ func parseExtendedStatus(status *models.Status, bins *models.Bins, data *data) {
 	parseStatusOlrStatistics(status, data.OlrStatistics_US, data.OlrStatistics_DS)
 	parseStatusDSMStatus(status, data.DSM_Status)
 
-	parseStatusChannelCounters(status, data.PM_ChannelCountersShowtime_Near, data.PM_ChannelCountersShowtime_Far)
-	parseStatusLineSecCounters(status, data.PM_LineSecCountersShowtime_Near, data.PM_LineSecCountersShowtime_Far)
-	parseStatusReTxCounters(status, data.PM_ReTxCountersShowtimeGet_Near, data.PM_ReTxCountersShowtimeGet_Far)
-	parseStatusReTxStatistics(status, data.ReTxStatistics_Near, data.ReTxStatistics_Far)
+	if isCarrierOffice(status.NearEndInventory) {
+		parseStatusChannelCounters(status, data.PM_ChannelCountersShowtime_Far, data.PM_ChannelCountersShowtime_Near)
+		parseStatusLineSecCounters(status, data.PM_LineSecCountersShowtime_Far, data.PM_LineSecCountersShowtime_Near)
+		parseStatusReTxCounters(status, data.PM_ReTxCountersShowtimeGet_Far, data.PM_ReTxCountersShowtimeGet_Near)
+		parseStatusReTxStatistics(status, data.ReTxStatistics_Far, data.ReTxStatistics_Near)
+	} else {
+		parseStatusChannelCounters(status, data.PM_ChannelCountersShowtime_Near, data.PM_ChannelCountersShowtime_Far)
+		parseStatusLineSecCounters(status, data.PM_LineSecCountersShowtime_Near, data.PM_LineSecCountersShowtime_Far)
+		parseStatusReTxCounters(status, data.PM_ReTxCountersShowtimeGet_Near, data.PM_ReTxCountersShowtimeGet_Far)
+		parseStatusReTxStatistics(status, data.ReTxStatistics_Near, data.ReTxStatistics_Far)
+	}
 }
 
 func interpretStatusBoolValue(values map[string]string, key string) (out models.BoolValue) {
