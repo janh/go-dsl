@@ -43,16 +43,17 @@ func generateBandsDataADSL(bins *models.Bins) {
 }
 
 func generateBandsDataFromBitloading(bins *models.Bins) {
-	if len(bins.Bits.Downstream.Data) < bins.Mode.BinCount() || len(bins.Bits.Upstream.Data) < bins.Mode.BinCount() {
-		return
-	}
-
 	var isValid, lastValid, isDownstream, lastDownstream bool
 	var firstValidIndex, lastValidIndex int
 
 	for i := 0; i < bins.Mode.BinCount(); i++ {
-		bitsDS := bins.Bits.Downstream.Data[i]
-		bitsUS := bins.Bits.Upstream.Data[i]
+		var bitsDS, bitsUS int8
+		if i < len(bins.Bits.Downstream.Data) {
+			bitsDS = bins.Bits.Downstream.Data[i]
+		}
+		if i < len(bins.Bits.Upstream.Data) {
+			bitsUS = bins.Bits.Upstream.Data[i]
+		}
 
 		isValid = bitsDS > 0 || bitsUS > 0
 
