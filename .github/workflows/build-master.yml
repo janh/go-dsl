@@ -177,8 +177,6 @@ jobs:
           CGO_ENABLED: 1
           GOARCH: amd64
         run: |
-          New-Item -Force -ItemType Directory .\build\x86-64
-          Copy-Item .\libs\webview2\build\native\x64\WebView2Loader.dll .\build\x86-64\
           $Env:Path = "$PWD\toolchain\llvm-mingw\bin;$Env:Path"
           $Env:CGO_CXXFLAGS = "-I$PWD\libs\webview2\build\native\include"
           go build -tags gui -ldflags="-H windowsgui" -o .\build\x86-64\dsl-gui.exe .\cmd
@@ -190,8 +188,6 @@ jobs:
           CGO_ENABLED: 1
           GOARCH: 386
         run: |
-          New-Item -Force -ItemType Directory .\build\x86
-          Copy-Item .\libs\webview2\build\native\x86\WebView2Loader.dll .\build\x86\
           $Env:Path = "$PWD\toolchain\llvm-mingw\bin;$Env:Path"
           $Env:CGO_CXXFLAGS = "-I$PWD\libs\webview2\build\native\include"
           go build -tags gui -ldflags="-H windowsgui" -o .\build\x86\dsl-gui.exe .\cmd
@@ -203,8 +199,6 @@ jobs:
           CGO_ENABLED: 1
           GOARCH: arm64
         run: |
-          New-Item -Force -ItemType Directory .\build\arm64
-          Copy-Item .\libs\webview2\build\native\arm64\WebView2Loader.dll .\build\arm64\
           $Env:Path = "$PWD\toolchain\llvm-mingw\bin;$Env:Path"
           $Env:CGO_CXXFLAGS = "-I$PWD\libs\webview2\build\native\include"
           go build -tags gui -ldflags="-H windowsgui" -o .\build\arm64\dsl-gui.exe .\cmd
