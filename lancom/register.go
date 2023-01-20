@@ -18,6 +18,7 @@ func init() {
 			EncryptionPassphrase: config.EncryptionPassphrase,
 			AuthProtocol:         config.Options["AuthProtocol"],
 			PrivacyProtocol:      config.Options["PrivacyProtocol"],
+			Subtree:              config.Options["Subtree"],
 		}
 		return NewClient(clientConfig)
 	}
@@ -45,6 +46,18 @@ func init() {
 				snmp.PrivacyProtocolAES256,
 				snmp.PrivacyProtocolAES256C,
 			),
+			"Subtree": dsl.Option{
+				Description: "the LCOS subtree to load data from",
+				Type:        dsl.OptionTypeEnum,
+				Values: []dsl.OptionValue{
+					dsl.OptionValue{Value: "", Title: "auto-detect"},
+					dsl.OptionValue{Value: "/Status/VDSL", Title: "Status > VDSL"},
+					dsl.OptionValue{Value: "/Status/xDSL/VDSL1", Title: "Status > xDSL > VDSL1"},
+					dsl.OptionValue{Value: "/Status/xDSL/VDSL2", Title: "Status > xDSL > VDSL2"},
+					dsl.OptionValue{Value: "/Status/ADSL", Title: "Status > ADSL"},
+					dsl.OptionValue{Value: "/Status/xDSL/ADSL", Title: "Status > xDSL > ADSL"},
+				},
+			},
 		},
 	}
 	dsl.RegisterClient("lancom_snmpv3", newFunc, clientDesc)

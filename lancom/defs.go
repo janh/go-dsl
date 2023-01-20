@@ -5,54 +5,58 @@
 package lancom
 
 const (
-	lcsStatusVdsl = ".1.3.6.1.4.1.2356.11.1.75"
+	lcsStatusAdsl      = ".1.3.6.1.4.1.2356.11.1.41"
+	lcsStatusVdsl      = ".1.3.6.1.4.1.2356.11.1.75"
+	lcsStatusXdslAdsl  = ".1.3.6.1.4.1.2356.11.1.99.1"
+	lcsStatusXdslVdsl1 = ".1.3.6.1.4.1.2356.11.1.99.2"
+	lcsStatusXdslVdsl2 = ".1.3.6.1.4.1.2356.11.1.99.3"
 
-	lcsStatusVdslLineState = ".1.3.6.1.4.1.2356.11.1.75.1.0" // Integer -> lineState
+	oidLineState = ".1.0" // Integer -> lineState
 
-	lcsStatusVdslLineType    = ".1.3.6.1.4.1.2356.11.1.75.2.0"  // OctetString -> lineType
-	lcsStatusVdslStandard    = ".1.3.6.1.4.1.2356.11.1.75.3.0"  // Integer -> dslStandard
-	lcsStatusVdslVdslProfile = ".1.3.6.1.4.1.2356.11.1.75.40.0" // Integer -> profile
+	oidLineType    = ".2.0"  // OctetString -> lineType
+	oidStandard    = ".3.0"  // Integer -> dslStandard
+	oidVdslProfile = ".40.0" // Integer -> profile
 
-	lcsStatusVdslModemChipsetType                     = ".1.3.6.1.4.1.2356.11.1.75.500.13.0" // OctetString -> string
-	lcsStatusVdslModemDspFirmwareVersion              = ".1.3.6.1.4.1.2356.11.1.75.500.11.0" // OctetString -> string
-	lcsStatusVdslAdvancedDslamChipsetManufacturerDump = ".1.3.6.1.4.1.2356.11.1.75.25.47.0"  // OctetString -> bytes
+	oidModemChipsetType                     = ".500.13.0" // OctetString -> string
+	oidModemDspFirmwareVersion              = ".500.11.0" // OctetString -> string
+	oidAdvancedDslamChipsetManufacturerDump = ".25.47.0"  // OctetString -> bytes
 
-	lcsStatusVdslConnectionDuration = ".1.3.6.1.4.1.2356.11.1.75.54.0" // Integer
+	oidConnectionDuration = ".54.0" // Integer
 
-	lcsStatusVdslDataRateDownstreamKbps = ".1.3.6.1.4.1.2356.11.1.75.5.0" // Integer
-	lcsStatusVdslDataRateUpstreamKbps   = ".1.3.6.1.4.1.2356.11.1.75.4.0" // Integer
+	oidDataRateDownstreamKbps = ".5.0" // Integer
+	oidDataRateUpstreamKbps   = ".4.0" // Integer
 
-	lcsStatusVdslAttainableDataRateDownstreamKbps = ".1.3.6.1.4.1.2356.11.1.75.36.0" // Integer
-	lcsStatusVdslAttainableDataRateUpstreamKbps   = ".1.3.6.1.4.1.2356.11.1.75.37.0" // Integer
+	oidAttainableDataRateDownstreamKbps = ".36.0" // Integer
+	oidAttainableDataRateUpstreamKbps   = ".37.0" // Integer
 
-	lcsStatusVdslSnrDownstreamDb = ".1.3.6.1.4.1.2356.11.1.75.6.0" // OctetString -> float
-	lcsStatusVdslSnrUpstreamDb   = ".1.3.6.1.4.1.2356.11.1.75.7.0" // OctetString -> float
+	oidSnrDownstreamDb = ".6.0" // OctetString -> float
+	oidSnrUpstreamDb   = ".7.0" // OctetString -> float
 
-	lcsStatusVdslAttenuationDownstreamDb = ".1.3.6.1.4.1.2356.11.1.75.8.0" // OctetString -> float
-	lcsStatusVdslAttenuationUpstreamDb   = ".1.3.6.1.4.1.2356.11.1.75.9.0" // OctetString -> float
+	oidAttenuationDownstreamDb = ".8.0" // OctetString -> float
+	oidAttenuationUpstreamDb   = ".9.0" // OctetString -> float
 
-	lcsStatusVdslInterleaveDownstreamMs = ".1.3.6.1.4.1.2356.11.1.75.11.0" // OctetString -> float
-	lcsStatusVdslInterleaveUpstreamMs   = ".1.3.6.1.4.1.2356.11.1.75.10.0" // OctetString -> float
+	oidInterleaveDownstreamMs = ".11.0" // OctetString -> float
+	oidInterleaveUpstreamMs   = ".10.0" // OctetString -> float
 
-	lcsStatusVdslAdvancedDsInpSymbols = ".1.3.6.1.4.1.2356.11.1.75.25.101.0" // OctetString -> float
-	lcsStatusVdslAdvancedUsInpSymbols = ".1.3.6.1.4.1.2356.11.1.75.25.121.0" // OctetString -> float
+	oidAdvancedDsInpSymbols = ".25.101.0" // OctetString -> float
+	oidAdvancedUsInpSymbols = ".25.121.0" // OctetString -> float
 
-	lcsStatusVdslAdvancedDsCrcErrors = ".1.3.6.1.4.1.2356.11.1.75.25.102.0" // Integer
-	lcsStatusVdslAdvancedUsCrcErrors = ".1.3.6.1.4.1.2356.11.1.75.25.122.0" // Integer
+	oidAdvancedDsCrcErrors = ".25.102.0" // Integer
+	oidAdvancedUsCrcErrors = ".25.122.0" // Integer
 
-	lcsStatusVdslAdvancedDsFecErrors = ".1.3.6.1.4.1.2356.11.1.75.25.103.0" // Integer
-	lcsStatusVdslAdvancedUsFecErrors = ".1.3.6.1.4.1.2356.11.1.75.25.123.0" // Integer
+	oidAdvancedDsFecErrors = ".25.103.0" // Integer
+	oidAdvancedUsFecErrors = ".25.123.0" // Integer
 
-	lcsStatusVdslVectoring = ".1.3.6.1.4.1.2356.11.1.75.46.0" // Integer -> vectoring
+	oidVectoring = ".46.0" // Integer -> vectoring
 
-	lcsStatusVdslAdvancedDsLineOptions = ".1.3.6.1.4.1.2356.11.1.75.25.158.0" // OctetString -> lineOption
-	lcsStatusVdslAdvancedUsLineOptions = ".1.3.6.1.4.1.2356.11.1.75.25.148.0" // OctetString -> lineOption
+	oidAdvancedDsLineOptions = ".25.158.0" // OctetString -> lineOption
+	oidAdvancedUsLineOptions = ".25.148.0" // OctetString -> lineOption
 
-	lcsStatusVdslAdvancedDsBitLoadingTable = ".1.3.6.1.4.1.2356.11.1.75.25.13" // table
-	lcsStatusVdslAdvancedUsBitLoadingTable = ".1.3.6.1.4.1.2356.11.1.75.25.25" // table
+	oidAdvancedDsBitLoadingTable = ".25.13" // table
+	oidAdvancedUsBitLoadingTable = ".25.25" // table
 	// columns: base number (OctetString -> string), entries 0-9 (Integer), graph (OctetString -> string)
 
-	lcsStatusVdslAdvancedDsSnrPerSubCarrierTable = ".1.3.6.1.4.1.2356.11.1.75.25.157" // table
+	oidAdvancedDsSnrPerSubCarrierTable = ".25.157" // table
 	// columns: base number (OctetString -> string), entries 0-9 (Integer)
 )
 

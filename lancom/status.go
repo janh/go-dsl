@@ -13,49 +13,49 @@ import (
 	"3e8.eu/go/dsl/models"
 )
 
-func parseStatus(values snmp.Values) models.Status {
+func parseStatus(values snmp.Values, oidBase string) models.Status {
 	var status models.Status
 
-	status.State = interpretState(values, lcsStatusVdslLineState)
-	status.Mode = interpretMode(values, lcsStatusVdslStandard, lcsStatusVdslLineType, lcsStatusVdslVdslProfile)
+	status.State = interpretState(values, oidBase+oidLineState)
+	status.Mode = interpretMode(values, oidBase+oidStandard, oidBase+oidLineType, oidBase+oidVdslProfile)
 
 	status.NearEndInventory = interpretNearEndInventory(values,
-		lcsStatusVdslModemChipsetType, lcsStatusVdslModemDspFirmwareVersion)
-	status.FarEndInventory = interpretFarEndInventory(values, lcsStatusVdslAdvancedDslamChipsetManufacturerDump)
+		oidBase+oidModemChipsetType, oidBase+oidModemDspFirmwareVersion)
+	status.FarEndInventory = interpretFarEndInventory(values, oidBase+oidAdvancedDslamChipsetManufacturerDump)
 
-	status.Uptime = interpretUptime(values, lcsStatusVdslConnectionDuration)
+	status.Uptime = interpretUptime(values, oidBase+oidConnectionDuration)
 
-	status.DownstreamActualRate.IntValue = interpretIntValue(values, lcsStatusVdslDataRateDownstreamKbps)
-	status.UpstreamActualRate.IntValue = interpretIntValue(values, lcsStatusVdslDataRateUpstreamKbps)
+	status.DownstreamActualRate.IntValue = interpretIntValue(values, oidBase+oidDataRateDownstreamKbps)
+	status.UpstreamActualRate.IntValue = interpretIntValue(values, oidBase+oidDataRateUpstreamKbps)
 
-	status.DownstreamAttainableRate.IntValue = interpretIntValue(values, lcsStatusVdslAttainableDataRateDownstreamKbps)
-	status.UpstreamAttainableRate.IntValue = interpretIntValue(values, lcsStatusVdslAttainableDataRateUpstreamKbps)
+	status.DownstreamAttainableRate.IntValue = interpretIntValue(values, oidBase+oidAttainableDataRateDownstreamKbps)
+	status.UpstreamAttainableRate.IntValue = interpretIntValue(values, oidBase+oidAttainableDataRateUpstreamKbps)
 
-	status.DownstreamSNRMargin.FloatValue = interpretFloatValue(values, lcsStatusVdslSnrDownstreamDb)
-	status.UpstreamSNRMargin.FloatValue = interpretFloatValue(values, lcsStatusVdslSnrUpstreamDb)
+	status.DownstreamSNRMargin.FloatValue = interpretFloatValue(values, oidBase+oidSnrDownstreamDb)
+	status.UpstreamSNRMargin.FloatValue = interpretFloatValue(values, oidBase+oidSnrUpstreamDb)
 
-	status.DownstreamAttenuation.FloatValue = interpretFloatValue(values, lcsStatusVdslAttenuationDownstreamDb)
-	status.UpstreamAttenuation.FloatValue = interpretFloatValue(values, lcsStatusVdslAttenuationUpstreamDb)
+	status.DownstreamAttenuation.FloatValue = interpretFloatValue(values, oidBase+oidAttenuationDownstreamDb)
+	status.UpstreamAttenuation.FloatValue = interpretFloatValue(values, oidBase+oidAttenuationUpstreamDb)
 
-	status.DownstreamInterleavingDelay.FloatValue = interpretFloatValue(values, lcsStatusVdslInterleaveDownstreamMs)
-	status.UpstreamInterleavingDelay.FloatValue = interpretFloatValue(values, lcsStatusVdslInterleaveUpstreamMs)
+	status.DownstreamInterleavingDelay.FloatValue = interpretFloatValue(values, oidBase+oidInterleaveDownstreamMs)
+	status.UpstreamInterleavingDelay.FloatValue = interpretFloatValue(values, oidBase+oidInterleaveUpstreamMs)
 
-	status.DownstreamCRCCount = interpretIntValue(values, lcsStatusVdslAdvancedDsCrcErrors)
-	status.UpstreamCRCCount = interpretIntValue(values, lcsStatusVdslAdvancedUsCrcErrors)
+	status.DownstreamImpulseNoiseProtection.FloatValue = interpretFloatValue(values, oidBase+oidAdvancedDsInpSymbols)
+	status.UpstreamImpulseNoiseProtection.FloatValue = interpretFloatValue(values, oidBase+oidAdvancedUsInpSymbols)
 
-	status.DownstreamImpulseNoiseProtection.FloatValue = interpretFloatValue(values, lcsStatusVdslAdvancedDsInpSymbols)
-	status.UpstreamImpulseNoiseProtection.FloatValue = interpretFloatValue(values, lcsStatusVdslAdvancedUsInpSymbols)
+	status.DownstreamCRCCount = interpretIntValue(values, oidBase+oidAdvancedDsCrcErrors)
+	status.UpstreamCRCCount = interpretIntValue(values, oidBase+oidAdvancedUsCrcErrors)
 
-	status.DownstreamFECCount = interpretIntValue(values, lcsStatusVdslAdvancedDsFecErrors)
-	status.UpstreamFECCount = interpretIntValue(values, lcsStatusVdslAdvancedUsFecErrors)
+	status.DownstreamFECCount = interpretIntValue(values, oidBase+oidAdvancedDsFecErrors)
+	status.UpstreamFECCount = interpretIntValue(values, oidBase+oidAdvancedUsFecErrors)
 
-	status.DownstreamVectoringState = interpretVectoringValue(values, lcsStatusVdslVectoring)
+	status.DownstreamVectoringState = interpretVectoringValue(values, oidBase+oidVectoring)
 
 	status.DownstreamBitswapEnabled, status.DownstreamRetransmissionEnabled =
-		interpretLineOptions(values, lcsStatusVdslAdvancedDsLineOptions)
+		interpretLineOptions(values, oidBase+oidAdvancedDsLineOptions)
 
 	status.UpstreamBitswapEnabled, status.UpstreamRetransmissionEnabled =
-		interpretLineOptions(values, lcsStatusVdslAdvancedUsLineOptions)
+		interpretLineOptions(values, oidBase+oidAdvancedUsLineOptions)
 
 	return status
 }

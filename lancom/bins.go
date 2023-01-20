@@ -14,17 +14,17 @@ import (
 	"3e8.eu/go/dsl/models"
 )
 
-func parseBins(status *models.Status, values snmp.Values) models.Bins {
+func parseBins(status *models.Status, values snmp.Values, oidBase string) models.Bins {
 	var bins models.Bins
 
 	bins.Mode = status.Mode
 
-	bins.Bits.Downstream = interpretBitloadingTable(values, lcsStatusVdslAdvancedDsBitLoadingTable)
-	bins.Bits.Upstream = interpretBitloadingTable(values, lcsStatusVdslAdvancedUsBitLoadingTable)
+	bins.Bits.Downstream = interpretBitloadingTable(values, oidBase+oidAdvancedDsBitLoadingTable)
+	bins.Bits.Upstream = interpretBitloadingTable(values, oidBase+oidAdvancedUsBitLoadingTable)
 
 	helpers.GenerateBandsData(&bins)
 
-	bins.SNR.Downstream = interpretSNRTable(values, lcsStatusVdslAdvancedDsSnrPerSubCarrierTable,
+	bins.SNR.Downstream = interpretSNRTable(values, oidBase+oidAdvancedDsSnrPerSubCarrierTable,
 		bins.Mode, bins.Bands.Downstream)
 
 	return bins

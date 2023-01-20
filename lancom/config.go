@@ -15,4 +15,5 @@ type Config struct {
 	EncryptionPassphrase dsl.EncryptionPassphraseCallback
 	AuthProtocol         string
 	PrivacyProtocol      string
+	Subtree              string
 }

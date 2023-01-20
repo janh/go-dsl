@@ -5,6 +5,9 @@
 package lancom
 
 import (
+	"errors"
+	"strings"
+
 	"3e8.eu/go/dsl"
 	"3e8.eu/go/dsl/internal/snmp"
 	"3e8.eu/go/dsl/models"
@@ -12,15 +15,46 @@ import (
 
 type client struct {
 	client  *snmp.Client
+	oidBase string
 	rawData []byte
 	status  models.Status
 	bins    models.Bins
+}
+
+func getBase(subtree string) ([]string, error) {
+	subtree = strings.ToLower(subtree)
+	if len(subtree) >= 2 && subtree[0] == '/' {
+		subtree = subtree[1:]
+	}
+
+	switch subtree {
+	case "status/vdsl":
+		return []string{lcsStatusVdsl}, nil
+	case "status/xdsl/vdsl1":
+		return []string{lcsStatusXdslVdsl1}, nil
+	case "status/xdsl/vdsl2":
+		return []string{lcsStatusXdslVdsl2}, nil
+	case "status/adsl":
+		return []string{lcsStatusAdsl}, nil
+	case "status/xdsl/adsl":
+		return []string{lcsStatusXdslAdsl}, nil
+	case "":
+		return []string{lcsStatusVdsl, lcsStatusAdsl}, nil
+	default:
+		return nil, errors.New("unrecognized subtree value")
+	}
 }
 
 func NewClient(config Config) (dsl.Client, error) {
 	c := client{}
 
 	var err error
+
+	var baseList []string
+	baseList, err = getBase(config.Subtree)
+	if err != nil {
+		return nil, err
+	}
 
 	c.client, err = snmp.NewClient(config.Host, "udp", config.User,
 		snmp.AuthProtocol(config.AuthProtocol), snmp.PrivacyProtocol(config.PrivacyProtocol),
@@ -29,7 +63,13 @@ func NewClient(config Config) (dsl.Client, error) {
 		return nil, err
 	}
 
-	err = c.client.CheckResult(lcsStatusVdslLineState, 0x2)
+	for _, base := range baseList {
+		err = c.client.CheckResult(base+oidLineState, 0x2)
+		if err == nil {
+			c.oidBase = base
+			break
+		}
+	}
 	if err != nil {
 		c.client.Close()
 		return nil, err
@@ -51,13 +91,13 @@ func (c *client) Bins() models.Bins {
 }
 
 func (c *client) UpdateData() (err error) {
-	values, err := c.client.Walk(lcsStatusVdsl)
+	values, err := c.client.Walk(c.oidBase)
 	if err != nil {
 		return
 	}
 
-	c.status = parseStatus(values)
-	c.bins = parseBins(&c.status, values)
+	c.status = parseStatus(values, c.oidBase)
+	c.bins = parseBins(&c.status, values, c.oidBase)
 	c.rawData = []byte(values.String())
 
 	return

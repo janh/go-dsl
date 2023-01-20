@@ -49,7 +49,8 @@ However, note that this will significantly increase loading times.
 SNMP access needs to be configured on the device beforehand.
 To do so, go to "Configuration > Logging/Monitoring > Protocols" and follow these steps:
 
-1. Create a new view with access to the OID subtree "1.3.6.1.4.1.2356.11.1.75".
+1. Add view entries with access to the OID subtrees "1.3.6.1.4.1.2356.11.1.75", "1.3.6.1.4.1.2356.11.1.41", and "1.3.6.1.4.1.2356.11.1.99".
+   Use the same name for all of them.
 2. Create new access rights and select the just created view as read-only view.
    Configure the security model as "SNMPv3 (USM)" and choose the desired security level.
 3. Create a new user with the desired security options.
@@ -57,6 +58,9 @@ To do so, go to "Configuration > Logging/Monitoring > Protocols" and follow thes
    Configure the security model as "SNMPv3 (USM)".
 
 The options `AuthProtocol` and `PrivacyProtocol` need to be specified in the client, and must match the configuration on the device.
+
+You may also set the `Subtree` option to choose which subtree is loaded from the device.
+If no value is specified, both "/Status/VDSL" and "/Status/ADSL" will be tried.
 
 	./dsl -d lancom_snmpv3 -u user -o AuthProtocol=sha -o PrivacyProtocol=aes256 172.23.56.254
 
