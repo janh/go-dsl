@@ -34,6 +34,8 @@ Only Telnet is supported for connection to the device, as the SSH server suffers
 
 Should work with any DSL FRITZ!Box running a somewhat recent firmware (but for now requires the web interface language being set to German).
 
+For some error counters and transmit power information, TR-064 needs to be enabled on the device.
+
 It is possible to access additional information that is not available from the web interface, such as QLN and Hlog data.
 To do so, set the option `LoadSupportData` to `1`.
 However, note that this will significantly increase loading times.
