@@ -57,6 +57,9 @@ func parseStatus(values snmp.Values, oidBase string) models.Status {
 	status.UpstreamBitswapEnabled, status.UpstreamRetransmissionEnabled =
 		interpretLineOptions(values, oidBase+oidAdvancedUsLineOptions)
 
+	status.DownstreamSeamlessRateAdaption = interpretSraMode(values, oidBase+oidAdvancedDsSraMode)
+	status.UpstreamSeamlessRateAdaption = interpretSraMode(values, oidBase+oidAdvancedUsSraMode)
+
 	return status
 }
 
@@ -205,6 +208,14 @@ func interpretLineOptions(values snmp.Values, oid string) (outBitswap, outRetran
 		outBitswap.Valid = true
 		outRetransmission.Bool = (val & lineOptionRetransmission) != 0
 		outRetransmission.Valid = true
+	}
+	return
+}
+
+func interpretSraMode(values snmp.Values, oid string) (out models.BoolValue) {
+	if val, err := values.GetUint64(oid); err == nil {
+		out.Bool = (val == sraModeDynamic || val == sraModeDynamicSos)
+		out.Valid = true
 	}
 	return
 }

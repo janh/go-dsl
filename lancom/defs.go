@@ -52,6 +52,9 @@ const (
 	oidAdvancedDsLineOptions = ".25.158.0" // OctetString -> lineOption
 	oidAdvancedUsLineOptions = ".25.148.0" // OctetString -> lineOption
 
+	oidAdvancedDsSraMode = ".25.172.0" // Integer -> sraMode
+	oidAdvancedUsSraMode = ".25.162.0" // Integer -> sraMode
+
 	oidAdvancedDsBitLoadingTable = ".25.13" // table
 	oidAdvancedUsBitLoadingTable = ".25.25" // table
 	// columns: base number (OctetString -> string), entries 0-9 (Integer), graph (OctetString -> string)
@@ -127,4 +130,13 @@ const (
 	lineOptionTrellis        = 1 << 2
 	lineOptionVirtualNoise   = 1 << 1
 	lineOptionRetransmission = 1 << 0
+)
+
+// These values are not documented, but seem to match the ones from Lantiq drivers
+// (sraModeAtInit is confirmed to be correct from command line interface)
+const (
+	sraModeManual     = 1
+	sraModeAtInit     = 2
+	sraModeDynamic    = 3
+	sraModeDynamicSos = 4
 )
