@@ -51,6 +51,8 @@ func parseExtendedStatus(status *models.Status, bins *models.Bins, data *data) {
 	parseStatusOlrStatistics(status, data.OlrStatistics_US, data.OlrStatistics_DS)
 	parseStatusDSMStatus(status, data.DSM_Status)
 
+	normalizeOLRValues(status)
+
 	if isCarrierOffice(status.NearEndInventory) {
 		parseStatusChannelCounters(status, data.PM_ChannelCountersShowtime_Far, data.PM_ChannelCountersShowtime_Near)
 		parseStatusLineSecCounters(status, data.PM_LineSecCountersShowtime_Far, data.PM_LineSecCountersShowtime_Near)
@@ -64,20 +66,18 @@ func parseExtendedStatus(status *models.Status, bins *models.Bins, data *data) {
 	}
 }
 
+func normalizeOLRValues(status *models.Status) {
+	status.UpstreamBitswap.Normalize()
+	status.DownstreamBitswap.Normalize()
+
+	status.UpstreamSeamlessRateAdaptation.Normalize()
+	status.DownstreamSeamlessRateAdaptation.Normalize()
+}
+
 func interpretStatusBoolValue(values map[string]string, key string) (out models.BoolValue) {
 	if val, ok := values[key]; ok {
 		if valInt, err := strconv.Atoi(val); err == nil && (valInt == 0 || valInt == 1) {
 			out.Bool = valInt == 1
-			out.Valid = true
-		}
-	}
-	return
-}
-
-func interpretStatusBoolValueGreaterThanZero(values map[string]string, key string) (out models.BoolValue) {
-	if val, ok := values[key]; ok {
-		if valInt, err := strconv.ParseInt(val, 10, 64); err == nil {
-			out.Bool = valInt > 0
 			out.Valid = true
 		}
 	}
@@ -376,11 +376,11 @@ func parseStatusOlrStatistics(status *models.Status, osgUS, osgDS dataItem) {
 	osgUSValues := parseValues(osgUS.Output)
 	osgDSValues := parseValues(osgDS.Output)
 
-	status.UpstreamBitswapEnabled = interpretStatusBoolValueGreaterThanZero(osgUSValues, "nBitswapExecuted")
-	status.DownstreamBitswapEnabled = interpretStatusBoolValueGreaterThanZero(osgDSValues, "nBitswapExecuted")
+	status.UpstreamBitswap.Executed = interpretStatusIntValue(osgUSValues, "nBitswapExecuted", 1)
+	status.DownstreamBitswap.Executed = interpretStatusIntValue(osgDSValues, "nBitswapExecuted", 1)
 
-	status.UpstreamSeamlessRateAdaptation = interpretStatusBoolValueGreaterThanZero(osgUSValues, "nSraExecuted")
-	status.DownstreamSeamlessRateAdaptation = interpretStatusBoolValueGreaterThanZero(osgDSValues, "nSraExecuted")
+	status.UpstreamSeamlessRateAdaptation.Executed = interpretStatusIntValue(osgUSValues, "nSraExecuted", 1)
+	status.DownstreamSeamlessRateAdaptation.Executed = interpretStatusIntValue(osgDSValues, "nSraExecuted", 1)
 }
 
 func parseStatusDSMStatus(status *models.Status, dsmsg dataItem) {

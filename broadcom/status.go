@@ -202,7 +202,7 @@ func parseExtendedStats(stats string) (values map[string][2]string, linkTime str
 }
 
 func interpretExtendedStats(status *models.Status, values map[string][2]string) {
-	status.DownstreamBitswapEnabled, status.UpstreamBitswapEnabled = interpretExtendedStatsBitswap(values, "bitswap")
+	status.DownstreamBitswap, status.UpstreamBitswap = interpretExtendedStatsBitswap(values, "bitswap")
 
 	status.DownstreamInterleavingDelay.FloatValue, status.UpstreamInterleavingDelay.FloatValue = interpretExtendedStatsFloatValue(values, "delay")
 	status.DownstreamImpulseNoiseProtection.FloatValue, status.UpstreamImpulseNoiseProtection.FloatValue =
@@ -269,19 +269,20 @@ func interpretExtendedStatsBoolValueNonZero(values map[string][2]string, key str
 	return
 }
 
-func interpretExtendedStatsBitswapString(val string) (out models.BoolValue) {
+func interpretExtendedStatsBitswapString(val string) (out models.OLRValue) {
 	split := strings.Split(val, "/")
 	if len(split) != 2 {
 		return
 	}
 	if valInt, err := strconv.ParseInt(split[0], 10, 64); err == nil {
-		out.Bool = valInt > 0
-		out.Valid = true
+		out.Executed.Int = valInt
+		out.Executed.Valid = true
 	}
+	out.Normalize()
 	return
 }
 
-func interpretExtendedStatsBitswap(values map[string][2]string, key string) (downstream, upstream models.BoolValue) {
+func interpretExtendedStatsBitswap(values map[string][2]string, key string) (downstream, upstream models.OLRValue) {
 	if val, ok := values[key]; ok {
 		downstream = interpretExtendedStatsBitswapString(val[0])
 		upstream = interpretExtendedStatsBitswapString(val[1])

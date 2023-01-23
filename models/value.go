@@ -208,3 +208,39 @@ func (v VectoringValue) Value() string {
 func (v VectoringValue) Unit() string {
 	return ""
 }
+
+type OLRValue struct {
+	Enabled  BoolValue
+	Executed IntValue
+}
+
+func (v *OLRValue) Normalize() {
+	if v.Executed.Valid && v.Executed.Int > 0 {
+		v.Enabled.Valid = true
+		v.Enabled.Bool = true
+	}
+}
+
+func (v OLRValue) String() string {
+	return v.Value()
+}
+
+func (v OLRValue) Value() string {
+	var str string
+	if v.Enabled.Valid {
+		str = v.Enabled.String()
+		if !v.Enabled.Bool {
+			return str
+		}
+	} else {
+		str = "-"
+	}
+	if v.Executed.Valid {
+		str += " (" + v.Executed.String() + ")"
+	}
+	return str
+}
+
+func (v OLRValue) Unit() string {
+	return ""
+}

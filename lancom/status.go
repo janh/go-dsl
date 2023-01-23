@@ -51,14 +51,14 @@ func parseStatus(values snmp.Values, oidBase string) models.Status {
 
 	status.DownstreamVectoringState = interpretVectoringValue(values, oidBase+oidVectoring)
 
-	status.DownstreamBitswapEnabled, status.DownstreamRetransmissionEnabled =
+	status.DownstreamBitswap.Enabled, status.DownstreamRetransmissionEnabled =
 		interpretLineOptions(values, oidBase+oidAdvancedDsLineOptions)
 
-	status.UpstreamBitswapEnabled, status.UpstreamRetransmissionEnabled =
+	status.UpstreamBitswap.Enabled, status.UpstreamRetransmissionEnabled =
 		interpretLineOptions(values, oidBase+oidAdvancedUsLineOptions)
 
-	status.DownstreamSeamlessRateAdaptation = interpretSraMode(values, oidBase+oidAdvancedDsSraMode)
-	status.UpstreamSeamlessRateAdaptation = interpretSraMode(values, oidBase+oidAdvancedUsSraMode)
+	status.DownstreamSeamlessRateAdaptation.Enabled = interpretSraMode(values, oidBase+oidAdvancedDsSraMode)
+	status.UpstreamSeamlessRateAdaptation.Enabled = interpretSraMode(values, oidBase+oidAdvancedUsSraMode)
 
 	return status
 }

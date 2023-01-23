@@ -38,7 +38,17 @@ func parseStatus(statusStr, counts, more, olr, basic string) models.Status {
 	valuesBasic := readBasic(basic)
 	interpretBasic(&status, valuesBasic)
 
+	normalizeOLRValues(&status)
+
 	return status
+}
+
+func normalizeOLRValues(status *models.Status) {
+	status.DownstreamBitswap.Normalize()
+	status.UpstreamBitswap.Normalize()
+
+	status.DownstreamSeamlessRateAdaptation.Normalize()
+	status.UpstreamSeamlessRateAdaptation.Normalize()
 }
 
 func readStatus(status string) map[string]string {
@@ -310,20 +320,6 @@ func interpretNearFarBoolValue(values map[string][2]string, key string) (near, f
 	return
 }
 
-func interpretNearFarBoolValueGreaterThanZero(values map[string][2]string, key string) (near, far models.BoolValue) {
-	if val, ok := values[key]; ok {
-		if n, err := strconv.ParseInt(val[0], 10, 64); err == nil {
-			near.Bool = n > 0
-			near.Valid = true
-		}
-		if f, err := strconv.ParseInt(val[1], 10, 64); err == nil {
-			far.Bool = f > 0
-			far.Valid = true
-		}
-	}
-	return
-}
-
 func interpretNearFarFloatValueFactor(values map[string][2]string, key string, factor float64) (near, far models.FloatValue) {
 	if val, ok := values[key]; ok {
 		if n, err := strconv.ParseFloat(val[0], 64); err == nil {
@@ -379,8 +375,11 @@ func interpretMore(status *models.Status, values map[string][2]string) {
 }
 
 func interpretOLR(status *models.Status, values map[string][2]string) {
-	status.UpstreamBitswapEnabled, status.DownstreamBitswapEnabled = interpretNearFarBoolValueGreaterThanZero(values, "BitswapExecuted")
-	status.UpstreamSeamlessRateAdaptation, status.DownstreamSeamlessRateAdaptation = interpretNearFarBoolValueGreaterThanZero(values, "SraExecuted")
+	status.UpstreamBitswap.Executed, status.DownstreamBitswap.Executed =
+		interpretNearFarIntValue(values, "BitswapExecuted")
+
+	status.UpstreamSeamlessRateAdaptation.Executed, status.DownstreamSeamlessRateAdaptation.Executed =
+		interpretNearFarIntValue(values, "SraExecuted")
 }
 
 func readBasic(basic string) map[string]string {

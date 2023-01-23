@@ -24,11 +24,11 @@ type Status struct {
 	DownstreamMinimumErrorFreeThroughput ValueBandwidth
 	UpstreamMinimumErrorFreeThroughput   ValueBandwidth
 
-	DownstreamBitswapEnabled BoolValue
-	UpstreamBitswapEnabled   BoolValue
+	DownstreamBitswap OLRValue
+	UpstreamBitswap   OLRValue
 
-	DownstreamSeamlessRateAdaptation BoolValue
-	UpstreamSeamlessRateAdaptation   BoolValue
+	DownstreamSeamlessRateAdaptation OLRValue
+	UpstreamSeamlessRateAdaptation   OLRValue
 
 	DownstreamInterleavingDelay ValueMilliseconds
 	UpstreamInterleavingDelay   ValueMilliseconds
@@ -93,7 +93,7 @@ func (s Status) Summary() string {
 	printValues(&b, "MINEFTR", s.DownstreamMinimumErrorFreeThroughput, s.UpstreamMinimumErrorFreeThroughput)
 	fmt.Fprintln(&b)
 
-	printValues(&b, "Bitswap", s.DownstreamBitswapEnabled, s.UpstreamBitswapEnabled)
+	printValues(&b, "Bitswap", s.DownstreamBitswap, s.UpstreamBitswap)
 	printValues(&b, "Rate adaptation", s.DownstreamSeamlessRateAdaptation, s.UpstreamSeamlessRateAdaptation)
 	fmt.Fprintln(&b)
 
