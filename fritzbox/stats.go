@@ -66,7 +66,7 @@ func interpretStatsConnection(status *models.Status, values map[string][2]string
 
 	status.DownstreamBitswapEnabled, status.UpstreamBitswapEnabled =
 		interpretStatsBoolValues(values, "trägertauschbitswap")
-	status.DownstreamSeamlessRateAdaption, status.UpstreamSeamlessRateAdaption =
+	status.DownstreamSeamlessRateAdaptation, status.UpstreamSeamlessRateAdaptation =
 		interpretStatsBoolValues(values, "nahtloseratenadaption")
 
 	status.DownstreamInterleavingDelay, status.UpstreamInterleavingDelay =

@@ -379,8 +379,8 @@ func parseStatusOlrStatistics(status *models.Status, osgUS, osgDS dataItem) {
 	status.UpstreamBitswapEnabled = interpretStatusBoolValueGreaterThanZero(osgUSValues, "nBitswapExecuted")
 	status.DownstreamBitswapEnabled = interpretStatusBoolValueGreaterThanZero(osgDSValues, "nBitswapExecuted")
 
-	status.UpstreamSeamlessRateAdaption = interpretStatusBoolValueGreaterThanZero(osgUSValues, "nSraExecuted")
-	status.DownstreamSeamlessRateAdaption = interpretStatusBoolValueGreaterThanZero(osgDSValues, "nSraExecuted")
+	status.UpstreamSeamlessRateAdaptation = interpretStatusBoolValueGreaterThanZero(osgUSValues, "nSraExecuted")
+	status.DownstreamSeamlessRateAdaptation = interpretStatusBoolValueGreaterThanZero(osgDSValues, "nSraExecuted")
 }
 
 func parseStatusDSMStatus(status *models.Status, dsmsg dataItem) {

@@ -380,7 +380,7 @@ func interpretMore(status *models.Status, values map[string][2]string) {
 
 func interpretOLR(status *models.Status, values map[string][2]string) {
 	status.UpstreamBitswapEnabled, status.DownstreamBitswapEnabled = interpretNearFarBoolValueGreaterThanZero(values, "BitswapExecuted")
-	status.UpstreamSeamlessRateAdaption, status.DownstreamSeamlessRateAdaption = interpretNearFarBoolValueGreaterThanZero(values, "SraExecuted")
+	status.UpstreamSeamlessRateAdaptation, status.DownstreamSeamlessRateAdaptation = interpretNearFarBoolValueGreaterThanZero(values, "SraExecuted")
 }
 
 func readBasic(basic string) map[string]string {

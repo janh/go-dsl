@@ -57,8 +57,8 @@ func parseStatus(values snmp.Values, oidBase string) models.Status {
 	status.UpstreamBitswapEnabled, status.UpstreamRetransmissionEnabled =
 		interpretLineOptions(values, oidBase+oidAdvancedUsLineOptions)
 
-	status.DownstreamSeamlessRateAdaption = interpretSraMode(values, oidBase+oidAdvancedDsSraMode)
-	status.UpstreamSeamlessRateAdaption = interpretSraMode(values, oidBase+oidAdvancedUsSraMode)
+	status.DownstreamSeamlessRateAdaptation = interpretSraMode(values, oidBase+oidAdvancedDsSraMode)
+	status.UpstreamSeamlessRateAdaptation = interpretSraMode(values, oidBase+oidAdvancedUsSraMode)
 
 	return status
 }

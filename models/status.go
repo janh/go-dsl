@@ -27,8 +27,8 @@ type Status struct {
 	DownstreamBitswapEnabled BoolValue
 	UpstreamBitswapEnabled   BoolValue
 
-	DownstreamSeamlessRateAdaption BoolValue
-	UpstreamSeamlessRateAdaption   BoolValue
+	DownstreamSeamlessRateAdaptation BoolValue
+	UpstreamSeamlessRateAdaptation   BoolValue
 
 	DownstreamInterleavingDelay ValueMilliseconds
 	UpstreamInterleavingDelay   ValueMilliseconds
@@ -94,7 +94,7 @@ func (s Status) Summary() string {
 	fmt.Fprintln(&b)
 
 	printValues(&b, "Bitswap", s.DownstreamBitswapEnabled, s.UpstreamBitswapEnabled)
-	printValues(&b, "Rate adaption", s.DownstreamSeamlessRateAdaption, s.UpstreamSeamlessRateAdaption)
+	printValues(&b, "Rate adaptation", s.DownstreamSeamlessRateAdaptation, s.UpstreamSeamlessRateAdaptation)
 	fmt.Fprintln(&b)
 
 	printValues(&b, "Interleaving", s.DownstreamInterleavingDelay, s.UpstreamInterleavingDelay)
