@@ -365,6 +365,8 @@ func interpretMore(status *models.Status, values map[string][2]string) {
 
 	status.UpstreamRetransmissionEnabled, status.DownstreamRetransmissionEnabled = interpretNearFarBoolValue(values, "ReTxEnable")
 
+	status.UpstreamBitswap.Enabled, status.DownstreamBitswap.Enabled = interpretNearFarBoolValue(values, "Bitswap")
+
 	// Dividing by 5 seems to give the correct value. According to the xDSL
 	// specifications, this value is provided in 0.1 symbols granularity. However,
 	// for old versions of the Lantiq API, it seems to have been provided with
