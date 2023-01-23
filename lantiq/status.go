@@ -48,6 +48,7 @@ func parseExtendedStatus(status *models.Status, bins *models.Bins, data *data) {
 	parseStatusChannelStatus(status, data.G997_ChannelStatus_US, data.G997_ChannelStatus_DS, data.APIVersion)
 	parseStatusLineStatus(status, bins, data.G997_LineStatus_US, data.G997_LineStatus_DS)
 	parseStatusLineFeatures(status, data.LineFeatureStatus_US, data.LineFeatureStatus_DS)
+	parseStatusRateAdaptationStatus(status, data.G997_RateAdaptationStatus_US, data.G997_RateAdaptationStatus_DS)
 	parseStatusOlrStatistics(status, data.OlrStatistics_US, data.OlrStatistics_DS)
 	parseStatusDSMStatus(status, data.DSM_Status)
 
@@ -175,6 +176,16 @@ func interpretStatusEFTRMin(values map[string]string, key string) (out models.In
 	if val, ok := values[key]; ok {
 		if valInt, err := strconv.ParseInt(val, 10, 64); err == nil && valInt > 0 && valInt != 4294967295 {
 			out.Int = valInt / 1000
+			out.Valid = true
+		}
+	}
+	return
+}
+
+func interpretStatusRAMode(values map[string]string, key string) (out models.BoolValue) {
+	if val, ok := values[key]; ok {
+		if valInt, err := strconv.ParseInt(val, 10, 64); err == nil {
+			out.Bool = (valInt == raModeDynamic || valInt == raModeDynamicSOS)
 			out.Valid = true
 		}
 	}
@@ -370,6 +381,17 @@ func parseStatusLineFeatures(status *models.Status, lfsgUS, lfsgDS dataItem) {
 
 	status.UpstreamRetransmissionEnabled = interpretStatusBoolValue(lfsgUSValues, "bReTxEnable")
 	status.DownstreamRetransmissionEnabled = interpretStatusBoolValue(lfsgDSValues, "bReTxEnable")
+
+	status.UpstreamBitswap.Enabled = interpretStatusBoolValue(lfsgUSValues, "bBitswapEnable")
+	status.DownstreamBitswap.Enabled = interpretStatusBoolValue(lfsgDSValues, "bBitswapEnable")
+}
+
+func parseStatusRateAdaptationStatus(status *models.Status, g997rasgUS, g997rasgDS dataItem) {
+	g997rasgUSValues := parseValues(g997rasgUS.Output)
+	g997rasgDSValues := parseValues(g997rasgDS.Output)
+
+	status.UpstreamSeamlessRateAdaptation.Enabled = interpretStatusRAMode(g997rasgUSValues, "RA_MODE")
+	status.DownstreamSeamlessRateAdaptation.Enabled = interpretStatusRAMode(g997rasgDSValues, "RA_MODE")
 }
 
 func parseStatusOlrStatistics(status *models.Status, osgUS, osgDS dataItem) {

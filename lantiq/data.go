@@ -25,15 +25,17 @@ type data struct {
 	VersionInformation           dataItem `command:"vig" commandLegacy:"vig"`
 	G997_LineInventory_Far       dataItem `command:"g997lig 1" commandLegacy:"g997lig 0 1"`
 
-	G997_ChannelStatus_US dataItem `command:"g997csg 0 0" commandLegacy:"g997csg 0 0 0"`
-	G997_ChannelStatus_DS dataItem `command:"g997csg 0 1" commandLegacy:"g997csg 0 0 1"`
-	G997_LineStatus_US    dataItem `command:"g997lsg 0 1" commandLegacy:"g997lsg 0 0"`
-	G997_LineStatus_DS    dataItem `command:"g997lsg 1 1" commandLegacy:"g997lsg 0 1"`
-	LineFeatureStatus_US  dataItem `command:"lfsg 0"`
-	LineFeatureStatus_DS  dataItem `command:"lfsg 1"`
-	OlrStatistics_US      dataItem `command:"osg 0" commandLegacy:"ostg 0 0"`
-	OlrStatistics_DS      dataItem `command:"osg 1" commandLegacy:"ostg 0 1"`
-	DSM_Status            dataItem `command:"dsmsg"`
+	G997_ChannelStatus_US        dataItem `command:"g997csg 0 0" commandLegacy:"g997csg 0 0 0"`
+	G997_ChannelStatus_DS        dataItem `command:"g997csg 0 1" commandLegacy:"g997csg 0 0 1"`
+	G997_LineStatus_US           dataItem `command:"g997lsg 0 1" commandLegacy:"g997lsg 0 0"`
+	G997_LineStatus_DS           dataItem `command:"g997lsg 1 1" commandLegacy:"g997lsg 0 1"`
+	LineFeatureStatus_US         dataItem `command:"lfsg 0"`
+	LineFeatureStatus_DS         dataItem `command:"lfsg 1"`
+	G997_RateAdaptationStatus_US dataItem `command:"g997rasg 0"`
+	G997_RateAdaptationStatus_DS dataItem `command:"g997rasg 1"`
+	OlrStatistics_US             dataItem `command:"osg 0" commandLegacy:"ostg 0 0"`
+	OlrStatistics_DS             dataItem `command:"osg 1" commandLegacy:"ostg 0 1"`
+	DSM_Status                   dataItem `command:"dsmsg"`
 
 	PM_ChannelCountersShowtime_Near dataItem `command:"pmccsg 0 0 0,pmcctg 0 0" commandLegacy:"pmcctg 0 0 0"`
 	PM_ChannelCountersShowtime_Far  dataItem `command:"pmccsg 0 1 0,pmcctg 0 1" commandLegacy:"pmcctg 0 0 1"`
