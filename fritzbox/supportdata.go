@@ -24,6 +24,12 @@ func parseSupportData(status *models.Status, bins *models.Bins, d *rawDataSuppor
 		status.FarEndInventory.Version = values["ATUC Vendor Info"]
 	}
 
+	parseSupportDataOLRValue(&status.DownstreamBitswap, values, "DS Bitswap")
+	parseSupportDataOLRValue(&status.UpstreamBitswap, values, "US Bitswap")
+
+	parseSupportDataOLRValue(&status.DownstreamSeamlessRateAdaptation, values, "DS SRA")
+	parseSupportDataOLRValue(&status.UpstreamSeamlessRateAdaptation, values, "US SRA")
+
 	if status.DownstreamRetransmissionEnabled.Bool {
 		parseSupportDataIntValue(&status.DownstreamRTXTXCount, values, "US RTX retransmitted DTUs")
 		parseSupportDataIntValue(&status.DownstreamRTXCCount, values, "DS RTX corrected DTUs")
@@ -79,6 +85,21 @@ func parseSupportDataIntValue(out *models.IntValue, values map[string]string, ke
 		}
 	}
 	return
+}
+
+func parseSupportDataBoolValue(out *models.BoolValue, values map[string]string, key string) {
+	if val, ok := values[key]; ok {
+		if valInt, err := strconv.Atoi(val); err == nil && (valInt == 0 || valInt == 1) {
+			out.Bool = valInt == 1
+			out.Valid = true
+		}
+	}
+	return
+}
+
+func parseSupportDataOLRValue(out *models.OLRValue, values map[string]string, key string) {
+	parseSupportDataBoolValue(&out.Enabled, values, key)
+	parseSupportDataIntValue(&out.Executed, values, key+" Cnt")
 }
 
 func parseSupportDataPilotTones(pilotTones *[]int, groupSize int, values map[string]string, key string) {
