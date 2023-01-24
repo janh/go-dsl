@@ -70,10 +70,14 @@ If no value is specified, both "/Status/VDSL" and "/Status/ADSL" will be tried.
 
 Requires command line access via SSH or Telnet.
 
-You'll likely need to specify the `Command` option.
+Some FRITZ!Box devices are also supported, if a modified firmware with command line access is installed.
+However, it is necessary to run `dsl_pipe ccadbgmls 13 ff` before connecting, as command output will be hidden otherwise.
+
+On many devices, you'll need to specify the `Command` option.
 If unspecified, `dsl_cpe_pipe` is used, but the actual name of the command varies between devices.
 
 	./dsl -d lantiq_ssh -o Command="dsl_cpe_pipe.sh" -u root openwrt.lan # OpenWrt
+	./dsl -d lantiq_ssh -o Command="/usr/sbin/dsl_pipe" -u root fritz.box # FRITZ!Box (modified firmware)
 	./dsl -d lantiq_telnet -o Command="/ifx/vdsl2/dsl_pipe" 192.168.16.249 # VINAX modem
 
 ## MediaTek, TrendChip, EcoNet, Airoha (chipset vendor)
