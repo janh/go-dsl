@@ -25,47 +25,29 @@ func parseSupportData(status *models.Status, bins *models.Bins, d *rawDataSuppor
 	}
 
 	if status.DownstreamRetransmissionEnabled.Bool {
-		status.DownstreamRTXTXCount = interpretSupportDataIntValue(values, "US RTX retransmitted DTUs")
-		status.DownstreamRTXCCount = interpretSupportDataIntValue(values, "DS RTX corrected DTUs")
-		status.DownstreamRTXUCCount = interpretSupportDataIntValue(values, "DS RTX uncorrected DTUs")
+		parseSupportDataIntValue(&status.DownstreamRTXTXCount, values, "US RTX retransmitted DTUs")
+		parseSupportDataIntValue(&status.DownstreamRTXCCount, values, "DS RTX corrected DTUs")
+		parseSupportDataIntValue(&status.DownstreamRTXUCCount, values, "DS RTX uncorrected DTUs")
 	}
 
 	if status.UpstreamRetransmissionEnabled.Bool {
-		status.UpstreamRTXTXCount = interpretSupportDataIntValue(values, "DS RTX retransmitted DTUs")
-		status.UpstreamRTXCCount = interpretSupportDataIntValue(values, "US RTX corrected DTUs")
-		status.UpstreamRTXUCCount = interpretSupportDataIntValue(values, "US RTX uncorrected DTUs")
+		parseSupportDataIntValue(&status.UpstreamRTXTXCount, values, "DS RTX retransmitted DTUs")
+		parseSupportDataIntValue(&status.UpstreamRTXCCount, values, "US RTX corrected DTUs")
+		parseSupportDataIntValue(&status.UpstreamRTXUCCount, values, "US RTX uncorrected DTUs")
 	}
 
 	batGroupSize, _ := strconv.Atoi(values["BAT Bins per Group"])
 
-	if val, ok := values["Pilot Array"]; ok {
-		parseSupportDataPilotTones(&bins.PilotTones, val, batGroupSize)
-	}
+	parseSupportDataPilotTones(&bins.PilotTones, batGroupSize, values, "Pilot Array")
 
-	if val, ok := values["DS Bands"]; ok {
-		parseSupportDataBands(&bins.Bands.Downstream, val, batGroupSize)
-	}
-	if val, ok := values["US Bands"]; ok {
-		parseSupportDataBands(&bins.Bands.Upstream, val, batGroupSize)
-	}
+	parseSupportDataBands(&bins.Bands.Downstream, batGroupSize, values, "DS Bands")
+	parseSupportDataBands(&bins.Bands.Upstream, batGroupSize, values, "US Bands")
 
-	if val, ok := values["HLOG DS Array"]; ok {
-		bins.Hlog.Downstream = parseSupportDataBins(val, bins.Bands.Downstream)
-	} else if val, ok := values["HLOG Array"]; ok {
-		bins.Hlog.Downstream = parseSupportDataBins(val, bins.Bands.Downstream)
-	}
-	if val, ok := values["HLOG US Array"]; ok {
-		bins.Hlog.Upstream = parseSupportDataBins(val, bins.Bands.Upstream)
-	}
+	bins.Hlog.Downstream = parseSupportDataBins(bins.Bands.Downstream, values, "HLOG DS Array", "HLOG Array")
+	bins.Hlog.Upstream = parseSupportDataBins(bins.Bands.Upstream, values, "HLOG US Array")
 
-	if val, ok := values["QLN DS Array"]; ok {
-		bins.QLN.Downstream = parseSupportDataBins(val, bins.Bands.Downstream)
-	} else if val, ok := values["QLN Array"]; ok {
-		bins.QLN.Downstream = parseSupportDataBins(val, bins.Bands.Downstream)
-	}
-	if val, ok := values["QLN US Array"]; ok {
-		bins.QLN.Upstream = parseSupportDataBins(val, bins.Bands.Upstream)
-	}
+	bins.QLN.Downstream = parseSupportDataBins(bins.Bands.Downstream, values, "QLN DS Array", "QLN Array")
+	bins.QLN.Upstream = parseSupportDataBins(bins.Bands.Upstream, values, "QLN US Array")
 }
 
 func parseSupportDataValues(supportData string) map[string]string {
@@ -89,7 +71,7 @@ func parseSupportDataValues(supportData string) map[string]string {
 	return values
 }
 
-func interpretSupportDataIntValue(values map[string]string, key string) (out models.IntValue) {
+func parseSupportDataIntValue(out *models.IntValue, values map[string]string, key string) {
 	if val, ok := values[key]; ok {
 		if valInt, err := strconv.ParseInt(val, 10, 64); err == nil {
 			out.Int = valInt
@@ -99,7 +81,12 @@ func interpretSupportDataIntValue(values map[string]string, key string) (out mod
 	return
 }
 
-func parseSupportDataPilotTones(pilotTones *[]int, val string, groupSize int) {
+func parseSupportDataPilotTones(pilotTones *[]int, groupSize int, values map[string]string, key string) {
+	val, ok := values[key]
+	if !ok {
+		return
+	}
+
 	data := strings.Split(val, ",")
 	if len(data) <= len(*pilotTones) || groupSize == 0 {
 		return
@@ -113,7 +100,12 @@ func parseSupportDataPilotTones(pilotTones *[]int, val string, groupSize int) {
 	}
 }
 
-func parseSupportDataBands(bands *[]models.Band, val string, groupSize int) {
+func parseSupportDataBands(bands *[]models.Band, groupSize int, values map[string]string, key string) {
+	val, ok := values[key]
+	if !ok {
+		return
+	}
+
 	data := strings.Split(val, ",")
 	if len(data)%2 != 0 || groupSize == 0 {
 		return
@@ -138,7 +130,18 @@ func calculateSupportDataGroupSize(lastBandsIndex int) int {
 	return groupSize
 }
 
-func parseSupportDataBins(data string, bands []models.Band) (out models.BinsFloat) {
+func parseSupportDataBins(bands []models.Band, values map[string]string, keys ...string) (out models.BinsFloat) {
+	var data string
+	var ok bool
+	for _, key := range keys {
+		if data, ok = values[key]; ok {
+			break
+		}
+	}
+	if !ok {
+		return
+	}
+
 	dataSplit := strings.Split(data, ",")
 
 	if len(dataSplit) <= 1 || len(bands) == 0 {
