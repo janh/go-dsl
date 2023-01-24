@@ -43,9 +43,6 @@ func parseStats(status *models.Status, d *rawDataStats) {
 		json.Unmarshal([]byte(d.Data), &data)
 
 		valuesConnection = parseStatsTableValues(data.Data.NegotiatedValues)
-
-		valuesErrors := parseStatsTableValues(data.Data.ErrorCounters)
-		interpretStatsErrors(status, valuesErrors)
 	} else {
 		valuesConnection = parseStatsTableValuesLegacy(d.Data)
 
@@ -83,14 +80,6 @@ func interpretStatsConnection(status *models.Status, values map[string][2]string
 		interpretStatsFloatValues(values, "leitungsdämpfung")
 	status.DownstreamSNRMargin.FloatValue, status.UpstreamSNRMargin.FloatValue =
 		interpretStatsFloatValues(values, "störabstandsmarge")
-}
-
-func interpretStatsErrors(status *models.Status, values map[string][2]string) {
-	status.DownstreamESCount, status.UpstreamESCount =
-		interpretStatsIntValues(values, "fehlernes")
-
-	status.DownstreamSESCount, status.UpstreamSESCount =
-		interpretStatsIntValues(values, "fehlernses")
 }
 
 func parseStatsErrorsLegacy(status *models.Status, dslStats string) {

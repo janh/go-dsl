@@ -21,10 +21,12 @@ type interfaceConfigInfoType struct {
 type interfaceConfigStatisticsTotalType struct {
 	XMLName xml.Name `xml:"Envelope"`
 	Data    struct {
-		NewFECErrors     int64 `xml:"NewFECErrors"`
-		NewATUCFECErrors int64 `xml:"NewATUCFECErrors"`
-		NewCRCErrors     int64 `xml:"NewCRCErrors"`
-		NewATUCCRCErrors int64 `xml:"NewATUCCRCErrors"`
+		NewErroredSecs         int64 `xml:"NewErroredSecs"`
+		NewSeverelyErroredSecs int64 `xml:"NewSeverelyErroredSecs"`
+		NewFECErrors           int64 `xml:"NewFECErrors"`
+		NewATUCFECErrors       int64 `xml:"NewATUCFECErrors"`
+		NewCRCErrors           int64 `xml:"NewCRCErrors"`
+		NewATUCCRCErrors       int64 `xml:"NewATUCCRCErrors"`
 	} `xml:"Body>GetStatisticsTotalResponse"`
 }
 
@@ -55,6 +57,16 @@ func parseTR064Data(status *models.Status, d *rawDataTR064) {
 	err = xml.Unmarshal([]byte(d.InterfaceConfigStatisticsTotal), &statistics)
 
 	if err == nil {
+		if !status.DownstreamESCount.Valid {
+			status.DownstreamESCount.Int = statistics.Data.NewErroredSecs
+			status.DownstreamESCount.Valid = true
+		}
+
+		if !status.DownstreamSESCount.Valid {
+			status.DownstreamSESCount.Int = statistics.Data.NewSeverelyErroredSecs
+			status.DownstreamSESCount.Valid = true
+		}
+
 		status.DownstreamFECCount.Int = statistics.Data.NewFECErrors
 		status.DownstreamFECCount.Valid = true
 
