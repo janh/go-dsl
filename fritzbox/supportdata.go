@@ -42,6 +42,18 @@ func parseSupportData(status *models.Status, bins *models.Bins, d *rawDataSuppor
 		parseSupportDataIntValue(&status.UpstreamRTXUCCount, values, "US RTX uncorrected DTUs")
 	}
 
+	parseSupportDataIntValue(&status.DownstreamFECCount, values, "DS total FEC")
+	parseSupportDataIntValue(&status.UpstreamFECCount, values, "US total FEC")
+
+	parseSupportDataIntValue(&status.DownstreamCRCCount, values, "DS total CRC")
+	parseSupportDataIntValue(&status.UpstreamCRCCount, values, "US total CRC")
+
+	parseSupportDataIntValue(&status.DownstreamESCount, values, "DS ES")
+	parseSupportDataIntValue(&status.UpstreamESCount, values, "US ES")
+
+	parseSupportDataIntValue(&status.DownstreamSESCount, values, "DS SES")
+	parseSupportDataIntValue(&status.UpstreamSESCount, values, "US SES")
+
 	batGroupSize, _ := strconv.Atoi(values["BAT Bins per Group"])
 
 	parseSupportDataPilotTones(&bins.PilotTones, batGroupSize, values, "Pilot Array")
