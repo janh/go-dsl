@@ -159,7 +159,10 @@ func interpretStatusBytes(values map[string]string, key string) []byte {
 
 func interpretStatusByte(values map[string]string, key string) byte {
 	valStr := values[key]
-	valInt, _ := strconv.ParseUint(valStr, 10, 8)
+	if strings.HasPrefix(valStr, "0x") {
+		valStr = valStr[2:]
+	}
+	valInt, _ := strconv.ParseUint(valStr, 16, 8)
 	return byte(valInt)
 }
 
