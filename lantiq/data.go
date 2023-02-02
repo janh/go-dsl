@@ -20,7 +20,7 @@ type data struct {
 	APIVersion string
 
 	LineState                    dataItem `command:"lsg" commandLegacy:"lsg 0"`
-	G997_XTUSystemEnablingStatus dataItem `command:"g997xtusesg" commandLegacy:"g997atusecg 0"`
+	G997_XTUSystemEnablingStatus dataItem `command:"g997xtusesg" commandLegacy:"g997atusesg 0"`
 	BandPlanSTatus               dataItem `command:"bpstg" commandLegacy:"bpcg 0"`
 	VersionInformation           dataItem `command:"vig" commandLegacy:"vig"`
 	G997_LineInventory_Far       dataItem `command:"g997lig 1" commandLegacy:"g997lig 0 1"`

@@ -157,13 +157,20 @@ func interpretStatusBytes(values map[string]string, key string) []byte {
 	return nil
 }
 
-func interpretStatusByte(values map[string]string, key string) byte {
-	valStr := values[key]
-	if strings.HasPrefix(valStr, "0x") {
-		valStr = valStr[2:]
+func interpretStatusByte(values map[string]string, keys ...string) (out byte) {
+	for _, key := range keys {
+		if valStr, ok := values[key]; ok {
+			if strings.HasPrefix(valStr, "0x") {
+				valStr = valStr[2:]
+			}
+			valInt, _ := strconv.ParseUint(valStr, 16, 8)
+			out = byte(valInt)
+
+			return
+		}
 	}
-	valInt, _ := strconv.ParseUint(valStr, 16, 8)
-	return byte(valInt)
+
+	return
 }
 
 func interpretStatusDuration(values map[string]string, key string) (out models.Duration) {
@@ -238,14 +245,14 @@ func parseStatusState(status *models.Status, lsg dataItem) {
 
 func parseStatusMode(status *models.Status, g997xtusesg, bpstg dataItem) {
 	g977xtusesgValues := parseValues(g997xtusesg.Output)
-	xtse1 := interpretStatusByte(g977xtusesgValues, "XTSE1")
-	xtse2 := interpretStatusByte(g977xtusesgValues, "XTSE2")
-	xtse3 := interpretStatusByte(g977xtusesgValues, "XTSE3")
-	xtse4 := interpretStatusByte(g977xtusesgValues, "XTSE4")
-	xtse5 := interpretStatusByte(g977xtusesgValues, "XTSE5")
-	xtse6 := interpretStatusByte(g977xtusesgValues, "XTSE6")
-	xtse7 := interpretStatusByte(g977xtusesgValues, "XTSE7")
-	xtse8 := interpretStatusByte(g977xtusesgValues, "XTSE8")
+	xtse1 := interpretStatusByte(g977xtusesgValues, "XTSE1", "ATSE1")
+	xtse2 := interpretStatusByte(g977xtusesgValues, "XTSE2", "ATSE2")
+	xtse3 := interpretStatusByte(g977xtusesgValues, "XTSE3", "ATSE3")
+	xtse4 := interpretStatusByte(g977xtusesgValues, "XTSE4", "ATSE4")
+	xtse5 := interpretStatusByte(g977xtusesgValues, "XTSE5", "ATSE5")
+	xtse6 := interpretStatusByte(g977xtusesgValues, "XTSE6", "ATSE6")
+	xtse7 := interpretStatusByte(g977xtusesgValues, "XTSE7", "ATSE7")
+	xtse8 := interpretStatusByte(g977xtusesgValues, "XTSE8", "ATSE8")
 
 	status.Mode.Type = getStatusModeType(xtse1, xtse2, xtse3, xtse4, xtse5, xtse6, xtse7, xtse8)
 
