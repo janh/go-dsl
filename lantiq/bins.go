@@ -141,6 +141,8 @@ func parseSNRAllocation(out *models.BinsFloat, data dataItem) {
 		valUint, err := strconv.ParseUint(val, 16, 8)
 		if err == nil && valUint != 255 {
 			out.Data[num] = -32 + float64(valUint)/2
+		} else {
+			out.Data[num] = -32.5
 		}
 	}
 }
@@ -201,6 +203,8 @@ func parseDELTSNR(out *models.BinsFloat, bands []models.Band, data dataItem) {
 		if err == nil && valUint != 255 {
 			valFloat := -32 + float64(valUint)/2
 			out.Data[num] = valFloat
+		} else {
+			out.Data[num] = -32.5
 		}
 	}
 }
