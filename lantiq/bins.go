@@ -43,6 +43,8 @@ func parseBins(status *models.Status, data *data) models.Bins {
 	parseDELTHlog(&bins.Hlog.Upstream, bins.Bands.Upstream, data.G997_DeltHLOG_US)
 	parseDELTHlog(&bins.Hlog.Downstream, bins.Bands.Downstream, data.G997_DeltHLOG_DS)
 
+	fixHlogScaling(status, &bins.Hlog.Downstream)
+
 	return bins
 }
 
@@ -225,4 +227,27 @@ func parseBinsHelper(rawValues []string, base, bitSize int, invalid uint64, offs
 	}
 
 	return
+}
+
+func fixHlogScaling(status *models.Status, data *models.BinsFloat) {
+	// Issues with the Hlog data are known to exist for ADSL2+ on VR9, so for now
+	// the correction is limited to that case.
+	if !strings.HasPrefix(status.NearEndInventory.Version, "5.") || status.Mode.Type != models.ModeTypeADSL2Plus {
+		return
+	}
+
+	// It looks like the first half contains the actual data for all carriers, the
+	// third quarter is a copy of the second quarter, and the rest is garbage.
+
+	if len(data.Data) == 512 {
+		// Verify that second and third quarter are actually equal
+		for i := 128; i < 256; i++ {
+			if data.Data[i] != data.Data[i+128] {
+				return
+			}
+		}
+
+		data.GroupSize = 2
+		data.Data = data.Data[:256]
+	}
 }
