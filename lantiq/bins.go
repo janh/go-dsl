@@ -37,17 +37,11 @@ func parseBins(status *models.Status, data *data) models.Bins {
 		parseDELTSNR(&bins.SNR.Downstream, bins.Bands.Downstream, data.G997_DeltSNR_DS)
 	}
 
-	// Sometimes all zeroes are reported (this happens at least on a Vinax-based
-	// ALL126AM2 CO modem depending on the connected device). As zero is a actually
-	// a valid value and this behavior hasn't been seen on more recent devices, it
-	// is only filtered on devices with an older API version.
-	rejectZeroValues := strings.HasPrefix(data.APIVersion, "2")
+	parseDELTQLN(&bins.QLN.Upstream, bins.Bands.Upstream, data.G997_DeltQLN_US)
+	parseDELTQLN(&bins.QLN.Downstream, bins.Bands.Downstream, data.G997_DeltQLN_DS)
 
-	parseDELTQLN(&bins.QLN.Upstream, bins.Bands.Upstream, data.G997_DeltQLN_US, rejectZeroValues)
-	parseDELTQLN(&bins.QLN.Downstream, bins.Bands.Downstream, data.G997_DeltQLN_DS, rejectZeroValues)
-
-	parseDELTHlog(&bins.Hlog.Upstream, bins.Bands.Upstream, data.G997_DeltHLOG_US, rejectZeroValues)
-	parseDELTHlog(&bins.Hlog.Downstream, bins.Bands.Downstream, data.G997_DeltHLOG_DS, rejectZeroValues)
+	parseDELTHlog(&bins.Hlog.Upstream, bins.Bands.Upstream, data.G997_DeltHLOG_US)
+	parseDELTHlog(&bins.Hlog.Downstream, bins.Bands.Downstream, data.G997_DeltHLOG_DS)
 
 	return bins
 }
@@ -135,7 +129,7 @@ func parseSNRAllocation(out *models.BinsFloat, data dataItem) {
 	rawValues := parseBinsShort(data.Output)
 
 	out.GroupSize = 1
-	out.Data = parseBinsHelper(rawValues, 16, 8, 255, -32, 2, false)
+	out.Data = parseBinsHelper(rawValues, 16, 8, 255, -32, 2)
 }
 
 func parseBinsDELT(data string, bands []models.Band) (rawItems []string, groupSize int) {
@@ -187,35 +181,48 @@ func parseDELTSNR(out *models.BinsFloat, bands []models.Band, data dataItem) {
 	rawValues, groupSize := parseBinsDELT(data.Output, bands)
 
 	out.GroupSize = groupSize
-	out.Data = parseBinsHelper(rawValues, 10, 8, 255, -32, 2, false)
+	out.Data = parseBinsHelper(rawValues, 10, 8, 255, -32, 2)
 }
 
-func parseDELTQLN(out *models.BinsFloat, bands []models.Band, data dataItem, rejectZeroValues bool) {
+func parseDELTQLN(out *models.BinsFloat, bands []models.Band, data dataItem) {
 	rawValues, groupSize := parseBinsDELT(data.Output, bands)
 
 	out.GroupSize = groupSize
-	out.Data = parseBinsHelper(rawValues, 10, 8, 255, -23, -2, rejectZeroValues)
+	out.Data = parseBinsHelper(rawValues, 10, 8, 255, -23, -2)
 }
 
-func parseDELTHlog(out *models.BinsFloat, bands []models.Band, data dataItem, rejectZeroValues bool) {
+func parseDELTHlog(out *models.BinsFloat, bands []models.Band, data dataItem) {
 	rawValues, groupSize := parseBinsDELT(data.Output, bands)
 
 	out.GroupSize = groupSize
-	out.Data = parseBinsHelper(rawValues, 10, 10, 1023, 6, -10, rejectZeroValues)
+	out.Data = parseBinsHelper(rawValues, 10, 10, 1023, 6, -10)
 }
 
-func parseBinsHelper(rawValues []string, base, bitSize int, invalid uint64, offset, divisor float64, rejectZeroValues bool) (out []float64) {
+func parseBinsHelper(rawValues []string, base, bitSize int, invalid uint64, offset, divisor float64) (out []float64) {
 	out = make([]float64, len(rawValues))
+
+	allZeros := true
 
 	for num, val := range rawValues {
 		valUint, err := strconv.ParseUint(val, base, bitSize)
+		if valUint != 0 {
+			allZeros = false
+		}
 		var valFloat float64
-		if err == nil && valUint != invalid && (!rejectZeroValues || valUint != 0) {
+		if err == nil && valUint != invalid {
 			valFloat = offset + float64(valUint)/divisor
 		} else {
 			valFloat = offset + float64(invalid)/divisor
 		}
 		out[num] = valFloat
 	}
+
+	// Sometimes all zeros are reported (this has been seen on Vinax, as well as
+	// VR9 with ADSL2+. While zero is a valid value, assume that the entire data is
+	// invalid when all values are zero.
+	if allZeros {
+		out = nil
+	}
+
 	return
 }
