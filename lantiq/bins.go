@@ -135,16 +135,7 @@ func parseSNRAllocation(out *models.BinsFloat, data dataItem) {
 	rawValues := parseBinsShort(data.Output)
 
 	out.GroupSize = 1
-	out.Data = make([]float64, len(rawValues))
-
-	for num, val := range rawValues {
-		valUint, err := strconv.ParseUint(val, 16, 8)
-		if err == nil && valUint != 255 {
-			out.Data[num] = -32 + float64(valUint)/2
-		} else {
-			out.Data[num] = -32.5
-		}
-	}
+	out.Data = parseBinsHelper(rawValues, 16, 8, 255, -32, 2, false)
 }
 
 func parseBinsDELT(data string, bands []models.Band) (rawItems []string, groupSize int) {
@@ -196,47 +187,35 @@ func parseDELTSNR(out *models.BinsFloat, bands []models.Band, data dataItem) {
 	rawValues, groupSize := parseBinsDELT(data.Output, bands)
 
 	out.GroupSize = groupSize
-	out.Data = make([]float64, len(rawValues))
-
-	for num, val := range rawValues {
-		valUint, err := strconv.ParseUint(val, 10, 8)
-		if err == nil && valUint != 255 {
-			valFloat := -32 + float64(valUint)/2
-			out.Data[num] = valFloat
-		} else {
-			out.Data[num] = -32.5
-		}
-	}
+	out.Data = parseBinsHelper(rawValues, 10, 8, 255, -32, 2, false)
 }
 
 func parseDELTQLN(out *models.BinsFloat, bands []models.Band, data dataItem, rejectZeroValues bool) {
 	rawValues, groupSize := parseBinsDELT(data.Output, bands)
 
 	out.GroupSize = groupSize
-	out.Data = make([]float64, len(rawValues))
-
-	for num, val := range rawValues {
-		valUint, err := strconv.ParseUint(val, 10, 8)
-		if err == nil && valUint != 255 && (!rejectZeroValues || valUint != 0) {
-			valFloat := -23 - float64(valUint)/2
-			out.Data[num] = valFloat
-		}
-	}
+	out.Data = parseBinsHelper(rawValues, 10, 8, 255, -23, -2, rejectZeroValues)
 }
 
 func parseDELTHlog(out *models.BinsFloat, bands []models.Band, data dataItem, rejectZeroValues bool) {
 	rawValues, groupSize := parseBinsDELT(data.Output, bands)
 
 	out.GroupSize = groupSize
-	out.Data = make([]float64, len(rawValues))
+	out.Data = parseBinsHelper(rawValues, 10, 10, 1023, 6, -10, rejectZeroValues)
+}
+
+func parseBinsHelper(rawValues []string, base, bitSize int, invalid uint64, offset, divisor float64, rejectZeroValues bool) (out []float64) {
+	out = make([]float64, len(rawValues))
 
 	for num, val := range rawValues {
-		valUint, err := strconv.ParseUint(val, 10, 10)
-		if err == nil && valUint != 1023 && (!rejectZeroValues || valUint != 0) {
-			valFloat := 6 - float64(valUint)/10
-			out.Data[num] = valFloat
+		valUint, err := strconv.ParseUint(val, base, bitSize)
+		var valFloat float64
+		if err == nil && valUint != invalid && (!rejectZeroValues || valUint != 0) {
+			valFloat = offset + float64(valUint)/divisor
 		} else {
-			out.Data[num] = -96.3
+			valFloat = offset + float64(invalid)/divisor
 		}
+		out[num] = valFloat
 	}
+	return
 }
