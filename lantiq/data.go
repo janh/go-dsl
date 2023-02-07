@@ -67,7 +67,9 @@ func (d *data) LoadData(e exec.Executor, command string) (err error) {
 	var tagName = "command"
 
 	vig, err := e.Execute(command + " vig")
-	if err != nil {
+	if exec.IsCommandNotFound(vig, err) {
+		return errors.New("command not found, check the configuration")
+	} else if err != nil {
 		return err
 	}
 	vigData := parseValues(vig)

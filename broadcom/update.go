@@ -5,6 +5,7 @@
 package broadcom
 
 import (
+	"errors"
 	"fmt"
 	"strings"
 
@@ -18,7 +19,10 @@ func updateData(e exec.Executor, command string) (status models.Status, bins mod
 	}
 
 	stats, err := e.Execute(command + " info --stats")
-	if err != nil {
+	if exec.IsCommandNotFound(stats, err) {
+		err = errors.New("command not found, check the configuration")
+		return
+	} else if err != nil {
 		return
 	}
 
