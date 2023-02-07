@@ -8,14 +8,11 @@ import (
 	"fmt"
 	"strings"
 
+	"3e8.eu/go/dsl/internal/exec"
 	"3e8.eu/go/dsl/models"
 )
 
-type executor interface {
-	Execute(cmd string) (string, error)
-}
-
-func updateData(e executor, command string) (status models.Status, bins models.Bins, rawData []byte, err error) {
+func updateData(e exec.Executor, command string) (status models.Status, bins models.Bins, rawData []byte, err error) {
 	if command == "" {
 		command = "xdslctl"
 	}

@@ -9,6 +9,8 @@ import (
 	"fmt"
 	"reflect"
 	"strings"
+
+	"3e8.eu/go/dsl/internal/exec"
 )
 
 type dataItem struct {
@@ -61,7 +63,7 @@ type data struct {
 	G997_DeltHLOG_DS              dataItem `command:"g997dhlogg 1 1" commandLegacy:"g997dhlogg 0 1"`
 }
 
-func (d *data) LoadData(e executor, command string) (err error) {
+func (d *data) LoadData(e exec.Executor, command string) (err error) {
 	var tagName = "command"
 
 	vig, err := e.Execute(command + " vig")

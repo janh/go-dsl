@@ -8,14 +8,11 @@ import (
 	"fmt"
 	"strings"
 
+	"3e8.eu/go/dsl/internal/exec"
 	"3e8.eu/go/dsl/models"
 )
 
-type executor interface {
-	Execute(cmd string) (string, error)
-}
-
-func updateData(e executor) (status models.Status, bins models.Bins, rawData []byte, err error) {
+func updateData(e exec.Executor) (status models.Status, bins models.Bins, rawData []byte, err error) {
 	adslStats, err := e.Execute("cat /proc/tc3162/adsl_stats")
 	if err != nil {
 		return
