@@ -19,6 +19,7 @@ type dataItem struct {
 }
 
 type data struct {
+	Command    string
 	APIVersion string
 
 	LineState                    dataItem `command:"lsg" commandLegacy:"lsg 0"`
@@ -74,7 +75,7 @@ func (d *data) LoadData(e exec.Executor, command string) error {
 		return err
 	}
 
-	err = d.readData(e, command)
+	err = d.readData(e)
 	if err != nil {
 		return err
 	}
@@ -82,20 +83,39 @@ func (d *data) LoadData(e exec.Executor, command string) error {
 	return nil
 }
 
-func (d *data) readVersionInformation(e exec.Executor, command string) error {
-	fullCommand := command + " vig"
+func (d *data) readVersionInformation(e exec.Executor, command string) (err error) {
+	var commands []string
 
-	vig, err := e.Execute(fullCommand)
-	if exec.IsCommandNotFound(vig, err) {
-		return errors.New("command not found, check the configuration")
-	} else if err != nil {
-		return err
+	if command != "" {
+		commands = []string{command}
+	} else {
+		commands = []string{
+			"dsl_cpe_pipe",        // default
+			"dsl_cpe_pipe.sh",     // OpenWrt
+			"/usr/sbin/dsl_pipe",  // FRITZ!Box
+			"/ifx/vdsl2/dsl_pipe", // ALL126AM2, other old Vinax devices
+		}
 	}
 
-	d.VersionInformation.Command = fullCommand
-	d.VersionInformation.Output = vig
+	for _, c := range commands {
+		fullCommand := c + " vig"
 
-	return nil
+		var output string
+		output, err = e.Execute(fullCommand)
+
+		if exec.IsCommandNotFound(output, err) {
+			err = errors.New("command not found, check the configuration")
+		} else if err == nil {
+			d.Command = c
+
+			d.VersionInformation.Command = fullCommand
+			d.VersionInformation.Output = output
+
+			break
+		}
+	}
+
+	return
 }
 
 func (d *data) parseVersionInformation() error {
@@ -112,7 +132,7 @@ func (d *data) parseVersionInformation() error {
 	return nil
 }
 
-func (d *data) readData(e exec.Executor, command string) (err error) {
+func (d *data) readData(e exec.Executor) (err error) {
 	tagName := "command"
 	if strings.HasPrefix(d.APIVersion, "2") {
 		tagName = "commandLegacy"
@@ -137,7 +157,7 @@ func (d *data) readData(e exec.Executor, command string) (err error) {
 					continue
 				}
 
-				fullCommand = command + " " + cmd
+				fullCommand = d.Command + " " + cmd
 				out, err = e.Execute(fullCommand)
 				if err != nil {
 					return err

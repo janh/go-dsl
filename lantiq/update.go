@@ -10,10 +10,6 @@ import (
 )
 
 func updateData(e exec.Executor, command string) (status models.Status, bins models.Bins, rawData []byte, err error) {
-	if command == "" {
-		command = "dsl_cpe_pipe"
-	}
-
 	var data data
 
 	err = data.LoadData(e, command)
