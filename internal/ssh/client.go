@@ -177,7 +177,7 @@ func (c *Client) Execute(command string) (string, error) {
 			return "", &dsl.ConnectionError{Err: err}
 		}
 
-		return "", err
+		return string(output), err
 	}
 
 	return string(output), nil
