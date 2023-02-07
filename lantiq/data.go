@@ -79,7 +79,7 @@ func (d *data) LoadData(e exec.Executor, command string) (err error) {
 	} else if version, ok := vigData["DSL_APILibraryVersion"]; ok {
 		d.APIVersion = version
 	} else {
-		return errors.New("failed to read Lantiq API version")
+		return errors.New("command did not return API version")
 	}
 
 	if strings.HasPrefix(d.APIVersion, "2") {
