@@ -63,16 +63,43 @@ type data struct {
 	G997_DeltHLOG_DS              dataItem `command:"g997dhlogg 1 1" commandLegacy:"g997dhlogg 0 1"`
 }
 
-func (d *data) LoadData(e exec.Executor, command string) (err error) {
-	var tagName = "command"
+func (d *data) LoadData(e exec.Executor, command string) error {
+	err := d.readVersionInformation(e, command)
+	if err != nil {
+		return err
+	}
 
-	vig, err := e.Execute(command + " vig")
+	err = d.parseVersionInformation()
+	if err != nil {
+		return err
+	}
+
+	err = d.readData(e, command)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (d *data) readVersionInformation(e exec.Executor, command string) error {
+	fullCommand := command + " vig"
+
+	vig, err := e.Execute(fullCommand)
 	if exec.IsCommandNotFound(vig, err) {
 		return errors.New("command not found, check the configuration")
 	} else if err != nil {
 		return err
 	}
-	vigData := parseValues(vig)
+
+	d.VersionInformation.Command = fullCommand
+	d.VersionInformation.Output = vig
+
+	return nil
+}
+
+func (d *data) parseVersionInformation() error {
+	vigData := parseValues(d.VersionInformation.Output)
 
 	if version, ok := vigData["DSL_DriverVersionApi"]; ok {
 		d.APIVersion = version
@@ -82,6 +109,11 @@ func (d *data) LoadData(e exec.Executor, command string) (err error) {
 		return errors.New("command did not return API version")
 	}
 
+	return nil
+}
+
+func (d *data) readData(e exec.Executor, command string) (err error) {
+	tagName := "command"
 	if strings.HasPrefix(d.APIVersion, "2") {
 		tagName = "commandLegacy"
 	}
@@ -101,15 +133,14 @@ func (d *data) LoadData(e exec.Executor, command string) (err error) {
 
 			commandsSplit := strings.Split(commands, ",")
 			for _, cmd := range commandsSplit {
-				fullCommand = command + " " + cmd
+				if cmd == "vig" {
+					continue
+				}
 
-				if cmd != "vig" {
-					out, err = e.Execute(fullCommand)
-					if err != nil {
-						return err
-					}
-				} else {
-					out = vig
+				fullCommand = command + " " + cmd
+				out, err = e.Execute(fullCommand)
+				if err != nil {
+					return err
 				}
 
 				truncate := 100
