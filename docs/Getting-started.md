@@ -5,7 +5,7 @@ If the application does not run, see the troubleshooting section below.
 
 ## Configuration
 
-For all devices you will need to specify the host (either the hostname or an IP address), and most also need a user name.
+For all devices you will need to specify the host (either the hostname or an IP address, optionally including port), and most also need a user name.
 
 Depending on the device additional options may be required.
 Check the [list of supported devices](Supported-devices.md) to find out if this is the case for your device.

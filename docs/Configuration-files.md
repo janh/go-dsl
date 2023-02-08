@@ -16,7 +16,7 @@ This file is also used to persist configuration from the graphical user interfac
   *(equivalent to `-d` command line option)*
 
 - **Host**:  
-  Host name or IP address to connect to.  
+  Host name or IP address to connect to, optionally including port.  
   *(equivalent to last argument on the command line)*
 
 - **User**:  
