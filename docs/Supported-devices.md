@@ -73,8 +73,8 @@ Requires command line access via SSH or Telnet.
 Some FRITZ!Box devices are also supported, if a modified firmware with command line access is installed.
 However, it is necessary to run `dsl_pipe ccadbgmls 13 ff` before connecting, as command output will be hidden otherwise.
 
-On many devices, you'll need to specify the `Command` option.
-If unspecified, `dsl_cpe_pipe` is used, but the actual name of the command varies between devices.
+On some devices, you may need to specify the actual name of the `dsl_cpe_pipe` command using the `Command` option.
+If unspecified, a few common variants are tried.
 
 	./dsl -d lantiq_ssh -o Command="dsl_cpe_pipe.sh" -u root openwrt.lan # OpenWrt
 	./dsl -d lantiq_ssh -o Command="/usr/sbin/dsl_pipe" -u root fritz.box # FRITZ!Box (modified firmware)
