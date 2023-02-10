@@ -25,7 +25,7 @@ type data struct {
 	LineState                    dataItem `command:"lsg" commandLegacy:"lsg 0"`
 	G997_XTUSystemEnablingStatus dataItem `command:"g997xtusesg" commandLegacy:"g997atusesg 0"`
 	BandPlanSTatus               dataItem `command:"bpstg" commandLegacy:"bpcg 0"`
-	VersionInformation           dataItem `command:"vig" commandLegacy:"vig"`
+	VersionInformation           dataItem
 	G997_LineInventory_Far       dataItem `command:"g997lig 1" commandLegacy:"g997lig 0 1"`
 
 	G997_ChannelStatus_US        dataItem `command:"g997csg 0 0" commandLegacy:"g997csg 0 0 0"`
@@ -153,10 +153,6 @@ func (d *data) readData(e exec.Executor) (err error) {
 
 			commandsSplit := strings.Split(commands, ",")
 			for _, cmd := range commandsSplit {
-				if cmd == "vig" {
-					continue
-				}
-
 				fullCommand = d.Command + " " + cmd
 				out, err = e.Execute(fullCommand)
 				if err != nil {
