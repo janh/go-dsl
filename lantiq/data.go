@@ -115,7 +115,37 @@ func (d *data) readVersionInformation(e exec.Executor, command string) (err erro
 		}
 	}
 
+	if err != nil {
+		return
+	}
+
+	// By default, no output is returned on FRITZ!Box devices, but there is a
+	// command that allows to enable it.
+	if strings.TrimSpace(d.VersionInformation.Output) == "" {
+		err = d.readVersionInformationFritzboxFix(e)
+	}
+
 	return
+}
+
+func (d *data) readVersionInformationFritzboxFix(e exec.Executor) error {
+	// Use the command CCA_DBG_ModuleLevelSet to set the debug level for module
+	// DSL_CCA_DBG_AVM_DSL_FPRINTF (13) to DSL_CCA_DBG_LOCAL (ff). This seems to
+	// cover practically all output from the DSL daemon.
+	// TODO: the index of DSL_CCA_DBG_AVM_DSL_FPRINTF may differ depending on the DSL daemon version
+	_, err := e.Execute(d.Command + " ccadbgmls 13 ff")
+	if err != nil {
+		return fmt.Errorf("attempt to fix empty command result failed: %w", err)
+	}
+
+	output, err := e.Execute(d.Command + " vig")
+	if err != nil {
+		return err
+	}
+
+	d.VersionInformation.Output = output
+
+	return nil
 }
 
 func (d *data) parseVersionInformation() error {
