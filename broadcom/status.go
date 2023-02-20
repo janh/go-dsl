@@ -294,6 +294,10 @@ func interpretExtendedStatsBitswap(values map[string][2]string, key string) (dow
 }
 
 func interpretLinkTime(status *models.Status, linkTime string) {
+	if status.State != models.StateShowtime {
+		return
+	}
+
 	split := strings.Fields(linkTime)
 	if len(split)%2 != 0 || len(split) > 8 {
 		return

@@ -427,7 +427,7 @@ func parseStatusChannelCounters(status *models.Status, pmccsgNear, pmccsgFar dat
 	pmccsgFarValues := parseValues(pmccsgFar.Output)
 
 	// elapsed time is only meaningful for showtime stats, not for total stats
-	if strings.Contains(pmccsgNear.Command, "pmccsg") {
+	if strings.Contains(pmccsgNear.Command, "pmccsg") && status.State == models.StateShowtime {
 		status.Uptime = interpretStatusDuration(pmccsgNearValues, "nElapsedTime")
 	}
 

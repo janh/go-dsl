@@ -46,6 +46,10 @@ func interpretStatusMode(status *models.Status, data *dslObj) {
 }
 
 func interpretStatusUptime(status *models.Status, data *dslObj) {
+	if status.State != models.StateShowtime {
+		return
+	}
+
 	status.Uptime.Valid = true
 	status.Uptime.Duration = time.Duration(data.Lines[0].Stats.ShowtimeStart.Int) * time.Second
 }

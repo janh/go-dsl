@@ -23,7 +23,9 @@ func parseStatus(values snmp.Values, oidBase string) models.Status {
 		oidBase+oidModemChipsetType, oidBase+oidModemDspFirmwareVersion)
 	status.FarEndInventory = interpretFarEndInventory(values, oidBase+oidAdvancedDslamChipsetManufacturerDump)
 
-	status.Uptime = interpretUptime(values, oidBase+oidConnectionDuration)
+	if status.State == models.StateShowtime {
+		status.Uptime = interpretUptime(values, oidBase+oidConnectionDuration)
+	}
 
 	status.DownstreamActualRate.IntValue = interpretIntValue(values, oidBase+oidDataRateDownstreamKbps)
 	status.UpstreamActualRate.IntValue = interpretIntValue(values, oidBase+oidDataRateUpstreamKbps)
