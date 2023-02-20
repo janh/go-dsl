@@ -66,12 +66,14 @@ func parseStatus(values snmp.Values, oidBase string) models.Status {
 func interpretState(values snmp.Values, oid string) (out models.State) {
 	if lineState, err := values.GetUint64(oid); err == nil {
 		switch lineState {
-		case lineStateDown, lineStateShutdown, lineStateIdle:
-			out = models.StateIdle
+		case lineStateDown, lineStateShutdown:
+			out = models.StateDown
+		case lineStateIdle:
+			out = models.StateDownIdle
 		case lineStateHandshake:
-			out = models.StateHandshake
+			out = models.StateInitHandshake
 		case lineStateTraining:
-			out = models.StateTraining
+			out = models.StateInit
 		case lineStateShowtime:
 			out = models.StateShowtime
 		}

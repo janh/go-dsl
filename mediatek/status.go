@@ -218,11 +218,11 @@ func parseStatusBasic(status *models.Status, values map[string]string) {
 	state := strings.ToLower(interpretString(values, "adsllinkstatus"))
 	switch state {
 	case "down":
-		status.State = models.StateIdle
+		status.State = models.StateDown
 	case "wait for init":
-		status.State = models.StateHandshake
+		status.State = models.StateInitHandshake
 	case "initializing":
-		status.State = models.StateTraining
+		status.State = models.StateInit
 	case "up":
 		status.State = models.StateShowtime
 	}

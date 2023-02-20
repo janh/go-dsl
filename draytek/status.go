@@ -116,9 +116,9 @@ func splitAtLongestWhitespace(str string) [2]string {
 func parseState(str string) models.State {
 	switch strings.ToUpper(str) {
 	case "READY":
-		return models.StateIdle
+		return models.StateDown
 	case "TRAINING":
-		return models.StateTraining
+		return models.StateInit
 	case "SHOWTIME":
 		return models.StateShowtime
 	}

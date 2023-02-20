@@ -8,24 +8,36 @@ type State int
 
 const (
 	StateUnknown State = iota
-	StateIdle
-	StateSilent
-	StateHandshake
-	StateTraining
+	StateDown
+	StateDownIdle
+	StateDownSilent
+	StateInit
+	StateInitHandshake
+	StateInitChannelDiscovery
+	StateInitTraining
+	StateInitChannelAnalysisExchange
 	StateShowtime
 	StateError
 )
 
 func (s State) String() string {
 	switch s {
-	case StateIdle:
-		return "Idle"
-	case StateSilent:
-		return "Silent"
-	case StateHandshake:
-		return "Handshake"
-	case StateTraining:
-		return "Training"
+	case StateDown:
+		return "Down"
+	case StateDownIdle:
+		return "Down (Idle)"
+	case StateDownSilent:
+		return "Down (Silent)"
+	case StateInit:
+		return "Initialization"
+	case StateInitHandshake:
+		return "Initialization (Handshake)"
+	case StateInitChannelDiscovery:
+		return "Initialization (Channel Discovery)"
+	case StateInitTraining:
+		return "Initialization (Training)"
+	case StateInitChannelAnalysisExchange:
+		return "Initialization (Channel Analysis / Exchange)"
 	case StateShowtime:
 		return "Showtime"
 	case StateError:

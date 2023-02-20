@@ -38,17 +38,29 @@ const (
 func parseLineState(state uint64) models.State {
 	switch state {
 
+	case lineStateNotInitialized:
+		return models.StateDown
+
 	case lineStateIdleRequest, lineStateIdle:
-		return models.StateIdle
+		return models.StateDownIdle
 
 	case lineStateSilentRequest, lineStateSilent:
-		return models.StateSilent
+		return models.StateDownSilent
 
 	case lineStateHandshake:
-		return models.StateHandshake
+		return models.StateInitHandshake
 
-	case lineStateFullInit, lineStateDiscovery, lineStateTraining, lineStateAnalysis, lineStateExchange:
-		return models.StateTraining
+	case lineStateFullInit:
+		return models.StateInit
+
+	case lineStateDiscovery:
+		return models.StateInitChannelDiscovery
+
+	case lineStateTraining:
+		return models.StateInitTraining
+
+	case lineStateAnalysis, lineStateExchange:
+		return models.StateInitChannelAnalysisExchange
 
 	case lineStateShowtimeNoSync, lineStateShowtimeTCSync:
 		return models.StateShowtime

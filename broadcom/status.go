@@ -71,13 +71,16 @@ func parseState(str string) models.State {
 	switch {
 
 	case str == "idle":
-		return models.StateIdle
+		return models.StateDown
 
 	case strings.HasPrefix(str, "g.994"):
-		return models.StateHandshake
+		return models.StateInitHandshake
+
+	case strings.Contains(str, "channel analysis"), strings.Contains(str, "message exchange"):
+		return models.StateInitChannelAnalysisExchange
 
 	case strings.HasPrefix(str, "g.992"), strings.HasPrefix(str, "g.993"):
-		return models.StateTraining
+		return models.StateInit
 
 	case str == "showtime":
 		return models.StateShowtime

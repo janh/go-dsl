@@ -16,10 +16,10 @@ func ParseStateTR06X(str string) models.State {
 	switch str {
 
 	case "disabled", "nosignal", "initializing":
-		return models.StateIdle
+		return models.StateDown
 
 	case "establishinglink":
-		return models.StateTraining
+		return models.StateInit
 
 	case "up":
 		return models.StateShowtime

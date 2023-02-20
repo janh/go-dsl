@@ -56,9 +56,11 @@ func interpretOverviewState(state string) models.State {
 	case strings.HasPrefix(state, "ready"):
 		return models.StateShowtime
 	case state == "training":
-		return models.StateTraining
-	case state == "off" || state == "error":
-		return models.StateIdle
+		return models.StateInit
+	case state == "off":
+		return models.StateDown
+	case state == "error":
+		return models.StateError
 	}
 	return models.StateUnknown
 }
