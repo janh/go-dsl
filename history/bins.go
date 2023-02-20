@@ -12,6 +12,13 @@ import (
 	"3e8.eu/go/dsl/models"
 )
 
+const (
+	minValidSNR   = -32.0
+	maxValidSNR   = 95.0
+	defaultSNRMin = maxValidSNR + 1
+	defaultSNRMax = minValidSNR - 1
+)
+
 type BinsConfig struct {
 	PeriodLength time.Duration
 	PeriodCount  int
@@ -31,6 +38,20 @@ type snrMinMax struct {
 	Total             models.BinsFloatMinMax
 }
 
+func (m *snrMinMax) resetBinsFloatMinMax(data *models.BinsFloatMinMax, groupSize, count int) {
+	data.GroupSize = groupSize
+
+	data.Min = make([]float64, count, count)
+	for i := range data.Min {
+		data.Min[i] = defaultSNRMin
+	}
+
+	data.Max = make([]float64, count, count)
+	for i := range data.Max {
+		data.Max[i] = defaultSNRMax
+	}
+}
+
 func (m *snrMinMax) Reset(snr models.BinsFloat, maxBinCount, periodCount int) {
 	m.OriginalGroupSize = snr.GroupSize
 	m.OriginalCount = len(snr.Data)
@@ -44,19 +65,13 @@ func (m *snrMinMax) Reset(snr models.BinsFloat, maxBinCount, periodCount int) {
 
 	minmaxGroupSize := snr.GroupSize * factor
 
-	m.Total.GroupSize = minmaxGroupSize
-
-	m.Total.Min = make([]float64, minmaxCount, minmaxCount)
-	m.Total.Max = make([]float64, minmaxCount, minmaxCount)
+	m.resetBinsFloatMinMax(&m.Total, minmaxGroupSize, minmaxCount)
 
 	if periodCount != 0 {
 		m.Periods = make([]models.BinsFloatMinMax, periodCount, periodCount)
 
 		for i := range m.Periods {
-			m.Periods[i].GroupSize = minmaxGroupSize
-
-			m.Periods[i].Min = make([]float64, minmaxCount, minmaxCount)
-			m.Periods[i].Max = make([]float64, minmaxCount, minmaxCount)
+			m.resetBinsFloatMinMax(&m.Periods[i], minmaxGroupSize, minmaxCount)
 		}
 	}
 }
@@ -69,30 +84,20 @@ func (m *snrMinMax) ClearPeriods(startIndex int, count int) {
 		idx := (startIndex + i) % periodCount
 
 		for j := 0; j < minmaxCount; j++ {
-			m.Periods[idx].Min[j] = 0
-			m.Periods[idx].Max[j] = 0
+			m.Periods[idx].Min[j] = defaultSNRMin
+			m.Periods[idx].Max[j] = defaultSNRMax
 		}
 	}
 }
 
 func (m *snrMinMax) RecalculateTotal() {
 	for i := range m.Total.Min {
-		var minTotal, maxTotal float64
+		minTotal := defaultSNRMin
+		maxTotal := defaultSNRMax
 
 		for j := range m.Periods {
-			min := m.Periods[j].Min[i]
-			if minTotal == 0 {
-				minTotal = min
-			} else if min != 0 {
-				minTotal = math.Min(minTotal, min)
-			}
-
-			max := m.Periods[j].Max[i]
-			if maxTotal == 0 {
-				maxTotal = max
-			} else if max != 0 {
-				maxTotal = math.Max(maxTotal, max)
-			}
+			minTotal = math.Min(minTotal, m.Periods[j].Min[i])
+			maxTotal = math.Max(maxTotal, m.Periods[j].Max[i])
 		}
 
 		m.Total.Min[i] = minTotal
@@ -123,15 +128,8 @@ func updateBinsFloatMinMax(minmax *models.BinsFloatMinMax, snr models.BinsFloat)
 	for i, val := range snr.Data {
 		num := i / factor
 
-		if minmax.Min[num] == 0 {
-			minmax.Min[num] = val
-		} else if val != 0 {
+		if val >= minValidSNR && val <= maxValidSNR {
 			minmax.Min[num] = math.Min(minmax.Min[num], val)
-		}
-
-		if minmax.Max[num] == 0 {
-			minmax.Max[num] = val
-		} else if val != 0 {
 			minmax.Max[num] = math.Max(minmax.Max[num], val)
 		}
 	}
