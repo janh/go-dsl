@@ -13,7 +13,7 @@
 			{{- .Mode -}}
 		{{- end }}
 
-		{{ if .Uptime.Duration -}}
+		{{ if .Uptime.Valid -}}
 			<br />
 			{{- .Uptime -}}
 		{{- end }}

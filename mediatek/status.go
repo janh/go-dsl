@@ -80,9 +80,7 @@ func interpretString(values map[string]string, key string) string {
 	return ""
 }
 
-func interpretDuration(values map[string]string, key string) models.Duration {
-	var duration models.Duration
-
+func interpretDuration(values map[string]string, key string) (out models.Duration) {
 	if val, ok := values[key]; ok {
 		numbers := regexpNumber.FindAllString(val, -1)
 
@@ -101,11 +99,12 @@ func interpretDuration(values map[string]string, key string) models.Duration {
 				factor = 24 * time.Hour
 			}
 
-			duration.Duration += time.Duration(numInt) * factor
+			out.Valid = true
+			out.Duration += time.Duration(numInt) * factor
 		}
 	}
 
-	return duration
+	return
 }
 
 func interpretIntValue(values map[string]string, suffix string, keys ...string) (out models.IntValue) {

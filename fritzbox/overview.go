@@ -65,9 +65,7 @@ func interpretOverviewState(state string) models.State {
 	return models.StateUnknown
 }
 
-func interpretOverviewTime(timeStr string) time.Duration {
-	var duration time.Duration
-
+func interpretOverviewTime(timeStr string) (out models.Duration) {
 	split := strings.Fields(timeStr)
 
 	for i := 1; i < len(split); i++ {
@@ -87,13 +85,15 @@ func interpretOverviewTime(timeStr string) time.Duration {
 
 		val, err := strconv.ParseInt(split[i-1], 10, 64)
 		if err != nil {
-			return time.Duration(0)
+			out.Valid = false
+			return
 		}
 
-		duration += time.Duration(val) * factor
+		out.Valid = true
+		out.Duration += time.Duration(val) * factor
 	}
 
-	return duration
+	return
 }
 
 func parseOverviewJSON(status *models.Status, dslOverview string) {
@@ -109,7 +109,7 @@ func parseOverviewJSON(status *models.Status, dslOverview string) {
 		status.Mode = helpers.ParseMode(data.Lines[0].Mode)
 
 		if status.State == models.StateShowtime {
-			status.Uptime.Duration = interpretOverviewTime(data.Lines[0].Time)
+			status.Uptime = interpretOverviewTime(data.Lines[0].Time)
 		}
 	}
 
@@ -172,7 +172,7 @@ func parseOverviewDataLegacy(status *models.Status, dslOverviewData string) {
 		status.Mode = helpers.ParseMode(data.Lines[0].Mode)
 
 		if status.State == models.StateShowtime {
-			status.Uptime.Duration = interpretOverviewTime(data.Lines[0].Time)
+			status.Uptime = interpretOverviewTime(data.Lines[0].Time)
 		}
 	}
 }

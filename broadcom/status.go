@@ -299,7 +299,7 @@ func interpretLinkTime(status *models.Status, linkTime string) {
 		return
 	}
 
-	var duration time.Duration
+	var duration models.Duration
 
 	for i := 0; i < len(split); i += 2 {
 		valStr := split[i]
@@ -324,10 +324,11 @@ func interpretLinkTime(status *models.Status, linkTime string) {
 			return
 		}
 
-		duration += time.Duration(val) * factor
+		duration.Valid = true
+		duration.Duration += time.Duration(val) * factor
 	}
 
-	status.Uptime.Duration = duration
+	status.Uptime = duration
 }
 
 func parseVectoring(status *models.Status, vectoring string) {

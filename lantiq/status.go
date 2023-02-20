@@ -176,6 +176,7 @@ func interpretStatusByte(values map[string]string, keys ...string) (out byte) {
 func interpretStatusDuration(values map[string]string, key string) (out models.Duration) {
 	if val, ok := values[key]; ok {
 		if valInt, err := strconv.ParseInt(val, 10, 64); err == nil {
+			out.Valid = true
 			out.Duration = time.Duration(valInt) * time.Second
 		}
 	}

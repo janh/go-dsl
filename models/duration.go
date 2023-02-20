@@ -11,17 +11,18 @@ import (
 )
 
 type Duration struct {
-	time.Duration
+	Valid    bool
+	Duration time.Duration
 }
 
 func (d Duration) String() string {
-	if d.Duration <= 0 {
+	if !d.Valid {
 		return "-"
 	}
 
-	minutes := int64(d.Minutes()) % 60
-	hours := int64(d.Hours()) % 24
-	days := int64(d.Hours()) / 24
+	minutes := int64(d.Duration.Minutes()) % 60
+	hours := int64(d.Duration.Hours()) % 24
+	days := int64(d.Duration.Hours()) / 24
 
 	parts := make([]string, 0, 3)
 

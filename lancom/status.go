@@ -182,6 +182,7 @@ func interpretFarEndInventory(values snmp.Values, oid string) (out models.Invent
 
 func interpretUptime(values snmp.Values, oid string) (out models.Duration) {
 	if val, err := values.GetInt64(oid); err == nil {
+		out.Valid = true
 		out.Duration = time.Duration(val) * time.Second
 	}
 	return
