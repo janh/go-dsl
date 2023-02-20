@@ -154,6 +154,10 @@ func (h *Bins) Update(status models.Status, bins models.Bins, now time.Time) {
 		return
 	}
 
+	if status.Uptime.Valid && status.Uptime.Duration < 1*time.Minute {
+		return
+	}
+
 	if h.needsReset(bins) || h.periodStart.After(currentPeriodStart) {
 		h.mode = bins.Mode
 
