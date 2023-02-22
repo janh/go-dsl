@@ -116,7 +116,7 @@ func interpretBinsDataSNR(out *models.BinsFloat, data string, groupSize int) {
 		return val
 	}
 
-	interpretBinsData(out, data, groupSize, 0, processValueFunc)
+	interpretBinsData(out, data, groupSize, -32.5, processValueFunc)
 }
 
 func interpretBinsDataQLN(out *models.BinsFloat, data string, groupSize int) {
