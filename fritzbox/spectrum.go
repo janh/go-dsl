@@ -118,6 +118,15 @@ func processSpectrumBits(bits *models.BinsBitsDownUp, usBands []spectrumDataBand
 	}
 }
 
+func initSNRData(data *models.BinsFloat, binCount, groupSize int) {
+	data.Data = make([]float64, binCount/groupSize)
+	for i := range data.Data {
+		data.Data[i] = -32.5
+	}
+
+	data.GroupSize = groupSize
+}
+
 func processSpectrumSNR(snr *models.BinsFloatDownUp, usBands []spectrumDataBandItem, groupSize, binCount int, values []int) {
 	if groupSize == 0 {
 		return
@@ -127,11 +136,8 @@ func processSpectrumSNR(snr *models.BinsFloatDownUp, usBands []spectrumDataBandI
 		binCount = len(values) * groupSize
 	}
 
-	snr.Downstream.Data = make([]float64, binCount/groupSize)
-	snr.Downstream.GroupSize = groupSize
-
-	snr.Upstream.Data = make([]float64, binCount/groupSize)
-	snr.Upstream.GroupSize = groupSize
+	initSNRData(&snr.Downstream, binCount, groupSize)
+	initSNRData(&snr.Upstream, binCount, groupSize)
 
 	for num, val := range values {
 		if val != 0 {
