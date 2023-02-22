@@ -131,9 +131,15 @@ func parseSNR(bins *models.Bins, data string) {
 
 	bins.SNR.Downstream.GroupSize = 1
 	bins.SNR.Downstream.Data = make([]float64, len(values))
+	for num := range bins.SNR.Downstream.Data {
+		bins.SNR.Downstream.Data[num] = -32.5
+	}
 
 	bins.SNR.Upstream.GroupSize = 1
 	bins.SNR.Upstream.Data = make([]float64, len(values))
+	for num := range bins.SNR.Upstream.Data {
+		bins.SNR.Upstream.Data[num] = -32.5
+	}
 
 	bandDecider, err := helpers.NewBandDecider(bins.Bands)
 	if err != nil {
@@ -142,7 +148,7 @@ func parseSNR(bins *models.Bins, data string) {
 
 	for num, val := range values {
 		valFloat, err := strconv.ParseFloat(val, 64)
-		if err == nil && valFloat > 0 {
+		if err == nil && valFloat != 0 {
 			if bandDecider.IsDownstream(num) {
 				bins.SNR.Downstream.Data[num] = float64(valFloat)
 			} else {
