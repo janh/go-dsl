@@ -47,7 +47,7 @@ func interpretSNRTable(values snmp.Values, oid string, mode models.Mode, bands [
 
 	interpretTable(values, oid, func(index int, val int64) {
 		for len(out.Data) < index+1 {
-			out.Data = append(out.Data, 0)
+			out.Data = append(out.Data, -32.5)
 		}
 
 		if val != 255 {
