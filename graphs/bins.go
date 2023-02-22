@@ -441,7 +441,7 @@ func buildSNRMinMaxPath(pMin *path, pMax *path, bins models.BinsFloatMinMax, sca
 		drawn := false
 
 		posX := (float64(i) + 0.5) * width
-		posY := math.Min(maxY, val)*scaleY - 0.5
+		posY := math.Max(0, math.Min(maxY, val)*scaleY - 0.5)
 
 		if *lastValid && !valid {
 			p.LineTo(posX-0.5*width, *lastPosY*postScaleY)
@@ -470,7 +470,7 @@ func buildSNRMinMaxPath(pMin *path, pMax *path, bins models.BinsFloatMinMax, sca
 	for i := 0; i < count; i++ {
 		min := bins.Min[i]
 		max := bins.Max[i]
-		valid := (min > 0 && min <= 95) || (max > 0 && max <= 95)
+		valid := (min >= -32 && min <= 95) || (max >= -32 && max <= 95)
 
 		iter(pMin, i, min, valid, &lastMin, &lastPosYMin, &lastValidMin, &lastDrawnMin)
 		iter(pMax, i, max, valid, &lastMax, &lastPosYMax, &lastValidMax, &lastDrawnMax)

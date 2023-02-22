@@ -671,7 +671,7 @@ var DSLGraphs = DSLGraphs || (function () {
 			var drawn = false;
 
 			var posX = (i + 0.5) * width;
-			var posY = Math.min(maxY, val)*scaleY - 0.5;
+			var posY = Math.max(0, Math.min(maxY, val)*scaleY - 0.5);
 
 			if (state.lastValid && !valid) {
 				path.lineTo(posX-0.5*width, state.lastPosY*postScaleY);
@@ -700,7 +700,7 @@ var DSLGraphs = DSLGraphs || (function () {
 		for (var i = 0; i < count; i++) {
 			var min = bins.Min[i];
 			var max = bins.Max[i];
-			var valid = (min > 0 && min <= 95) || (max > 0 && max <= 95);
+			var valid = (min >= -32 && min <= 95) || (max >= -32 && max <= 95);
 
 			iter(pathMin, i, min, valid, stateMin);
 			iter(pathMax, i, max, valid, stateMax);
