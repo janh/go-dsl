@@ -105,7 +105,7 @@ func interpretTable(values snmp.Values, oid string, callback func(index int, val
 	}
 
 	limit := int(math.Pow10(digits - 1))
-	for row := 1; row < limit; row++ {
+	for row := 0; row < limit; row++ {
 		rowBase := row * 10
 		oidSuffix := getTableSuffix(digits, row)
 
