@@ -98,9 +98,15 @@ func parseSNR(bins *models.Bins, snr string) {
 
 	bins.SNR.Downstream.GroupSize = 1
 	bins.SNR.Downstream.Data = make([]float64, binCount)
+	for num := range bins.SNR.Downstream.Data {
+		bins.SNR.Downstream.Data[num] = -32.5
+	}
 
 	bins.SNR.Upstream.GroupSize = 1
 	bins.SNR.Upstream.Data = make([]float64, binCount)
+	for num := range bins.SNR.Upstream.Data {
+		bins.SNR.Upstream.Data[num] = -32.5
+	}
 
 	var val float64
 	parseBinList(snr, bins.Bands, func(num int, str string, isDownstream bool) {
@@ -120,7 +126,7 @@ func parseSNR(bins *models.Bins, snr string) {
 	})
 
 	isValid := func(val float64) bool {
-		return val != 0
+		return val >= -32 && val <= 95
 	}
 	adjustGroupSize(&bins.SNR.Downstream, isValid)
 	adjustGroupSize(&bins.SNR.Upstream, isValid)
