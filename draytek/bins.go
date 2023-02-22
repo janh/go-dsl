@@ -16,7 +16,7 @@ import (
 
 var regexpBandinfo = regexp.MustCompile(`Limits=\[\s*(\d+)-\s*(\d+)\]`)
 
-func parseBins(status models.Status, bandinfo, downstream, upstream, qln, hlog string) models.Bins {
+func parseBins(status models.Status, bandinfo, downstream, upstream, snr, qln, hlog string) models.Bins {
 	var bins models.Bins
 
 	bins.Mode = status.Mode
@@ -26,6 +26,7 @@ func parseBins(status models.Status, bandinfo, downstream, upstream, qln, hlog s
 	parseShowbinsData(&bins.Bits.Downstream, &bins.SNR.Downstream, bins.Mode.BinCount(), downstream)
 	parseShowbinsData(&bins.Bits.Upstream, &bins.SNR.Upstream, bins.Mode.BinCount(), upstream)
 
+	parseStatusSNR(&bins, snr)
 	parseStatusQLN(&bins, qln)
 	parseStatusHlog(&bins, hlog)
 
@@ -98,6 +99,8 @@ func readShowbinsBin(binsBits *models.BinsBits, snrData []float64, maxSNRIndex, 
 		if snr != 0 {
 			snrData[num] = snr
 			*maxSNRIndex = num
+		} else {
+			snrData[num] = -32.5
 		}
 	}
 }
@@ -113,6 +116,15 @@ func handleShowbinsSNR(binsSNR *models.BinsFloat, snrData []float64, maxSNRIndex
 			binsSNR.Data[num] = snrData[num]
 		}
 	}
+}
+
+func parseStatusSNR(bins *models.Bins, snr string) {
+	parseStatusBins(&bins.SNR, snr, func(val float64, ok bool) float64 {
+		if ok {
+			return val
+		}
+		return -32.5
+	})
 }
 
 func parseStatusQLN(bins *models.Bins, qln string) {
