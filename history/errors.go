@@ -58,12 +58,28 @@ func updateErrorValue(out *models.IntValue, lastVal, val models.IntValue) {
 		return
 	}
 
+	diff := val.Int - lastVal.Int
+
 	if lastVal.Int > val.Int {
+		// The counters are very likely implemented as 32 bit unsigned integers on the device (as that is
+		// the type used in the DSL standards). If an overflow seems plausible, calculate the difference in
+		// 32 bit unsigned arithmetic.
+		if lastVal.Int >= 1<<31 && lastVal.Int < 1<<32 && val.Int >= 0 && val.Int < 1<<31 {
+			diff = int64(uint32(val.Int) - uint32(lastVal.Int))
+		} else {
+			return
+		}
+	}
+
+	// Reject unreasonable large differences. This is mainly to work around an issue in Lantiq devices.
+	// Shortly after a resync (but not necessarily within the first minute), the downstream FEC counter
+	// may increase by a value close to 2^32.
+	if diff >= 1<<31 {
 		return
 	}
 
 	out.Valid = true
-	out.Int += val.Int - lastVal.Int
+	out.Int += diff
 }
 
 func NewErrors(config ErrorsConfig) (*Errors, error) {
