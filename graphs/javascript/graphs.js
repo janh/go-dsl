@@ -70,6 +70,32 @@ var DSLGraphs = DSLGraphs || (function () {
 	}
 
 
+	class Legend {
+
+		constructor() {
+			this.title = "";
+			this.items = [];
+		}
+
+	}
+
+	Object.defineProperty(Legend.prototype, 'title', {writable: true});
+	Object.defineProperty(Legend.prototype, 'items', {writable: true});
+
+
+	class LegendItem {
+
+		constructor(color, text) {
+			this.color = color;
+			this.text = text;
+		}
+
+	}
+
+	Object.defineProperty(LegendItem.prototype, 'color', {writable: true});
+	Object.defineProperty(LegendItem.prototype, 'text', {writable: true});
+
+
 	class GraphParams {
 
 		constructor() {
@@ -79,6 +105,16 @@ var DSLGraphs = DSLGraphs || (function () {
 			this.fontSize = 0.0;
 			this.colorBackground = new Color(255, 255, 255, 1.0);
 			this.colorForeground = new Color(0, 0, 0, 1.0);
+			this.legend = false;
+		}
+
+		static withLegend() {
+			var params = new GraphParams();
+
+			params.height = 132;
+			params.legend = true;
+
+			return params;
 		}
 
 	}
@@ -89,6 +125,7 @@ var DSLGraphs = DSLGraphs || (function () {
 	Object.defineProperty(GraphParams.prototype, 'fontSize', {writable: true});
 	Object.defineProperty(GraphParams.prototype, 'colorBackground', {writable: true});
 	Object.defineProperty(GraphParams.prototype, 'colorForeground', {writable: true});
+	Object.defineProperty(GraphParams.prototype, 'legend', {writable: true});
 
 
 	class GraphSpec {}
@@ -116,6 +153,9 @@ var DSLGraphs = DSLGraphs || (function () {
 	Object.defineProperty(GraphSpec.prototype, 'legendYLabelFormatFunc', {writable: true});
 	Object.defineProperty(GraphSpec.prototype, 'legendYBottom', {writable: true});
 	Object.defineProperty(GraphSpec.prototype, 'legendYTop', {writable: true});
+
+	Object.defineProperty(GraphSpec.prototype, 'legendEnabled', {writable: true});
+	Object.defineProperty(GraphSpec.prototype, 'legendData', {writable: true});
 
 
 	const COLOR_GREEN = Object.freeze(new Color(96, 192, 0, .75));
@@ -376,6 +416,10 @@ var DSLGraphs = DSLGraphs || (function () {
 			this.graphWidth = spec.width - this.graphX - Math.round(labelXMarginWidth+1.0*spec.scaleFactor);
 			this.graphHeight = spec.height - this.graphY - Math.round((14.0*fontFactor+5.0)*spec.scaleFactor);
 
+			if (spec.legendEnabled) {
+				this.graphHeight -= Math.round((15.0*fontFactor + 3.0) * spec.scaleFactor);
+			}
+
 			this.colorBackground = spec.colorBackground;
 			this.colorText = spec.colorForeground;
 
@@ -472,6 +516,16 @@ var DSLGraphs = DSLGraphs || (function () {
 				let text = spec.legendYLabelFormatFunc(i, legendYLabelStep, legendYLabelStart, spec.legendYLabelEnd);
 				this._labelsY.push({x: x - (5+5.5*ff)*f, y: pos + textOffset, text: text});
 			}).bind(this));
+
+			// legend for data
+			if (spec.legendEnabled) {
+				this._legendBaseline = this.height - (3+3*ff)*f;
+				this._legendOffset = 10 * ff * f;
+				this._legendSpacing = 10 * ff * f;
+				this._legendData = spec.legendData;
+			} else {
+				this._legendData = null;
+			}
 		}
 
 		draw(ctx) {
@@ -506,6 +560,25 @@ var DSLGraphs = DSLGraphs || (function () {
 			ctx.textAlign = "end";
 			for (var item of this._labelsY) {
 				ctx.fillText(item.text, item.x, item.y);
+			}
+
+			if (this._legendData) {
+				ctx.textAlign = "start";
+
+				let x = this._legendOffset;
+
+				ctx.fillText(this._legendData.title, x, this._legendBaseline);
+				x += ctx.measureText(this._legendData.title).width;
+
+				for (let item of this._legendData.items) {
+					x += this._legendSpacing;
+					ctx.fillStyle = item.color.toString();
+					ctx.fillText(" \u25FC ", x, this._legendBaseline);
+					x += ctx.measureText(" \u25FC ").width;
+					ctx.fillStyle = this.colorText.toString();
+					ctx.fillText(item.text, x, this._legendBaseline);
+					x += ctx.measureText(item.text).width;
+				}
 			}
 		}
 
@@ -874,6 +947,7 @@ var DSLGraphs = DSLGraphs || (function () {
 			this._spec.legendYLabelSteps = [2];
 			this._spec.legendYLabelFormatFunc = formatLegendYLabelBins;
 			this._spec.legendYLabelDigits = 3.75;
+			this._spec.legendData = this.constructor.legend();
 
 			this._specChanged = true;
 
@@ -881,6 +955,19 @@ var DSLGraphs = DSLGraphs || (function () {
 			this._setData(data);
 
 			this._draw();
+		}
+
+		static legend() {
+			var legend = new Legend();
+
+			legend.title = "Bitloading (bits per carrier)";
+			legend.items = [
+				new LegendItem(COLOR_BLUE, "Downstream"),
+				new LegendItem(COLOR_GREEN, "Upstream"),
+				new LegendItem(COLOR_RED, "Pilot tones")
+			];
+
+			return legend;
 		}
 
 		_draw() {
@@ -946,6 +1033,7 @@ var DSLGraphs = DSLGraphs || (function () {
 			this._spec.fontSize = params.fontSize;
 			this._spec.colorBackground = params.colorBackground;
 			this._spec.colorForeground = params.colorForeground;
+			this._spec.legendEnabled = params.legend;
 
 			this._specChanged = true;
 		}
@@ -1006,6 +1094,26 @@ var DSLGraphs = DSLGraphs || (function () {
 			this._setData(data, history);
 
 			this._draw();
+		}
+
+		static legend() {
+			var legend = new Legend();
+
+			legend.title = "Signal-to-noise ratio (dB)";
+
+			return legend;
+		}
+
+		static legendWithHistory() {
+			var legend = new Legend();
+
+			legend.title = "Signal-to-noise ratio (dB)";
+			legend.items = [
+				new LegendItem(COLOR_BLUE, "Minimum"),
+				new LegendItem(COLOR_GREEN, "Maximum")
+			];
+
+			return legend;
 		}
 
 		_draw() {
@@ -1089,6 +1197,7 @@ var DSLGraphs = DSLGraphs || (function () {
 			this._spec.fontSize = params.fontSize;
 			this._spec.colorBackground = params.colorBackground;
 			this._spec.colorForeground = params.colorForeground;
+			this._spec.legendEnabled = params.legend;
 
 			this._specChanged = true;
 		}
@@ -1107,6 +1216,19 @@ var DSLGraphs = DSLGraphs || (function () {
 				this._spec.legendXLabelEnd = legendXData.bins;
 				this._spec.legendXLabelSteps = [legendXData.step];
 				this._spec.legendXLabelFormatFunc = legendXData.formatFuncFreq;
+
+				this._specChanged = true;
+			}
+
+			if (this._history === undefined || !this._history != !history || (this._history && history &&
+					(this._history.SNR.Downstream.GroupSize != history.SNR.Downstream.GroupSize ||
+						this._history.SNR.Upstream.GroupSize != history.SNR.Upstream.GroupSize))) {
+
+				if (history && (history.SNR.Downstream.GroupSize != 0 || history.SNR.Upstream.GroupSize != 0)) {
+					this._spec.legendData = this.constructor.legendWithHistory();
+				} else {
+					this._spec.legendData = this.constructor.legend();
+				}
 
 				this._specChanged = true;
 			}
@@ -1143,6 +1265,7 @@ var DSLGraphs = DSLGraphs || (function () {
 			this._spec.legendYLabelSteps = [20];
 			this._spec.legendYLabelFormatFunc = formatLegendYLabelBins;
 			this._spec.legendYLabelDigits = 3.75;
+			this._spec.legendData = this.constructor.legend();
 
 			this._specChanged = true;
 
@@ -1150,6 +1273,14 @@ var DSLGraphs = DSLGraphs || (function () {
 			this._setData(data);
 
 			this._draw();
+		}
+
+		static legend() {
+			var legend = new Legend();
+
+			legend.title = "Quiet line noise (dBm/Hz)";
+
+			return legend;
 		}
 
 		_draw() {
@@ -1197,6 +1328,7 @@ var DSLGraphs = DSLGraphs || (function () {
 			this._spec.fontSize = params.fontSize;
 			this._spec.colorBackground = params.colorBackground;
 			this._spec.colorForeground = params.colorForeground;
+			this._spec.legendEnabled = params.legend;
 
 			this._specChanged = true;
 		}
@@ -1250,6 +1382,7 @@ var DSLGraphs = DSLGraphs || (function () {
 			this._spec.legendYLabelSteps = [20];
 			this._spec.legendYLabelFormatFunc = formatLegendYLabelBins;
 			this._spec.legendYLabelDigits = 3.75;
+			this._spec.legendData = this.constructor.legend();
 
 			this._specChanged = true;
 
@@ -1257,6 +1390,14 @@ var DSLGraphs = DSLGraphs || (function () {
 			this._setData(data);
 
 			this._draw();
+		}
+
+		static legend() {
+			var legend = new Legend();
+
+			legend.title = "Channel characteristic (dB)";
+
+			return legend;
 		}
 
 		_draw() {
@@ -1307,6 +1448,7 @@ var DSLGraphs = DSLGraphs || (function () {
 			this._spec.fontSize = params.fontSize;
 			this._spec.colorBackground = params.colorBackground;
 			this._spec.colorForeground = params.colorForeground;
+			this._spec.legendEnabled = params.legend;
 
 			this._specChanged = true;
 		}
@@ -1497,6 +1639,7 @@ var DSLGraphs = DSLGraphs || (function () {
 			this._spec.legendYLabelStart = 0;
 			this._spec.legendYLabelFormatFunc = formatLegendYLabelErrors;
 			this._spec.legendYLabelDigits = 5.0;
+			this._spec.legendData = this.constructor.legend();
 
 			this._specChanged = true;
 
@@ -1578,6 +1721,7 @@ var DSLGraphs = DSLGraphs || (function () {
 			this._spec.fontSize = params.fontSize;
 			this._spec.colorBackground = params.colorBackground;
 			this._spec.colorForeground = params.colorForeground;
+			this._spec.legendEnabled = params.legend;
 
 			this._specChanged = true;
 		}
@@ -1617,6 +1761,19 @@ var DSLGraphs = DSLGraphs || (function () {
 
 	class DownstreamRetransmissionGraph extends ErrorsGraph {
 
+		static legend() {
+			var legend = new Legend();
+
+			legend.title = "Downstream retransmissions";
+			legend.items = [
+				new LegendItem(COLOR_GREEN, "Retransmitted (rtx-tx)"),
+				new LegendItem(COLOR_BLUE, "Corrected (rtx-c)"),
+				new LegendItem(COLOR_RED, "Uncorrected (rtx-uc)")
+			];
+
+			return legend;
+		}
+
 		_getItems(data) {
 			if (data) {
 				return [
@@ -1632,6 +1789,19 @@ var DSLGraphs = DSLGraphs || (function () {
 
 
 	class UpstreamRetransmissionGraph extends ErrorsGraph {
+
+		static legend() {
+			var legend = new Legend();
+
+			legend.title = "Upstream retransmissions";
+			legend.items = [
+				new LegendItem(COLOR_GREEN, "Retransmitted (rtx-tx)"),
+				new LegendItem(COLOR_BLUE, "Corrected (rtx-c)"),
+				new LegendItem(COLOR_RED, "Uncorrected (rtx-uc)")
+			];
+
+			return legend;
+		}
 
 		_getItems(data) {
 			if (data) {
@@ -1649,6 +1819,18 @@ var DSLGraphs = DSLGraphs || (function () {
 
 	class DownstreamErrorsGraph extends ErrorsGraph {
 
+		static legend() {
+			var legend = new Legend();
+
+			legend.title = "Downstream errors";
+			legend.items = [
+				new LegendItem(COLOR_BLUE, "Corrected (FEC)"),
+				new LegendItem(COLOR_RED, "Uncorrected (CRC)")
+			];
+
+			return legend;
+		}
+
 		_getItems(data) {
 			if (data) {
 				return [
@@ -1663,6 +1845,18 @@ var DSLGraphs = DSLGraphs || (function () {
 
 
 	class UpstreamErrorsGraph extends ErrorsGraph {
+
+		static legend() {
+			var legend = new Legend();
+
+			legend.title = "Upstream errors";
+			legend.items = [
+				new LegendItem(COLOR_BLUE, "Corrected (FEC)"),
+				new LegendItem(COLOR_RED, "Uncorrected (CRC)")
+			];
+
+			return legend;
+		}
 
 		_getItems(data) {
 			if (data) {
@@ -1679,6 +1873,18 @@ var DSLGraphs = DSLGraphs || (function () {
 
 	class DownstreamErrorSecondsGraph extends ErrorsGraph {
 
+		static legend() {
+			var legend = new Legend();
+
+			legend.title = "Downstream errored seconds";
+			legend.items = [
+				new LegendItem(COLOR_BLUE, "Errored (ES)"),
+				new LegendItem(COLOR_RED, "Severely errored (SES)")
+			];
+
+			return legend;
+		}
+
 		_getItems(data) {
 			if (data) {
 				return [
@@ -1693,6 +1899,18 @@ var DSLGraphs = DSLGraphs || (function () {
 
 
 	class UpstreamErrorSecondsGraph extends ErrorsGraph {
+
+		static legend() {
+			var legend = new Legend();
+
+			legend.title = "Upstream errored seconds";
+			legend.items = [
+				new LegendItem(COLOR_BLUE, "Errored (ES)"),
+				new LegendItem(COLOR_RED, "Severely errored (SES)")
+			];
+
+			return legend;
+		}
 
 		_getItems(data) {
 			if (data) {

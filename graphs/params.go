@@ -11,6 +11,7 @@ type GraphParams struct {
 	FontSize        float64
 	ColorBackground Color
 	ColorForeground Color
+	Legend          bool
 }
 
 func (p *GraphParams) normalize() {
@@ -20,8 +21,9 @@ func (p *GraphParams) normalize() {
 }
 
 var (
-	DefaultWidth  = 560
-	DefaultHeight = 114
+	DefaultWidth            = 560
+	DefaultHeight           = 114
+	DefaultHeightWithLegend = 132
 
 	DefaultScaleFactor = 1.0
 
@@ -37,5 +39,16 @@ var (
 		FontSize:        DefaultFontSize,
 		ColorBackground: DefaultColorBackground,
 		ColorForeground: DefaultColorForeground,
+		Legend:          false,
+	}
+
+	DefaultGraphParamsWithLegend = GraphParams{
+		Width:           DefaultWidth,
+		Height:          DefaultHeightWithLegend,
+		ScaleFactor:     DefaultScaleFactor,
+		FontSize:        DefaultFontSize,
+		ColorBackground: DefaultColorBackground,
+		ColorForeground: DefaultColorForeground,
+		Legend:          true,
 	}
 )
