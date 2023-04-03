@@ -8,6 +8,7 @@ import (
 	"context"
 	"embed"
 	"fmt"
+	"html/template"
 	"log"
 	"net"
 	"net/http"
@@ -163,8 +164,9 @@ func handleRoot(w http.ResponseWriter, req *http.Request) {
 
 	w.Header().Set("Content-type", "text/html; charset=utf-8")
 
-	data, _ := files.ReadFile("templates/index.html")
-	w.Write(data)
+	tpl := template.Must(template.ParseFS(files, "templates/index.html"))
+	template.Must(tpl.ParseFS(common.Files, "res/graphs.html"))
+	tpl.Execute(w, nil)
 }
 
 func getStateMessage(change common.StateChange) (msg common.Message) {
