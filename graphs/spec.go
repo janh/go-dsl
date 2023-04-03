@@ -23,9 +23,10 @@ type graphSpec struct {
 	LegendXMin         float64
 	LegendXMax         float64
 
-	LegendYLabelStep  int
-	LegendYLabelStart int
-	LegendYLabelEnd   int
-	LegendYBottom     float64
-	LegendYTop        float64
+	LegendYLabelDigits float64
+	LegendYLabelStep   int
+	LegendYLabelStart  int
+	LegendYLabelEnd    int
+	LegendYBottom      float64
+	LegendYTop         float64
 }

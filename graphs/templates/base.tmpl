@@ -11,7 +11,7 @@
 	<g text-anchor="middle">
 		{{ range .LabelsX }}<text x="{{ .X }}" y="{{ .Y }}">{{ .Text }}</text>{{ end }}
 	</g>
-	<g transform="{{ .LabelsYTransform }}" text-anchor="end">
+	<g text-anchor="end">
 		{{ range .LabelsY }}<text x="{{ .X }}" y="{{ .Y }}">{{ .Text }}</text>{{ end }}
 	</g>
 </g>

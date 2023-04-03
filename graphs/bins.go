@@ -195,6 +195,7 @@ func DrawBitsGraph(out io.Writer, data models.Bins, params GraphParams) error {
 		LegendYLabelStart:  0,
 		LegendYLabelEnd:    15,
 		LegendYLabelStep:   2,
+		LegendYLabelDigits: 3.75,
 	}
 
 	m := bitsModel{}
@@ -362,6 +363,7 @@ func DrawSNRGraphWithHistory(out io.Writer, data models.Bins, history models.Bin
 		LegendYLabelStart:  0,
 		LegendYLabelEnd:    65,
 		LegendYLabelStep:   10,
+		LegendYLabelDigits: 3.75,
 	}
 
 	m := snrModel{}
@@ -424,6 +426,7 @@ func DrawQLNGraph(out io.Writer, data models.Bins, params GraphParams) error {
 		LegendYLabelStart:  -160,
 		LegendYLabelEnd:    -70,
 		LegendYLabelStep:   20,
+		LegendYLabelDigits: 3.75,
 	}
 
 	m := qlnModel{}
@@ -522,6 +525,7 @@ func DrawHlogGraph(out io.Writer, data models.Bins, params GraphParams) error {
 		LegendYLabelStart:  -100,
 		LegendYLabelEnd:    0,
 		LegendYLabelStep:   20,
+		LegendYLabelDigits: 3.75,
 	}
 
 	m := hlogModel{}

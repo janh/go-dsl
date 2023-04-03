@@ -73,7 +73,7 @@ var DSLGraphs = DSLGraphs || (function () {
 	class GraphParams {
 
 		constructor() {
-			this.width = 554;
+			this.width = 560;
 			this.height = 114;
 			this.scaleFactor = 1.0;
 			this.fontSize = 0.0;
@@ -109,6 +109,7 @@ var DSLGraphs = DSLGraphs || (function () {
 	Object.defineProperty(GraphSpec.prototype, 'legendXMin', {writable: true});
 	Object.defineProperty(GraphSpec.prototype, 'legendXMax', {writable: true});
 
+	Object.defineProperty(GraphSpec.prototype, 'legendYLabelDigits', {writable: true});
 	Object.defineProperty(GraphSpec.prototype, 'legendYLabelStep', {writable: true});
 	Object.defineProperty(GraphSpec.prototype, 'legendYLabelStart', {writable: true});
 	Object.defineProperty(GraphSpec.prototype, 'legendYLabelEnd', {writable: true});
@@ -279,7 +280,7 @@ var DSLGraphs = DSLGraphs || (function () {
 
 			var fontFactor;
 			if (spec.fontSize == 0) {
-				let factor = Math.min(scaledWidth/554, scaledHeight/114);
+				let factor = Math.min(scaledWidth/560, scaledHeight/114);
 				fontFactor = Math.min(Math.max(1.0, factor), 1.35);
 				this.fontSize = 10.5 * fontFactor * spec.scaleFactor;
 			} else {
@@ -287,7 +288,12 @@ var DSLGraphs = DSLGraphs || (function () {
 				this.fontSize = spec.fontSize * spec.scaleFactor;
 			}
 
-			this.graphX = Math.round((23.0*fontFactor + 5.0) * spec.scaleFactor);
+			var digitWidth = 6.1;
+
+			// 23.0 for default factors and 3.75 digits
+			var labelYWidth = (spec.legendYLabelDigits*digitWidth*fontFactor + 0.125) * spec.scaleFactor;
+
+			this.graphX = Math.round(labelYWidth + (6.0*fontFactor+5.0)*spec.scaleFactor);
 			this.graphY = Math.round(4.0 * fontFactor * spec.scaleFactor);
 			this.graphWidth = spec.width - this.graphX - Math.round((15.0*fontFactor-1.0)*spec.scaleFactor);
 			this.graphHeight = spec.height - this.graphY - Math.round((14.0*fontFactor+5.0)*spec.scaleFactor);
@@ -359,13 +365,6 @@ var DSLGraphs = DSLGraphs || (function () {
 			while (h*Math.abs(legendYLabelStep)/Math.abs(spec.legendYTop-spec.legendYBottom) < this.fontSize) {
 				legendYLabelStep *= 2;
 			}
-			this.labelsYTransform = null;
-			if (Math.max(Math.abs(spec.legendYLabelStart), Math.abs(spec.legendYLabelEnd)) >= 100) {
-				this.labelsYTransform = new Transform();
-				this.labelsYTransform.translate(x-(5+5.5*ff)*f, 0);
-				this.labelsYTransform.scale(0.7, 1);
-				this.labelsYTransform.translate((5+5.5*ff)*f-x, 0);
-			}
 			this._pathLegend.moveTo(x-0.5*s, y+0.5*s);
 			this._pathLegend.lineTo(x-0.5*s, y+h+0.5*s);
 			loopSteps(spec.legendYLabelStart+legendYLabelStep/2, spec.legendYLabelEnd, legendYLabelStep, (function(i) {
@@ -417,15 +416,9 @@ var DSLGraphs = DSLGraphs || (function () {
 				ctx.fillText(item.text, item.x, item.y);
 			}
 
-			if (this.labelsYTransform != null) {
-				ctx.setTransform(...this.labelsYTransform.abcdef());
-			}
 			ctx.textAlign = "end";
 			for (var item of this._labelsY) {
 				ctx.fillText(item.text, item.x, item.y);
-			}
-			if (this.labelsYTransform != null) {
-				ctx.resetTransform();
 			}
 		}
 
@@ -792,6 +785,7 @@ var DSLGraphs = DSLGraphs || (function () {
 			this._spec.legendYLabelStart = 0;
 			this._spec.legendYLabelEnd = 15;
 			this._spec.legendYLabelStep = 2;
+			this._spec.legendYLabelDigits = 3.75;
 
 			this._specChanged = true;
 
@@ -915,6 +909,7 @@ var DSLGraphs = DSLGraphs || (function () {
 			this._spec.legendYLabelStart = 0;
 			this._spec.legendYLabelEnd = 65;
 			this._spec.legendYLabelStep = 10;
+			this._spec.legendYLabelDigits = 3.75;
 
 			this._specChanged = true;
 
@@ -1057,6 +1052,7 @@ var DSLGraphs = DSLGraphs || (function () {
 			this._spec.legendYLabelStart = -160;
 			this._spec.legendYLabelEnd = -70;
 			this._spec.legendYLabelStep = 20;
+			this._spec.legendYLabelDigits = 3.75;
 
 			this._specChanged = true;
 
@@ -1162,6 +1158,7 @@ var DSLGraphs = DSLGraphs || (function () {
 			this._spec.legendYLabelStart = -100;
 			this._spec.legendYLabelEnd = 0;
 			this._spec.legendYLabelStep = 20;
+			this._spec.legendYLabelDigits = 3.75;
 
 			this._specChanged = true;
 

@@ -68,7 +68,7 @@ func getBaseModel(spec graphSpec) baseModel {
 
 	var fontFactor float64
 	if spec.FontSize == 0 {
-		factor := math.Min(m.ScaledWidth/554, m.ScaledHeight/114)
+		factor := math.Min(m.ScaledWidth/560, m.ScaledHeight/114)
 		fontFactor = math.Min(math.Max(1.0, factor), 1.35)
 		m.FontSize = 10.5 * fontFactor * spec.ScaleFactor
 	} else {
@@ -76,7 +76,12 @@ func getBaseModel(spec graphSpec) baseModel {
 		m.FontSize = spec.FontSize * spec.ScaleFactor
 	}
 
-	m.GraphX = math.Round((23.0*fontFactor + 5.0) * spec.ScaleFactor)
+	digitWidth := 6.1
+
+	// 23.0 for default factors and 3.75 digits
+	labelYWidth := (spec.LegendYLabelDigits*digitWidth*fontFactor + 0.125) * spec.ScaleFactor
+
+	m.GraphX = math.Round(labelYWidth + (6.0*fontFactor+5.0)*spec.ScaleFactor)
 	m.GraphY = math.Round(4.0 * fontFactor * spec.ScaleFactor)
 	m.GraphWidth = m.Width - m.GraphX - math.Round((15.0*fontFactor-1.0)*spec.ScaleFactor)
 	m.GraphHeight = m.Height - m.GraphY - math.Round((14.0*fontFactor+5.0)*spec.ScaleFactor)
@@ -139,11 +144,6 @@ func getBaseModel(spec graphSpec) baseModel {
 	legendYLabelStep := spec.LegendYLabelStep
 	for h*math.Abs(float64(legendYLabelStep))/math.Abs(spec.LegendYTop-spec.LegendYBottom) < m.FontSize {
 		legendYLabelStep *= 2
-	}
-	if math.Max(math.Abs(float64(spec.LegendYLabelStart)), math.Abs(float64(spec.LegendYLabelEnd))) >= 100 {
-		m.LabelsYTransform.Translate(x-(5+5.5*ff)*f, 0)
-		m.LabelsYTransform.Scale(0.7, 1)
-		m.LabelsYTransform.Translate((5+5.5*ff)*f-x, 0)
 	}
 	m.PathLegend.MoveTo(x-0.5*s, y+0.5*s)
 	m.PathLegend.LineTo(x-0.5*s, y+h+0.5*s)

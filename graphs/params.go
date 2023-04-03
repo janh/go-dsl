@@ -20,7 +20,7 @@ func (p *GraphParams) normalize() {
 }
 
 var (
-	DefaultWidth  = 554
+	DefaultWidth  = 560
 	DefaultHeight = 114
 
 	DefaultScaleFactor = 1.0

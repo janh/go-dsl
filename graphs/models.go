@@ -34,9 +34,8 @@ type baseModel struct {
 	PathLegend path
 	PathGrid   path
 
-	LabelsX          []label
-	LabelsY          []label
-	LabelsYTransform transform
+	LabelsX []label
+	LabelsY []label
 
 	ColorBandsDownstream Color
 	ColorBandsUpstream   Color
