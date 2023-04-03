@@ -1,23 +1,38 @@
+{{ define "legend" -}}
+	{{- if . -}}
+		<ul class="legend">
+			{{ range . }}
+				<li><span style="background-color: {{ .Color.CSS }}"></span> {{ .Text }}</li>
+			{{ end }}
+		</ul>
+	{{- end -}}
+{{- end }}
+
+
 {{ define "graphs" -}}
 	<h2>Bitloading (bits):</h2>
 	<p>
 		<canvas id="graph_bits"></canvas>
 	</p>
+	{{ template "legend" .LegendBits }}
 
 	<h2>Signal to noise ratio (dB):</h2>
 	<p>
 		<canvas id="graph_snr"></canvas>
 	</p>
+	{{ template "legend" .LegendSNR }}
 
 	<h2>Quiet line noise (dBm/Hz):</h2>
 	<p>
 		<canvas id="graph_qln"></canvas>
 	</p>
+	{{ template "legend" .LegendQLN }}
 
 	<h2>Channel characteristic (dB):</h2>
 	<p>
 		<canvas id="graph_hlog"></canvas>
 	</p>
+	{{ template "legend" .LegendHlog }}
 {{- end }}
 
 
@@ -27,16 +42,19 @@
 		<canvas id="graph_retransmission_ds"></canvas>
 		<canvas id="graph_retransmission_us"></canvas>
 	</p>
+	{{ template "legend" .LegendRetransmission }}
 
 	<h2>Errors (per 5 minutes):</h2>
 	<p>
 		<canvas id="graph_errors_ds"></canvas>
 		<canvas id="graph_errors_us"></canvas>
 	</p>
+	{{ template "legend" .LegendErrors }}
 
 	<h2>Errored seconds (per 5 minutes):</h2>
 	<p>
 		<canvas id="graph_errorseconds_ds"></canvas>
 		<canvas id="graph_errorseconds_us"></canvas>
 	</p>
+	{{ template "legend" .LegendErrorSeconds }}
 {{- end }}
