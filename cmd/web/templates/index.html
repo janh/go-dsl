@@ -20,41 +20,11 @@
 			<div id="summary"></div>
 
 			<div id="graphs">
-
-				<h2>Bitloading (bits):</h2>
-				<p><canvas id="graph_bits"></canvas></p>
-
-				<h2>Signal to noise ratio (dB):</h2>
-				<p><canvas id="graph_snr"></canvas></p>
-
-				<h2>Quiet line noise (dBm/Hz):</h2>
-				<p><canvas id="graph_qln"></canvas></p>
-
-				<h2>Channel characteristic (dB):</h2>
-				<p><canvas id="graph_hlog"></canvas></p>
-
+				{{ template "graphs" .GraphData }}
 			</div>
 
 			<div id="errors">
-
-				<h2>Retransmissions (per 5 minutes):</h2>
-				<p>
-					<canvas id="graph_retransmission_ds"></canvas>
-					<canvas id="graph_retransmission_us"></canvas>
-				</p>
-
-				<h2>Errors (per 5 minutes):</h2>
-				<p>
-					<canvas id="graph_errors_ds"></canvas>
-					<canvas id="graph_errors_us"></canvas>
-				</p>
-
-				<h2>Errored seconds (per 5 minutes):</h2>
-				<p>
-					<canvas id="graph_errorseconds_ds"></canvas>
-					<canvas id="graph_errorseconds_us"></canvas>
-				</p>
-
+				{{ template "graphs_errors" .GraphData }}
 			</div>
 
 		</div>

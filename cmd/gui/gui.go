@@ -126,6 +126,7 @@ func getMainDataURI() string {
 
 	buf := new(bytes.Buffer)
 	tpl := template.Must(template.ParseFS(resources, "res/main.html"))
+	template.Must(tpl.ParseFS(common.Files, "res/graphs.html"))
 	tpl.Execute(buf, data)
 
 	return "data:text/html;charset=utf-8;base64," + base64.StdEncoding.EncodeToString(buf.Bytes())
