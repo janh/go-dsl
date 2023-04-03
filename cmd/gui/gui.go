@@ -119,9 +119,10 @@ func getMainDataURI() string {
 	styleDSL, _ := common.Files.ReadFile("res/dsl.css")
 
 	data := map[string]interface{}{
-		"Style":    template.CSS(style),
-		"StyleDSL": template.CSS(styleDSL),
-		"Script":   template.JS(jsgraphs.Script()),
+		"Style":     template.CSS(style),
+		"StyleDSL":  template.CSS(styleDSL),
+		"Script":    template.JS(jsgraphs.Script()),
+		"GraphData": common.GetGraphTemplateData(),
 	}
 
 	buf := new(bytes.Buffer)

@@ -10,6 +10,10 @@ h2 {
 	margin: 1.3em 0 .8em 0;
 }
 
+p {
+	margin: 1em 0;
+}
+
 #state, dl {
 	max-width: 45em;
 }
@@ -92,6 +96,30 @@ dt::after {
 	flex-direction: row;
 	flex-wrap: wrap;
 	justify-content: space-between;
+}
+ul.legend {
+	margin: 0 0 1em 0;
+	padding: .2em 0 .1em 0;
+	display: flex;
+	flex-wrap: wrap;
+	flex-direction: row;
+	list-style-type: none;
+	color: #444;
+	user-select: none;
+	-webkit-user-select: none;
+}
+p + ul.legend {
+	margin-top: -1rem;
+}
+ul.legend li {
+	margin: 0 0 .2em 1.2em;
+	white-space: nowrap;
+}
+ul.legend span {
+	display: inline-block;
+	vertical-align: baseline;
+	width: .6em;
+	height: .6em;
 }
 
 #overlay {

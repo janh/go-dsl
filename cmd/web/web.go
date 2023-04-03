@@ -164,9 +164,13 @@ func handleRoot(w http.ResponseWriter, req *http.Request) {
 
 	w.Header().Set("Content-type", "text/html; charset=utf-8")
 
+	data := map[string]interface{}{
+		"GraphData": common.GetGraphTemplateData(),
+	}
+
 	tpl := template.Must(template.ParseFS(files, "templates/index.html"))
 	template.Must(tpl.ParseFS(common.Files, "res/graphs.html"))
-	tpl.Execute(w, nil)
+	tpl.Execute(w, data)
 }
 
 func getStateMessage(change common.StateChange) (msg common.Message) {
