@@ -119,7 +119,7 @@ func writeGraph(filename string, bins models.Bins, graphFunc func(out io.Writer,
 	f := createFile(filename)
 	defer f.Close()
 
-	err := graphFunc(f, bins, graphs.DefaultGraphParams)
+	err := graphFunc(f, bins, graphs.DefaultGraphParamsWithLegend)
 	if err != nil {
 		fmt.Println("failed to write graph:", err)
 		os.Exit(1)

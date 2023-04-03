@@ -45,7 +45,7 @@ func WriteArchive(w io.Writer, filenameBase string, state StateChange, rawData b
 	if err != nil {
 		return
 	}
-	err = graphs.DrawBitsGraph(fileWriter, state.Bins, graphs.DefaultGraphParams)
+	err = graphs.DrawBitsGraph(fileWriter, state.Bins, graphs.DefaultGraphParamsWithLegend)
 	if err != nil {
 		return
 	}
@@ -54,7 +54,7 @@ func WriteArchive(w io.Writer, filenameBase string, state StateChange, rawData b
 	if err != nil {
 		return
 	}
-	err = graphs.DrawSNRGraph(fileWriter, state.Bins, graphs.DefaultGraphParams)
+	err = graphs.DrawSNRGraph(fileWriter, state.Bins, graphs.DefaultGraphParamsWithLegend)
 	if err != nil {
 		return
 	}
@@ -63,7 +63,7 @@ func WriteArchive(w io.Writer, filenameBase string, state StateChange, rawData b
 	if err != nil {
 		return
 	}
-	err = graphs.DrawSNRGraphWithHistory(fileWriter, state.Bins, state.BinsHistory, graphs.DefaultGraphParams)
+	err = graphs.DrawSNRGraphWithHistory(fileWriter, state.Bins, state.BinsHistory, graphs.DefaultGraphParamsWithLegend)
 	if err != nil {
 		return
 	}
@@ -72,7 +72,7 @@ func WriteArchive(w io.Writer, filenameBase string, state StateChange, rawData b
 	if err != nil {
 		return
 	}
-	err = graphs.DrawQLNGraph(fileWriter, state.Bins, graphs.DefaultGraphParams)
+	err = graphs.DrawQLNGraph(fileWriter, state.Bins, graphs.DefaultGraphParamsWithLegend)
 	if err != nil {
 		return
 	}
@@ -81,7 +81,7 @@ func WriteArchive(w io.Writer, filenameBase string, state StateChange, rawData b
 	if err != nil {
 		return
 	}
-	err = graphs.DrawHlogGraph(fileWriter, state.Bins, graphs.DefaultGraphParams)
+	err = graphs.DrawHlogGraph(fileWriter, state.Bins, graphs.DefaultGraphParamsWithLegend)
 	if err != nil {
 		return
 	}
@@ -90,7 +90,7 @@ func WriteArchive(w io.Writer, filenameBase string, state StateChange, rawData b
 	if err != nil {
 		return
 	}
-	err = graphs.DrawDownstreamRetransmissionGraph(fileWriter, state.ErrorsHistory, graphs.DefaultGraphParams)
+	err = graphs.DrawDownstreamRetransmissionGraph(fileWriter, state.ErrorsHistory, graphs.DefaultGraphParamsWithLegend)
 	if err != nil {
 		return
 	}
@@ -99,7 +99,7 @@ func WriteArchive(w io.Writer, filenameBase string, state StateChange, rawData b
 	if err != nil {
 		return
 	}
-	err = graphs.DrawUpstreamRetransmissionGraph(fileWriter, state.ErrorsHistory, graphs.DefaultGraphParams)
+	err = graphs.DrawUpstreamRetransmissionGraph(fileWriter, state.ErrorsHistory, graphs.DefaultGraphParamsWithLegend)
 	if err != nil {
 		return
 	}
@@ -108,7 +108,7 @@ func WriteArchive(w io.Writer, filenameBase string, state StateChange, rawData b
 	if err != nil {
 		return
 	}
-	err = graphs.DrawDownstreamErrorsGraph(fileWriter, state.ErrorsHistory, graphs.DefaultGraphParams)
+	err = graphs.DrawDownstreamErrorsGraph(fileWriter, state.ErrorsHistory, graphs.DefaultGraphParamsWithLegend)
 	if err != nil {
 		return
 	}
@@ -117,7 +117,7 @@ func WriteArchive(w io.Writer, filenameBase string, state StateChange, rawData b
 	if err != nil {
 		return
 	}
-	err = graphs.DrawUpstreamErrorsGraph(fileWriter, state.ErrorsHistory, graphs.DefaultGraphParams)
+	err = graphs.DrawUpstreamErrorsGraph(fileWriter, state.ErrorsHistory, graphs.DefaultGraphParamsWithLegend)
 	if err != nil {
 		return
 	}
@@ -126,7 +126,7 @@ func WriteArchive(w io.Writer, filenameBase string, state StateChange, rawData b
 	if err != nil {
 		return
 	}
-	err = graphs.DrawDownstreamErrorSecondsGraph(fileWriter, state.ErrorsHistory, graphs.DefaultGraphParams)
+	err = graphs.DrawDownstreamErrorSecondsGraph(fileWriter, state.ErrorsHistory, graphs.DefaultGraphParamsWithLegend)
 	if err != nil {
 		return
 	}
@@ -135,7 +135,7 @@ func WriteArchive(w io.Writer, filenameBase string, state StateChange, rawData b
 	if err != nil {
 		return
 	}
-	err = graphs.DrawUpstreamErrorSecondsGraph(fileWriter, state.ErrorsHistory, graphs.DefaultGraphParams)
+	err = graphs.DrawUpstreamErrorSecondsGraph(fileWriter, state.ErrorsHistory, graphs.DefaultGraphParamsWithLegend)
 	if err != nil {
 		return
 	}
