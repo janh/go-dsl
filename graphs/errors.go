@@ -149,7 +149,7 @@ func buildErrorsPath(p *path, data []models.IntValue, scaleY, maxY, postScaleY f
 	}
 }
 
-func drawErrorsGraph(out io.Writer, data models.ErrorsHistory, params GraphParams, items []errorsGraphItem) error {
+func drawErrorsGraph(out io.Writer, data models.ErrorsHistory, params GraphParams, legend Legend, items []errorsGraphItem) error {
 
 	maxX, stepsX := getErrorsHistoryLegendX(data)
 	maxY, endY, stepsY := getErrorsHistoryLegendY(items)
@@ -177,6 +177,8 @@ func drawErrorsGraph(out io.Writer, data models.ErrorsHistory, params GraphParam
 		LegendYLabelSteps:      stepsY,
 		LegendYLabelFormatFunc: formatLegendYLabelErrors,
 		LegendYLabelDigits:     5.0,
+		LegendEnabled:          params.Legend,
+		LegendData:             legend,
 	}
 
 	m := errorsModel{}
@@ -210,8 +212,20 @@ func drawErrorsGraph(out io.Writer, data models.ErrorsHistory, params GraphParam
 	return writeTemplate(out, m, templateBase, templateErrors)
 }
 
+func GetDownstreamRetransmissionGraphLegend() Legend {
+	return Legend{
+		Title: "Downstream retransmissions",
+		Items: []LegendItem{
+			{Color: colorGreen, Text: "Retransmitted (rtx-tx)"},
+			{Color: colorBlue, Text: "Corrected (rtx-c)"},
+			{Color: colorRed, Text: "Uncorrected (rtx-uc)"},
+		},
+	}
+}
+
 func DrawDownstreamRetransmissionGraph(out io.Writer, data models.ErrorsHistory, params GraphParams) error {
 	return drawErrorsGraph(out, data, params,
+		GetDownstreamRetransmissionGraphLegend(),
 		[]errorsGraphItem{
 			{data: data.DownstreamRTXTXCount, color: colorGreen},
 			{data: data.DownstreamRTXCCount, color: colorBlue},
@@ -219,8 +233,20 @@ func DrawDownstreamRetransmissionGraph(out io.Writer, data models.ErrorsHistory,
 		})
 }
 
+func GetUpstreamRetransmissionGraphLegend() Legend {
+	return Legend{
+		Title: "Upstream retransmissions",
+		Items: []LegendItem{
+			{Color: colorGreen, Text: "Retransmitted (rtx-tx)"},
+			{Color: colorBlue, Text: "Corrected (rtx-c)"},
+			{Color: colorRed, Text: "Uncorrected (rtx-uc)"},
+		},
+	}
+}
+
 func DrawUpstreamRetransmissionGraph(out io.Writer, data models.ErrorsHistory, params GraphParams) error {
 	return drawErrorsGraph(out, data, params,
+		GetUpstreamRetransmissionGraphLegend(),
 		[]errorsGraphItem{
 			{data: data.UpstreamRTXTXCount, color: colorGreen},
 			{data: data.UpstreamRTXCCount, color: colorBlue},
@@ -228,32 +254,76 @@ func DrawUpstreamRetransmissionGraph(out io.Writer, data models.ErrorsHistory, p
 		})
 }
 
+func GetDownstreamErrorsGraphLegend() Legend {
+	return Legend{
+		Title: "Downstream errors",
+		Items: []LegendItem{
+			{Color: colorBlue, Text: "Corrected (FEC)"},
+			{Color: colorRed, Text: "Uncorrected (CRC)"},
+		},
+	}
+}
+
 func DrawDownstreamErrorsGraph(out io.Writer, data models.ErrorsHistory, params GraphParams) error {
 	return drawErrorsGraph(out, data, params,
+		GetDownstreamErrorsGraphLegend(),
 		[]errorsGraphItem{
 			{data: data.DownstreamFECCount, color: colorBlue},
 			{data: data.DownstreamCRCCount, color: colorRed},
 		})
 }
 
+func GetUpstreamErrorsGraphLegend() Legend {
+	return Legend{
+		Title: "Upstream errors",
+		Items: []LegendItem{
+			{Color: colorBlue, Text: "Corrected (FEC)"},
+			{Color: colorRed, Text: "Uncorrected (CRC)"},
+		},
+	}
+}
+
 func DrawUpstreamErrorsGraph(out io.Writer, data models.ErrorsHistory, params GraphParams) error {
 	return drawErrorsGraph(out, data, params,
+		GetUpstreamErrorsGraphLegend(),
 		[]errorsGraphItem{
 			{data: data.UpstreamFECCount, color: colorBlue},
 			{data: data.UpstreamCRCCount, color: colorRed},
 		})
 }
 
+func GetDownstreamErrorSecondsGraphLegend() Legend {
+	return Legend{
+		Title: "Downstream errored seconds",
+		Items: []LegendItem{
+			{Color: colorBlue, Text: "Errored (ES)"},
+			{Color: colorRed, Text: "Severely errored (SES)"},
+		},
+	}
+}
+
 func DrawDownstreamErrorSecondsGraph(out io.Writer, data models.ErrorsHistory, params GraphParams) error {
 	return drawErrorsGraph(out, data, params,
+		GetDownstreamErrorSecondsGraphLegend(),
 		[]errorsGraphItem{
 			{data: data.DownstreamESCount, color: colorBlue},
 			{data: data.DownstreamSESCount, color: colorRed},
 		})
 }
 
+func GetUpstreamErrorSecondsGraphLegend() Legend {
+	return Legend{
+		Title: "Upstream errored seconds",
+		Items: []LegendItem{
+			{Color: colorBlue, Text: "Errored (ES)"},
+			{Color: colorRed, Text: "Severely errored (SES)"},
+		},
+	}
+}
+
 func DrawUpstreamErrorSecondsGraph(out io.Writer, data models.ErrorsHistory, params GraphParams) error {
 	return drawErrorsGraph(out, data, params,
+		GetUpstreamErrorSecondsGraphLegend(),
 		[]errorsGraphItem{
 			{data: data.UpstreamESCount, color: colorBlue},
 			{data: data.UpstreamSESCount, color: colorRed},

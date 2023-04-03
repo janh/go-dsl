@@ -184,6 +184,17 @@ func buildBitsPath(p *path, bins models.BinsBits, scaleY float64) {
 	}
 }
 
+func GetBitsGraphLegend() Legend {
+	return Legend{
+		Title: "Bitloading (bits per carrier)",
+		Items: []LegendItem{
+			{Color: colorBlue, Text: "Downstream"},
+			{Color: colorGreen, Text: "Upstream"},
+			{Color: colorRed, Text: "Pilot tones"},
+		},
+	}
+}
+
 func DrawBitsGraph(out io.Writer, data models.Bins, params GraphParams) error {
 	bins, step, _ := getLegendX(data.Mode)
 
@@ -210,6 +221,8 @@ func DrawBitsGraph(out io.Writer, data models.Bins, params GraphParams) error {
 		LegendYLabelSteps:      []int{2},
 		LegendYLabelFormatFunc: formatLegendYLabelBins,
 		LegendYLabelDigits:     3.75,
+		LegendEnabled:          params.Legend,
+		LegendData:             GetBitsGraphLegend(),
 	}
 
 	m := bitsModel{}
@@ -349,14 +362,37 @@ func buildSNRMinMaxPath(pMin *path, pMax *path, bins models.BinsFloatMinMax, sca
 
 }
 
+func GetSNRGraphLegend() Legend {
+	return Legend{
+		Title: "Signal-to-noise ratio (dB)",
+	}
+}
+
 func DrawSNRGraph(out io.Writer, data models.Bins, params GraphParams) error {
 	return DrawSNRGraphWithHistory(out, data, models.BinsHistory{}, params)
+}
+
+func GetSNRGraphWithHistoryLegend() Legend {
+	return Legend{
+		Title: "Signal-to-noise ratio (dB)",
+		Items: []LegendItem{
+			{Color: colorBlue, Text: "Minimum"},
+			{Color: colorGreen, Text: "Maximum"},
+		},
+	}
 }
 
 func DrawSNRGraphWithHistory(out io.Writer, data models.Bins, history models.BinsHistory, params GraphParams) error {
 	bins, step, formatFuncFreq := getLegendX(data.Mode)
 
 	params.normalize()
+
+	var legend Legend
+	if history.SNR.Downstream.GroupSize != 0 || history.SNR.Upstream.GroupSize != 0 {
+		legend = GetSNRGraphWithHistoryLegend()
+	} else {
+		legend = GetSNRGraphLegend()
+	}
 
 	spec := graphSpec{
 		Width:                  params.Width,
@@ -379,6 +415,8 @@ func DrawSNRGraphWithHistory(out io.Writer, data models.Bins, history models.Bin
 		LegendYLabelSteps:      []int{10},
 		LegendYLabelFormatFunc: formatLegendYLabelBins,
 		LegendYLabelDigits:     3.75,
+		LegendEnabled:          params.Legend,
+		LegendData:             legend,
 	}
 
 	m := snrModel{}
@@ -417,6 +455,12 @@ func DrawSNRGraphWithHistory(out io.Writer, data models.Bins, history models.Bin
 	return writeTemplate(out, m, templateBase, templateSNR)
 }
 
+func GetQLNGraphLegend() Legend {
+	return Legend{
+		Title: "Quiet line noise (dBm/Hz)",
+	}
+}
+
 func DrawQLNGraph(out io.Writer, data models.Bins, params GraphParams) error {
 	bins, step, formatFuncFreq := getLegendX(data.Mode)
 
@@ -443,6 +487,8 @@ func DrawQLNGraph(out io.Writer, data models.Bins, params GraphParams) error {
 		LegendYLabelSteps:      []int{20},
 		LegendYLabelFormatFunc: formatLegendYLabelBins,
 		LegendYLabelDigits:     3.75,
+		LegendEnabled:          params.Legend,
+		LegendData:             GetQLNGraphLegend(),
 	}
 
 	m := qlnModel{}
@@ -517,6 +563,12 @@ func buildHlogPath(p *path, bins models.BinsFloat, scaleY, offsetY, maxY, postSc
 
 }
 
+func GetHlogGraphLegend() Legend {
+	return Legend{
+		Title: "Channel characteristic (dB)",
+	}
+}
+
 func DrawHlogGraph(out io.Writer, data models.Bins, params GraphParams) error {
 	bins, step, formatFuncFreq := getLegendX(data.Mode)
 
@@ -543,6 +595,8 @@ func DrawHlogGraph(out io.Writer, data models.Bins, params GraphParams) error {
 		LegendYLabelSteps:      []int{20},
 		LegendYLabelFormatFunc: formatLegendYLabelBins,
 		LegendYLabelDigits:     3.75,
+		LegendEnabled:          params.Legend,
+		LegendData:             GetHlogGraphLegend(),
 	}
 
 	m := hlogModel{}

@@ -125,6 +125,10 @@ func getBaseModel(spec graphSpec) baseModel {
 	m.GraphWidth = m.Width - m.GraphX - math.Round(labelXMarginWidth+1.0*spec.ScaleFactor)
 	m.GraphHeight = m.Height - m.GraphY - math.Round((14.0*fontFactor+5.0)*spec.ScaleFactor)
 
+	if spec.LegendEnabled {
+		m.GraphHeight -= math.Round((15.0*fontFactor + 3.0) * spec.ScaleFactor)
+	}
+
 	m.ColorBackground = spec.ColorBackground
 	m.ColorText = spec.ColorForeground
 
@@ -213,6 +217,14 @@ func getBaseModel(spec graphSpec) baseModel {
 		text := spec.LegendYLabelFormatFunc(i, legendYLabelStep, legendYLabelStart, spec.LegendYLabelEnd)
 		m.LabelsY = append(m.LabelsY, label{X: x - (5+5.5*ff)*f, Y: pos + textOffset, Text: text})
 	})
+
+	// legend for data
+	if spec.LegendEnabled {
+		m.LegendBaseline = m.Height - (3+3*ff)*f
+		m.LegendOffset = 10 * ff * f
+		m.LegendSpacing = 10 * ff * f
+		m.LegendData = spec.LegendData
+	}
 
 	return m
 }

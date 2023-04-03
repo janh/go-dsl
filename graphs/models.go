@@ -37,6 +37,11 @@ type baseModel struct {
 	LabelsX []label
 	LabelsY []label
 
+	LegendBaseline float64
+	LegendOffset   float64
+	LegendSpacing  float64
+	LegendData     Legend
+
 	ColorBandsDownstream Color
 	ColorBandsUpstream   Color
 	ColorBandsStroke     Color

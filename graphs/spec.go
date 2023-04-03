@@ -32,4 +32,7 @@ type graphSpec struct {
 	LegendYLabelFormatFunc labelFormatFunc
 	LegendYBottom          float64
 	LegendYTop             float64
+
+	LegendEnabled bool
+	LegendData    Legend
 }

@@ -14,6 +14,10 @@
 	<g text-anchor="end">
 		{{ range .LabelsY }}<text x="{{ .X }}" y="{{ .Y }}">{{ .Text }}</text>{{ end }}
 	</g>
+	<text x="{{ .LegendOffset }}" y="{{ .LegendBaseline }}">
+		{{ .LegendData.Title }}
+		{{ range .LegendData.Items }}<tspan dx="{{ $.LegendSpacing }}" fill="{{ .Color }}">◼</tspan> {{ .Text }} {{ end }}
+	</text>
 </g>
 
 <path fill="{{ .ColorBandsUpstream }}" d="{{ .PathBandsUpstream }}"/>
