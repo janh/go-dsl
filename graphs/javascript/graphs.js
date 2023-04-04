@@ -105,7 +105,6 @@ var DSLGraphs = DSLGraphs || (function () {
 	Object.defineProperty(GraphSpec.prototype, 'legendXLabelStep', {writable: true});
 	Object.defineProperty(GraphSpec.prototype, 'legendXLabelStart', {writable: true});
 	Object.defineProperty(GraphSpec.prototype, 'legendXLabelEnd', {writable: true});
-	Object.defineProperty(GraphSpec.prototype, 'legendXLabelFactor', {writable: true});
 	Object.defineProperty(GraphSpec.prototype, 'legendXLabelFormatFunc', {writable: true});
 	Object.defineProperty(GraphSpec.prototype, 'legendXMin', {writable: true});
 	Object.defineProperty(GraphSpec.prototype, 'legendXMax', {writable: true});
@@ -114,6 +113,7 @@ var DSLGraphs = DSLGraphs || (function () {
 	Object.defineProperty(GraphSpec.prototype, 'legendYLabelStep', {writable: true});
 	Object.defineProperty(GraphSpec.prototype, 'legendYLabelStart', {writable: true});
 	Object.defineProperty(GraphSpec.prototype, 'legendYLabelEnd', {writable: true});
+	Object.defineProperty(GraphSpec.prototype, 'legendYLabelFormatFunc', {writable: true});
 	Object.defineProperty(GraphSpec.prototype, 'legendYBottom', {writable: true});
 	Object.defineProperty(GraphSpec.prototype, 'legendYTop', {writable: true});
 
@@ -241,16 +241,31 @@ var DSLGraphs = DSLGraphs || (function () {
 	}
 
 
+	function formatLegendXLabelBinsNum(val, step, start, end) {
+		return val.toFixed(0);
+	}
+
+
+	function formatLegendYLabelBins(val, step, start, end) {
+		return val.toString();
+	}
+
+
 	function getLegendX(data) {
 		var res = {};
+		var freq;
 
 		if (data) {
 			res.bins = data.BinCount;
-			res.freq = data.CarrierSpacing;
+			freq = data.CarrierSpacing;
 		} else {
 			res.bins = 8192;
-			res.freq = 4.3125;
+			freq = 4.3125;
 		}
+
+		res.formatFuncFreq = function(val, step, start, end) {
+			return (val*(freq/1000)).toFixed(1);
+		};
 
 		switch (res.bins) {
 		case 3479:
@@ -363,7 +378,7 @@ var DSLGraphs = DSLGraphs || (function () {
 				let pos = x - 0.5*s + Math.round(w*frac);
 				this._pathLegend.moveTo(pos, y+h+Math.round(2*f)+0.5*s);
 				this._pathLegend.lineTo(pos, y+h+Math.round(1*f)+0.5*s);
-				let text = spec.legendXLabelFormatFunc(i*spec.legendXLabelFactor);
+				let text = spec.legendXLabelFormatFunc(i, legendXLabelStep, spec.legendXLabelStart, spec.legendXLabelEnd);
 				this._labelsX.push({x: pos, y: y + h + (2+8*ff)*f + textOffset, text: text});
 			}).bind(this));
 
@@ -390,7 +405,7 @@ var DSLGraphs = DSLGraphs || (function () {
 					this._pathGrid.moveTo(x+0.5*s, pos);
 					this._pathGrid.lineTo(x+w-0.5*s, pos);
 				}
-				let text = i.toString();
+				let text = spec.legendYLabelFormatFunc(i, legendYLabelStep, spec.legendYLabelStart, spec.legendYLabelEnd);
 				this._labelsY.push({x: x - (5+5.5*ff)*f, y: pos + textOffset, text: text});
 			}).bind(this));
 		}
@@ -786,14 +801,14 @@ var DSLGraphs = DSLGraphs || (function () {
 			this._spec = new GraphSpec();
 			this._spec.legendXMin = 0;
 			this._spec.legendXLabelStart = 0;
-			this._spec.legendXLabelFactor = 1.0;
-			this._spec.legendXLabelFormatFunc = function(val) { return val.toFixed(0) };
+			this._spec.legendXLabelFormatFunc = formatLegendXLabelBinsNum;
 			this._spec.legendXLabelDigits = 4.0;
 			this._spec.legendYBottom = 0;
 			this._spec.legendYTop = 15.166666667;
 			this._spec.legendYLabelStart = 0;
 			this._spec.legendYLabelEnd = 15;
 			this._spec.legendYLabelStep = 2;
+			this._spec.legendYLabelFormatFunc = formatLegendYLabelBins;
 			this._spec.legendYLabelDigits = 3.75;
 
 			this._specChanged = true;
@@ -912,13 +927,13 @@ var DSLGraphs = DSLGraphs || (function () {
 			this._spec = new GraphSpec();
 			this._spec.legendXMin = 0;
 			this._spec.legendXLabelStart = 0;
-			this._spec.legendXLabelFormatFunc = function (val) { return val.toFixed(1) };
 			this._spec.legendXLabelDigits = 4.0;
 			this._spec.legendYBottom = 0;
 			this._spec.legendYTop = 65;
 			this._spec.legendYLabelStart = 0;
 			this._spec.legendYLabelEnd = 65;
 			this._spec.legendYLabelStep = 10;
+			this._spec.legendYLabelFormatFunc = formatLegendYLabelBins;
 			this._spec.legendYLabelDigits = 3.75;
 
 			this._specChanged = true;
@@ -1027,7 +1042,7 @@ var DSLGraphs = DSLGraphs || (function () {
 				this._spec.legendXMax = legendXData.bins;
 				this._spec.legendXLabelEnd = legendXData.bins;
 				this._spec.legendXLabelStep = legendXData.step;
-				this._spec.legendXLabelFactor = legendXData.freq / 1000;
+				this._spec.legendXLabelFormatFunc = legendXData.formatFuncFreq;
 
 				this._specChanged = true;
 			}
@@ -1056,13 +1071,13 @@ var DSLGraphs = DSLGraphs || (function () {
 			this._spec = new GraphSpec();
 			this._spec.legendXMin = 0;
 			this._spec.legendXLabelStart = 0;
-			this._spec.legendXLabelFormatFunc = function (val) { return val.toFixed(1) };
 			this._spec.legendXLabelDigits = 4.0;
 			this._spec.legendYBottom = -160;
 			this._spec.legendYTop = -69;
 			this._spec.legendYLabelStart = -160;
 			this._spec.legendYLabelEnd = -70;
 			this._spec.legendYLabelStep = 20;
+			this._spec.legendYLabelFormatFunc = formatLegendYLabelBins;
 			this._spec.legendYLabelDigits = 3.75;
 
 			this._specChanged = true;
@@ -1135,7 +1150,7 @@ var DSLGraphs = DSLGraphs || (function () {
 				this._spec.legendXMax = legendXData.bins;
 				this._spec.legendXLabelEnd = legendXData.bins;
 				this._spec.legendXLabelStep = legendXData.step;
-				this._spec.legendXLabelFactor = legendXData.freq / 1000;
+				this._spec.legendXLabelFormatFunc = legendXData.formatFuncFreq;
 
 				this._specChanged = true;
 			}
@@ -1163,13 +1178,13 @@ var DSLGraphs = DSLGraphs || (function () {
 			this._spec = new GraphSpec();
 			this._spec.legendXMin = 0;
 			this._spec.legendXLabelStart = 0;
-			this._spec.legendXLabelFormatFunc = function (val) { return val.toFixed(1) };
 			this._spec.legendXLabelDigits = 4.0;
 			this._spec.legendYBottom = -100;
 			this._spec.legendYTop = 7;
 			this._spec.legendYLabelStart = -100;
 			this._spec.legendYLabelEnd = 0;
 			this._spec.legendYLabelStep = 20;
+			this._spec.legendYLabelFormatFunc = formatLegendYLabelBins;
 			this._spec.legendYLabelDigits = 3.75;
 
 			this._specChanged = true;
@@ -1245,7 +1260,7 @@ var DSLGraphs = DSLGraphs || (function () {
 				this._spec.legendXMax = legendXData.bins;
 				this._spec.legendXLabelEnd = legendXData.bins;
 				this._spec.legendXLabelStep = legendXData.step;
-				this._spec.legendXLabelFactor = legendXData.freq / 1000;
+				this._spec.legendXLabelFormatFunc = legendXData.formatFuncFreq;
 
 				this._specChanged = true;
 			}

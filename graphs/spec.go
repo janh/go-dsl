@@ -4,6 +4,8 @@
 
 package graphs
 
+type labelFormatFunc func(val, step, start, end int) string
+
 type graphSpec struct {
 	Width  int
 	Height int
@@ -15,19 +17,19 @@ type graphSpec struct {
 	ColorBackground Color
 	ColorForeground Color
 
-	LegendXLabelDigits float64
-	LegendXLabelStep   int
-	LegendXLabelStart  int
-	LegendXLabelEnd    int
-	LegendXLabelFactor float64
-	LegendXLabelFormat string
-	LegendXMin         float64
-	LegendXMax         float64
+	LegendXLabelDigits     float64
+	LegendXLabelStep       int
+	LegendXLabelStart      int
+	LegendXLabelEnd        int
+	LegendXLabelFormatFunc labelFormatFunc
+	LegendXMin             float64
+	LegendXMax             float64
 
-	LegendYLabelDigits float64
-	LegendYLabelStep   int
-	LegendYLabelStart  int
-	LegendYLabelEnd    int
-	LegendYBottom      float64
-	LegendYTop         float64
+	LegendYLabelDigits     float64
+	LegendYLabelStep       int
+	LegendYLabelStart      int
+	LegendYLabelEnd        int
+	LegendYLabelFormatFunc labelFormatFunc
+	LegendYBottom          float64
+	LegendYTop             float64
 }

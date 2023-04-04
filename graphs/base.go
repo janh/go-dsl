@@ -5,7 +5,6 @@
 package graphs
 
 import (
-	"fmt"
 	"math"
 )
 
@@ -142,7 +141,7 @@ func getBaseModel(spec graphSpec) baseModel {
 		pos := x - 0.5*s + math.Round(w*frac)
 		m.PathLegend.MoveTo(pos, y+h+math.Round(2*f)+0.5*s)
 		m.PathLegend.LineTo(pos, y+h+math.Round(1*f)+0.5*s)
-		text := fmt.Sprintf(spec.LegendXLabelFormat, float64(i)*spec.LegendXLabelFactor)
+		text := spec.LegendXLabelFormatFunc(i, legendXLabelStep, spec.LegendXLabelStart, spec.LegendXLabelEnd)
 		m.LabelsX = append(m.LabelsX, label{X: pos, Y: y + h + (2+8*ff)*f + textOffset, Text: text})
 	})
 
@@ -169,7 +168,7 @@ func getBaseModel(spec graphSpec) baseModel {
 			m.PathGrid.MoveTo(x+0.5*s, pos)
 			m.PathGrid.LineTo(x+w-0.5*s, pos)
 		}
-		text := fmt.Sprintf("%d", i)
+		text := spec.LegendYLabelFormatFunc(i, legendYLabelStep, spec.LegendYLabelStart, spec.LegendYLabelEnd)
 		m.LabelsY = append(m.LabelsY, label{X: x - (5+5.5*ff)*f, Y: pos + textOffset, Text: text})
 	})
 
