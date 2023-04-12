@@ -6,6 +6,7 @@ package graphs
 
 import (
 	"math"
+	"sort"
 )
 
 var (
@@ -54,6 +55,36 @@ func getGraphColors(background, foreground Color) (colorGraph, colorGrid, colorN
 	colorNeutralStroke = Color{uint8(grayNeutral), uint8(grayNeutral), uint8(grayNeutral), .75}
 
 	return
+}
+
+func determineLegendStep(specSteps []int, valueRange float64, maxStepCount float64) (step int) {
+	sort.Slice(specSteps, func(i, j int) bool {
+		return math.Abs(float64(specSteps[i])) < math.Abs(float64(specSteps[j]))
+	})
+
+	minStep := valueRange / maxStepCount
+
+	for _, step = range specSteps {
+		if math.Abs(float64(step)) >= minStep {
+			break
+		}
+	}
+
+	for math.Abs(float64(step)) < minStep {
+		step *= 2
+	}
+
+	return
+}
+
+func findNextStep(start, step int) int {
+	if step > 0 && start >= 0 {
+		return ((start + step - 1) / step) * step
+	} else if step < 0 && start < 0 {
+		return ((start + step + 1) / step) * step
+	} else {
+		return (start / step) * step
+	}
 }
 
 func getBaseModel(spec graphSpec) baseModel {
@@ -129,37 +160,41 @@ func getBaseModel(spec graphSpec) baseModel {
 	}
 
 	// legend for x-axis
-	legendXLabelStep := spec.LegendXLabelStep
-	legendXMaxLabelSize := ((spec.LegendXLabelDigits + 1) * digitWidth * ff * f)
-	for w*math.Abs(float64(legendXLabelStep))/math.Abs(spec.LegendXMax-spec.LegendXMin) < legendXMaxLabelSize {
-		legendXLabelStep *= 2
+	maxStepXCount := w / ((spec.LegendXLabelDigits + 1) * digitWidth * ff * f)
+	if maxStepXCount > 16 {
+		maxStepXCount = 16 + (maxStepXCount-16)*0.4
 	}
+	legendXValueRange := math.Abs(spec.LegendXMax - spec.LegendXMin)
+	legendXLabelStep := determineLegendStep(spec.LegendXLabelSteps, legendXValueRange, maxStepXCount)
+	legendXLabelStart := findNextStep(spec.LegendXLabelStart, legendXLabelStep)
 	m.PathLegend.MoveTo(x-0.5*s, y+h+0.5*s)
 	m.PathLegend.LineTo(x-0.5*s+w, y+h+0.5*s)
-	loopSteps(spec.LegendXLabelStart, spec.LegendXLabelEnd, legendXLabelStep, func(i int) {
+	loopSteps(legendXLabelStart, spec.LegendXLabelEnd, legendXLabelStep, func(i int) {
 		frac := (float64(i) - spec.LegendXMin) / (spec.LegendXMax - spec.LegendXMin)
 		pos := x - 0.5*s + math.Round(w*frac)
 		m.PathLegend.MoveTo(pos, y+h+math.Round(2*f)+0.5*s)
 		m.PathLegend.LineTo(pos, y+h+math.Round(1*f)+0.5*s)
-		text := spec.LegendXLabelFormatFunc(i, legendXLabelStep, spec.LegendXLabelStart, spec.LegendXLabelEnd)
+		text := spec.LegendXLabelFormatFunc(i, legendXLabelStep, legendXLabelStart, spec.LegendXLabelEnd)
 		m.LabelsX = append(m.LabelsX, label{X: pos, Y: y + h + (2+8*ff)*f + textOffset, Text: text})
 	})
 
 	// legend for y-axis
-	legendYLabelStep := spec.LegendYLabelStep
-	legendYMaxLabelSize := (digitHeight * ff * f)
-	for h*math.Abs(float64(legendYLabelStep))/math.Abs(spec.LegendYTop-spec.LegendYBottom) < legendYMaxLabelSize {
-		legendYLabelStep *= 2
+	maxStepYCount := h / (digitHeight * ff * f)
+	if maxStepYCount > 7.5 {
+		maxStepYCount = 7.5 + (maxStepYCount-7.5)*0.2
 	}
+	legendYValueRange := math.Abs(spec.LegendYTop - spec.LegendYBottom)
+	legendYLabelStep := determineLegendStep(spec.LegendYLabelSteps, legendYValueRange, maxStepYCount)
+	legendYLabelStart := findNextStep(spec.LegendYLabelStart, legendYLabelStep)
 	m.PathLegend.MoveTo(x-0.5*s, y+0.5*s)
 	m.PathLegend.LineTo(x-0.5*s, y+h+0.5*s)
-	loopSteps(spec.LegendYLabelStart+legendYLabelStep/2, spec.LegendYLabelEnd, legendYLabelStep, func(i int) {
+	loopSteps(legendYLabelStart+legendYLabelStep/2, spec.LegendYLabelEnd, legendYLabelStep, func(i int) {
 		frac := (float64(i) - spec.LegendYBottom) / (spec.LegendYTop - spec.LegendYBottom)
 		pos := y + h + 0.5*s - math.Round(h*frac)
 		m.PathLegend.MoveTo(x-math.Round(2*f)-0.5*s, pos)
 		m.PathLegend.LineTo(x-math.Round(1*f)-0.5*s, pos)
 	})
-	loopSteps(spec.LegendYLabelStart, spec.LegendYLabelEnd, legendYLabelStep, func(i int) {
+	loopSteps(legendYLabelStart, spec.LegendYLabelEnd, legendYLabelStep, func(i int) {
 		frac := (float64(i) - spec.LegendYBottom) / (spec.LegendYTop - spec.LegendYBottom)
 		pos := y + h + 0.5*s - math.Round(h*frac)
 		m.PathLegend.MoveTo(x-math.Round(4*f)-0.5*s, pos)
@@ -168,7 +203,7 @@ func getBaseModel(spec graphSpec) baseModel {
 			m.PathGrid.MoveTo(x+0.5*s, pos)
 			m.PathGrid.LineTo(x+w-0.5*s, pos)
 		}
-		text := spec.LegendYLabelFormatFunc(i, legendYLabelStep, spec.LegendYLabelStart, spec.LegendYLabelEnd)
+		text := spec.LegendYLabelFormatFunc(i, legendYLabelStep, legendYLabelStart, spec.LegendYLabelEnd)
 		m.LabelsY = append(m.LabelsY, label{X: x - (5+5.5*ff)*f, Y: pos + textOffset, Text: text})
 	})
 

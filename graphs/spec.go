@@ -18,7 +18,7 @@ type graphSpec struct {
 	ColorForeground Color
 
 	LegendXLabelDigits     float64
-	LegendXLabelStep       int
+	LegendXLabelSteps      []int
 	LegendXLabelStart      int
 	LegendXLabelEnd        int
 	LegendXLabelFormatFunc labelFormatFunc
@@ -26,7 +26,7 @@ type graphSpec struct {
 	LegendXMax             float64
 
 	LegendYLabelDigits     float64
-	LegendYLabelStep       int
+	LegendYLabelSteps      []int
 	LegendYLabelStart      int
 	LegendYLabelEnd        int
 	LegendYLabelFormatFunc labelFormatFunc
