@@ -78,8 +78,8 @@ func getBaseModel(spec graphSpec) baseModel {
 
 	m.GraphX = math.Round((23.0*fontFactor + 5.0) * spec.ScaleFactor)
 	m.GraphY = math.Round(4.0 * fontFactor * spec.ScaleFactor)
-	m.GraphWidth = m.Width - math.Round((38.0*fontFactor+4.0)*spec.ScaleFactor)
-	m.GraphHeight = m.Height - math.Round((18.0*fontFactor+5.0)*spec.ScaleFactor)
+	m.GraphWidth = m.Width - m.GraphX - math.Round((15.0*fontFactor-1.0)*spec.ScaleFactor)
+	m.GraphHeight = m.Height - m.GraphY - math.Round((14.0*fontFactor+5.0)*spec.ScaleFactor)
 
 	m.ColorBackground = spec.ColorBackground
 	m.ColorText = spec.ColorForeground

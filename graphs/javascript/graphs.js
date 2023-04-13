@@ -286,8 +286,8 @@ var DSLGraphs = DSLGraphs || (function () {
 
 			this.graphX = Math.round((23.0*fontFactor + 5.0) * spec.scaleFactor);
 			this.graphY = Math.round(4.0 * fontFactor * spec.scaleFactor);
-			this.graphWidth = spec.width - Math.round((38.0*fontFactor+4.0)*spec.scaleFactor);
-			this.graphHeight = spec.height - Math.round((18.0*fontFactor+5.0)*spec.scaleFactor);
+			this.graphWidth = spec.width - this.graphX - Math.round((15.0*fontFactor-1.0)*spec.scaleFactor);
+			this.graphHeight = spec.height - this.graphY - Math.round((14.0*fontFactor+5.0)*spec.scaleFactor);
 
 			this.colorBackground = spec.colorBackground;
 			this.colorText = spec.colorForeground;
