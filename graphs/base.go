@@ -77,6 +77,7 @@ func getBaseModel(spec graphSpec) baseModel {
 	}
 
 	digitWidth := 6.1
+	digitHeight := 10.5
 
 	// 23.0 for default factors and 3.75 digits
 	labelYWidth := (spec.LegendYLabelDigits*digitWidth*fontFactor + 0.125) * spec.ScaleFactor
@@ -147,7 +148,8 @@ func getBaseModel(spec graphSpec) baseModel {
 
 	// legend for y-axis
 	legendYLabelStep := spec.LegendYLabelStep
-	for h*math.Abs(float64(legendYLabelStep))/math.Abs(spec.LegendYTop-spec.LegendYBottom) < m.FontSize {
+	legendYMaxLabelSize := (digitHeight * ff * f)
+	for h*math.Abs(float64(legendYLabelStep))/math.Abs(spec.LegendYTop-spec.LegendYBottom) < legendYMaxLabelSize {
 		legendYLabelStep *= 2
 	}
 	m.PathLegend.MoveTo(x-0.5*s, y+0.5*s)

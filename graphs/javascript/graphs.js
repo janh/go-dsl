@@ -290,6 +290,7 @@ var DSLGraphs = DSLGraphs || (function () {
 			}
 
 			var digitWidth = 6.1;
+			var digitHeight = 10.5;
 
 			// 23.0 for default factors and 3.75 digits
 			var labelYWidth = (spec.legendYLabelDigits*digitWidth*fontFactor + 0.125) * spec.scaleFactor;
@@ -368,7 +369,8 @@ var DSLGraphs = DSLGraphs || (function () {
 
 			// legend for y-axis
 			var legendYLabelStep = spec.legendYLabelStep;
-			while (h*Math.abs(legendYLabelStep)/Math.abs(spec.legendYTop-spec.legendYBottom) < this.fontSize) {
+			var legendYMaxLabelSize = (digitHeight * ff * f);
+			while (h*Math.abs(legendYLabelStep)/Math.abs(spec.legendYTop-spec.legendYBottom) < legendYMaxLabelSize) {
 				legendYLabelStep *= 2;
 			}
 			this._pathLegend.moveTo(x-0.5*s, y+0.5*s);
