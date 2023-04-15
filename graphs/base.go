@@ -80,10 +80,14 @@ func getBaseModel(spec graphSpec) baseModel {
 
 	// 23.0 for default factors and 3.75 digits
 	labelYWidth := (spec.LegendYLabelDigits*digitWidth*fontFactor + 0.125) * spec.ScaleFactor
+	// 13.0 for default factors and 4.0 digits
+	labelXMarginWidth := (0.5*spec.LegendXLabelDigits*digitWidth*fontFactor + 0.8) * spec.ScaleFactor
 
-	m.GraphX = math.Round(labelYWidth + (6.0*fontFactor+5.0)*spec.ScaleFactor)
+	m.GraphX = math.Round(math.Max(
+		labelYWidth+(6.0*fontFactor+5.0)*spec.ScaleFactor,
+		labelXMarginWidth+1.0*spec.ScaleFactor))
 	m.GraphY = math.Round(4.0 * fontFactor * spec.ScaleFactor)
-	m.GraphWidth = m.Width - m.GraphX - math.Round((15.0*fontFactor-1.0)*spec.ScaleFactor)
+	m.GraphWidth = m.Width - m.GraphX - math.Round(labelXMarginWidth+1.0*spec.ScaleFactor)
 	m.GraphHeight = m.Height - m.GraphY - math.Round((14.0*fontFactor+5.0)*spec.ScaleFactor)
 
 	m.ColorBackground = spec.ColorBackground
@@ -126,7 +130,8 @@ func getBaseModel(spec graphSpec) baseModel {
 
 	// legend for x-axis
 	legendXLabelStep := spec.LegendXLabelStep
-	for w*math.Abs(float64(legendXLabelStep))/math.Abs(spec.LegendXMax-spec.LegendXMin) < m.FontSize*2.5 {
+	legendXMaxLabelSize := ((spec.LegendXLabelDigits + 1) * digitWidth * ff * f)
+	for w*math.Abs(float64(legendXLabelStep))/math.Abs(spec.LegendXMax-spec.LegendXMin) < legendXMaxLabelSize {
 		legendXLabelStep *= 2
 	}
 	m.PathLegend.MoveTo(x-0.5*s, y+h+0.5*s)

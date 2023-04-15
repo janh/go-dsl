@@ -101,6 +101,7 @@ var DSLGraphs = DSLGraphs || (function () {
 	Object.defineProperty(GraphSpec.prototype, 'colorBackground', {writable: true});
 	Object.defineProperty(GraphSpec.prototype, 'colorForeground', {writable: true});
 
+	Object.defineProperty(GraphSpec.prototype, 'legendXLabelDigits', {writable: true});
 	Object.defineProperty(GraphSpec.prototype, 'legendXLabelStep', {writable: true});
 	Object.defineProperty(GraphSpec.prototype, 'legendXLabelStart', {writable: true});
 	Object.defineProperty(GraphSpec.prototype, 'legendXLabelEnd', {writable: true});
@@ -292,10 +293,14 @@ var DSLGraphs = DSLGraphs || (function () {
 
 			// 23.0 for default factors and 3.75 digits
 			var labelYWidth = (spec.legendYLabelDigits*digitWidth*fontFactor + 0.125) * spec.scaleFactor;
+			// 13.0 for default factors and 4.0 digits
+			var labelXMarginWidth = (0.5*spec.legendXLabelDigits*digitWidth*fontFactor + 0.8) * spec.scaleFactor;
 
-			this.graphX = Math.round(labelYWidth + (6.0*fontFactor+5.0)*spec.scaleFactor);
+			this.graphX = Math.round(Math.max(
+				labelYWidth+(6.0*fontFactor+5.0)*spec.scaleFactor,
+				labelXMarginWidth+1.0*spec.scaleFactor));
 			this.graphY = Math.round(4.0 * fontFactor * spec.scaleFactor);
-			this.graphWidth = spec.width - this.graphX - Math.round((15.0*fontFactor-1.0)*spec.scaleFactor);
+			this.graphWidth = spec.width - this.graphX - Math.round(labelXMarginWidth+1.0*spec.scaleFactor);
 			this.graphHeight = spec.height - this.graphY - Math.round((14.0*fontFactor+5.0)*spec.scaleFactor);
 
 			this.colorBackground = spec.colorBackground;
@@ -346,7 +351,8 @@ var DSLGraphs = DSLGraphs || (function () {
 
 			// legend for x-axis
 			var legendXLabelStep = spec.legendXLabelStep;
-			while (w*Math.abs(legendXLabelStep)/Math.abs(spec.legendXMax-spec.legendXMin) < this.fontSize*2.5) {
+			var legendXMaxLabelSize = ((spec.legendXLabelDigits + 1) * digitWidth * ff * f);
+			while (w*Math.abs(legendXLabelStep)/Math.abs(spec.legendXMax-spec.legendXMin) < legendXMaxLabelSize) {
 				legendXLabelStep *= 2;
 			}
 			this._pathLegend.moveTo(x-0.5*s, y+h+0.5*s);
@@ -780,6 +786,7 @@ var DSLGraphs = DSLGraphs || (function () {
 			this._spec.legendXLabelStart = 0;
 			this._spec.legendXLabelFactor = 1.0;
 			this._spec.legendXLabelFormatFunc = function(val) { return val.toFixed(0) };
+			this._spec.legendXLabelDigits = 4.0;
 			this._spec.legendYBottom = 0;
 			this._spec.legendYTop = 15.166666667;
 			this._spec.legendYLabelStart = 0;
@@ -904,6 +911,7 @@ var DSLGraphs = DSLGraphs || (function () {
 			this._spec.legendXMin = 0;
 			this._spec.legendXLabelStart = 0;
 			this._spec.legendXLabelFormatFunc = function (val) { return val.toFixed(1) };
+			this._spec.legendXLabelDigits = 4.0;
 			this._spec.legendYBottom = 0;
 			this._spec.legendYTop = 65;
 			this._spec.legendYLabelStart = 0;
@@ -1047,6 +1055,7 @@ var DSLGraphs = DSLGraphs || (function () {
 			this._spec.legendXMin = 0;
 			this._spec.legendXLabelStart = 0;
 			this._spec.legendXLabelFormatFunc = function (val) { return val.toFixed(1) };
+			this._spec.legendXLabelDigits = 4.0;
 			this._spec.legendYBottom = -160;
 			this._spec.legendYTop = -69;
 			this._spec.legendYLabelStart = -160;
@@ -1153,6 +1162,7 @@ var DSLGraphs = DSLGraphs || (function () {
 			this._spec.legendXMin = 0;
 			this._spec.legendXLabelStart = 0;
 			this._spec.legendXLabelFormatFunc = function (val) { return val.toFixed(1) };
+			this._spec.legendXLabelDigits = 4.0;
 			this._spec.legendYBottom = -100;
 			this._spec.legendYTop = 7;
 			this._spec.legendYLabelStart = -100;

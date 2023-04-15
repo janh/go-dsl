@@ -15,6 +15,7 @@ type graphSpec struct {
 	ColorBackground Color
 	ColorForeground Color
 
+	LegendXLabelDigits float64
 	LegendXLabelStep   int
 	LegendXLabelStart  int
 	LegendXLabelEnd    int
