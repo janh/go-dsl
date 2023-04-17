@@ -87,6 +87,10 @@ func findNextStep(start, step int) int {
 	}
 }
 
+func findNextStepWithOffset(start, step, offset int) int {
+	return findNextStep(start-offset, step) + offset
+}
+
 func getBaseModel(spec graphSpec) baseModel {
 	m := baseModel{}
 
@@ -188,12 +192,15 @@ func getBaseModel(spec graphSpec) baseModel {
 	legendYLabelStart := findNextStep(spec.LegendYLabelStart, legendYLabelStep)
 	m.PathLegend.MoveTo(x-0.5*s, y+0.5*s)
 	m.PathLegend.LineTo(x-0.5*s, y+h+0.5*s)
-	loopSteps(legendYLabelStart+legendYLabelStep/2, spec.LegendYLabelEnd, legendYLabelStep, func(i int) {
-		frac := (float64(i) - spec.LegendYBottom) / (spec.LegendYTop - spec.LegendYBottom)
-		pos := y + h + 0.5*s - math.Round(h*frac)
-		m.PathLegend.MoveTo(x-math.Round(2*f)-0.5*s, pos)
-		m.PathLegend.LineTo(x-math.Round(1*f)-0.5*s, pos)
-	})
+	if legendYLabelStep%2 == 0 {
+		legendYLabelStartHalf := findNextStepWithOffset(spec.LegendYLabelStart, legendYLabelStep, legendYLabelStep/2)
+		loopSteps(legendYLabelStartHalf, spec.LegendYLabelEnd, legendYLabelStep, func(i int) {
+			frac := (float64(i) - spec.LegendYBottom) / (spec.LegendYTop - spec.LegendYBottom)
+			pos := y + h + 0.5*s - math.Round(h*frac)
+			m.PathLegend.MoveTo(x-math.Round(2*f)-0.5*s, pos)
+			m.PathLegend.LineTo(x-math.Round(1*f)-0.5*s, pos)
+		})
+	}
 	loopSteps(legendYLabelStart, spec.LegendYLabelEnd, legendYLabelStep, func(i int) {
 		frac := (float64(i) - spec.LegendYBottom) / (spec.LegendYTop - spec.LegendYBottom)
 		pos := y + h + 0.5*s - math.Round(h*frac)

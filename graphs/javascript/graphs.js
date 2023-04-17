@@ -273,6 +273,11 @@ var DSLGraphs = DSLGraphs || (function () {
 	}
 
 
+	function findNextStepWithOffset(start, step, offset) {
+		return findNextStep(start-offset, step) + offset;
+	}
+
+
 	function formatLegendXLabelBinsNum(val, step, start, end) {
 		return val.toFixed(0);
 	}
@@ -426,12 +431,15 @@ var DSLGraphs = DSLGraphs || (function () {
 			var legendYLabelStart = findNextStep(spec.legendYLabelStart, legendYLabelStep);
 			this._pathLegend.moveTo(x-0.5*s, y+0.5*s);
 			this._pathLegend.lineTo(x-0.5*s, y+h+0.5*s);
-			loopSteps(legendYLabelStart+legendYLabelStep/2, spec.legendYLabelEnd, legendYLabelStep, (function(i) {
-				let frac = (i - spec.legendYBottom) / (spec.legendYTop - spec.legendYBottom);
-				let pos = y + h + 0.5*s - Math.round(h*frac);
-				this._pathLegend.moveTo(x-Math.round(2*f)-0.5*s, pos);
-				this._pathLegend.lineTo(x-Math.round(1*f)-0.5*s, pos);
-			}).bind(this));
+			if (legendYLabelStep%2 == 0) {
+				let legendYLabelStartHalf = findNextStepWithOffset(spec.legendYLabelStart, legendYLabelStep, legendYLabelStep/2);
+				loopSteps(legendYLabelStartHalf, spec.legendYLabelEnd, legendYLabelStep, (function(i) {
+					let frac = (i - spec.legendYBottom) / (spec.legendYTop - spec.legendYBottom);
+					let pos = y + h + 0.5*s - Math.round(h*frac);
+					this._pathLegend.moveTo(x-Math.round(2*f)-0.5*s, pos);
+					this._pathLegend.lineTo(x-Math.round(1*f)-0.5*s, pos);
+				}).bind(this));
+			}
 			loopSteps(legendYLabelStart, spec.legendYLabelEnd, legendYLabelStep, (function(i) {
 				let frac = (i - spec.legendYBottom) / (spec.legendYTop - spec.legendYBottom);
 				let pos = y + h + 0.5*s - Math.round(h*frac);
