@@ -10,7 +10,7 @@ The application includes a **graphical user interface**, but it can also be used
 [Go here to **download**](https://github.com/janh/go-dsl/releases) binaries for Linux, Windows and macOS.
 
 **You are a developer and want to use the library in your own project?**  
-[Get the source from 3e8.eu/go/dsl](https://3e8.eu/go/dsl).
+[Use the package 3e8.eu/go/dsl](https://3e8.eu/go/dsl).
 Note that there is no stable release yet, so incompatible changes should be expected occasionally.
 
 ---
