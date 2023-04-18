@@ -140,5 +140,14 @@ func WriteArchive(w io.Writer, filenameBase string, state StateChange, rawData b
 		return
 	}
 
+	fileWriter, err = archive.Create(filenameBase + "_errors.txt")
+	if err != nil {
+		return
+	}
+	_, err = io.WriteString(fileWriter, state.ErrorsHistory.String())
+	if err != nil {
+		return
+	}
+
 	return
 }

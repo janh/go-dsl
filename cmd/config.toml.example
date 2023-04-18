@@ -1,0 +1,4 @@
+DeviceType = "lantiq_ssh"
+Host = "openwrt.lan"
+User = "root"
+Options = { "Command" = "dsl_cpe_pipe.sh" }
