@@ -25,6 +25,19 @@ func (c Color) String() string {
 	return fmt.Sprintf("rgba(%d,%d,%d,%s)", c.R, c.G, c.B, aStr)
 }
 
+func (c Color) ColorHex() string {
+	return fmt.Sprintf("#%02x%02x%02x", c.R, c.G, c.B)
+}
+
+func (c Color) Opacity() string {
+	a := math.Round(c.A*1000) / 1000
+	aStr := strconv.FormatFloat(a, 'f', -1, 64)
+	if len(aStr) > 1 && aStr[0] == '0' {
+		aStr = aStr[1:]
+	}
+	return aStr
+}
+
 func (c Color) CSS() template.CSS {
 	return template.CSS(c.String())
 }

@@ -1,7 +1,7 @@
 {{ define "content" }}
 <g transform="{{ .Transform }}">
-	<path fill="none" stroke-linecap="butt" stroke-width="{{ .StrokeWidthPilotTones }}" stroke="{{ .ColorPilotTones }}" d="{{ .PathPilotTones }}"/>
-	<path fill="{{ .ColorUpstream }}" d="{{ .PathUpstream }}"/>
-	<path fill="{{ .ColorDownstream }}" d="{{ .PathDownstream }}"/>
+	<path fill="none" stroke-linecap="butt" stroke-width="{{ .StrokeWidthPilotTones }}" {{ template "color_stroke" .ColorPilotTones }} d="{{ .PathPilotTones }}"/>
+	<path {{ template "color_fill" .ColorUpstream }} d="{{ .PathUpstream }}"/>
+	<path {{ template "color_fill" .ColorDownstream }} d="{{ .PathDownstream }}"/>
 </g>
 {{ end }}

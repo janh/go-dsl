@@ -1,7 +1,7 @@
 {{ define "content" }}
-<path transform="{{ .Transform }}" fill="{{ .ColorNeutralFill }}" d="{{ .Path }}"/>
+<path transform="{{ .Transform }}" {{ template "color_fill" .ColorNeutralFill }} d="{{ .Path }}"/>
 <g transform="{{ .TransformMinMax }}" fill="none" stroke-width="{{ .StrokeWidth }}" stroke-linecap="butt" style="isolation:isolate">
-	<path stroke="{{ .ColorMinStroke }}" d="{{ .PathMin }}"/>
-	<path stroke="{{ .ColorMaxStroke }}" style="mix-blend-mode:multiply" d="{{ .PathMax }}"/>
+	<path {{ template "color_stroke" .ColorMinStroke }} d="{{ .PathMin }}"/>
+	<path {{ template "color_stroke" .ColorMaxStroke }} style="mix-blend-mode:multiply" d="{{ .PathMax }}"/>
 </g>
 {{ end }}

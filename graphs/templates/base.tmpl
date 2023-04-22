@@ -1,13 +1,16 @@
 <?xml version="1.0"?>
 <svg viewBox="0 0 {{ .Width }} {{ .Height }}" width="{{ .ScaledWidth }}" height="{{ .ScaledHeight }}" xmlns="http://www.w3.org/2000/svg">
 
-<rect fill="{{ .ColorBackground }}" x="0" y="0" width="{{ .Width }}" height="{{ .Height }}"/>
-<rect fill="{{ .ColorGraph }}" x="{{ .GraphX }}" y="{{ .GraphY }}" width="{{ .GraphWidth }}" height="{{ .GraphHeight }}"/>
+{{ define "color_fill" }}fill="{{ .ColorHex }}" fill-opacity="{{ .Opacity }}"{{ end }}
+{{ define "color_stroke" }}stroke="{{ .ColorHex }}" stroke-opacity="{{ .Opacity }}"{{ end }}
+
+<rect {{ template "color_fill" .ColorBackground }} x="0" y="0" width="{{ .Width }}" height="{{ .Height }}"/>
+<rect {{ template "color_fill" .ColorGraph }} x="{{ .GraphX }}" y="{{ .GraphY }}" width="{{ .GraphWidth }}" height="{{ .GraphHeight }}"/>
 <g fill="none" stroke-linecap="square" stroke-width="{{ .StrokeWidthBase }}">
-	<path stroke="{{ .ColorText }}" d="{{ .PathLegend }}"/>
-	<path stroke="{{ .ColorGrid }}" d="{{ .PathGrid }}"/>
+	<path {{ template "color_stroke" .ColorText }} d="{{ .PathLegend }}"/>
+	<path {{ template "color_stroke" .ColorGrid }} d="{{ .PathGrid }}"/>
 </g>
-<g font-family="Arial,Helvetica,sans-serif" font-size="{{ .FontSize }}" fill="{{ .ColorText }}">
+<g font-family="Arial,Helvetica,sans-serif" font-size="{{ .FontSize }}" {{ template "color_fill" .ColorText }}>
 	<g text-anchor="middle">
 		{{ range .LabelsX }}<text x="{{ .X }}" y="{{ .Y }}">{{ .Text }}</text>{{ end }}
 	</g>
@@ -16,13 +19,13 @@
 	</g>
 	<text x="{{ .LegendOffset }}" y="{{ .LegendBaseline }}">
 		{{ .LegendData.Title }}
-		{{ range .LegendData.Items }}<tspan dx="{{ $.LegendSpacing }}" fill="{{ .Color }}">◼</tspan> {{ .Text }} {{ end }}
+		{{ range .LegendData.Items }}<tspan dx="{{ $.LegendSpacing }}" {{ template "color_fill" .Color }}>◼</tspan> {{ .Text }} {{ end }}
 	</text>
 </g>
 
-<path fill="{{ .ColorBandsUpstream }}" d="{{ .PathBandsUpstream }}"/>
-<path fill="{{ .ColorBandsDownstream }}" d="{{ .PathBandsDownstream }}"/>
-<path fill="none" stroke-linecap="square" stroke-width="{{ .StrokeWidthBase }}" stroke="{{ .ColorBandsStroke }}" d="{{ .PathBandsStroke }}"/>
+<path {{ template "color_fill" .ColorBandsUpstream }} d="{{ .PathBandsUpstream }}"/>
+<path {{ template "color_fill" .ColorBandsDownstream }} d="{{ .PathBandsDownstream }}"/>
+<path fill="none" stroke-linecap="square" stroke-width="{{ .StrokeWidthBase }}" {{ template "color_stroke" .ColorBandsStroke }} d="{{ .PathBandsStroke }}"/>
 
 {{ template "content" . }}
 
