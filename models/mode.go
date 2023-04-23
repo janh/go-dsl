@@ -125,7 +125,10 @@ func (m Mode) BinCount() int {
 
 		switch m.Subtype {
 
-		case ModeSubtypeProfile8a, ModeSubtypeProfile8b, ModeSubtypeProfile8c, ModeSubtypeProfile8d:
+		case ModeSubtypeProfile8a, ModeSubtypeProfile8b, ModeSubtypeProfile8d:
+			return 2048
+
+		case ModeSubtypeProfile8c:
 			return 1972
 
 		case ModeSubtypeProfile12a, ModeSubtypeProfile12b:
