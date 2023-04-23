@@ -108,28 +108,21 @@ func formatLegendXLabelBinsNum(val, step, start, end int) string {
 	return fmt.Sprintf("%d", val)
 }
 
+func formatLegendXLabelBinsFreq(val, step, start, end int) string {
+	if val%100 == 0 {
+		return fmt.Sprintf("%.1f", float64(val)/1000)
+	} else {
+		return fmt.Sprintf("%.2f", float64(val)/1000)
+	}
+}
+
 func formatLegendYLabelBins(val, step, start, end int) string {
 	return fmt.Sprintf("%d", val)
 }
 
-func getLegendX(mode models.Mode) (bins int, step int, formatFuncFreq labelFormatFunc) {
+func getLegendX(mode models.Mode) (bins int, freq float64) {
 	bins = mode.BinCount()
-	freq := mode.CarrierSpacing()
-
-	formatFuncFreq = func(val, step, start, end int) string {
-		return fmt.Sprintf("%.1f", float64(val)*(freq/1000))
-	}
-
-	switch bins {
-	case 3479:
-		step = 256
-	case 2783:
-		step = 192
-	case 1972:
-		step = 128
-	default:
-		step = bins / 16
-	}
+	freq = float64(bins) * mode.CarrierSpacing()
 
 	return
 }
@@ -196,7 +189,7 @@ func GetBitsGraphLegend() Legend {
 }
 
 func DrawBitsGraph(out io.Writer, data models.Bins, params GraphParams) error {
-	bins, step, _ := getLegendX(data.Mode)
+	bins, _ := getLegendX(data.Mode)
 
 	params.normalize()
 
@@ -211,7 +204,7 @@ func DrawBitsGraph(out io.Writer, data models.Bins, params GraphParams) error {
 		LegendXMax:             float64(bins),
 		LegendXLabelStart:      0,
 		LegendXLabelEnd:        bins,
-		LegendXLabelSteps:      []int{step},
+		LegendXLabelSteps:      []int{8, 16, 32, 64, 128, 256, 512, 1024, 2048},
 		LegendXLabelFormatFunc: formatLegendXLabelBinsNum,
 		LegendXLabelDigits:     4.0,
 		LegendYBottom:          0,
@@ -383,7 +376,7 @@ func GetSNRGraphWithHistoryLegend() Legend {
 }
 
 func DrawSNRGraphWithHistory(out io.Writer, data models.Bins, history models.BinsHistory, params GraphParams) error {
-	bins, step, formatFuncFreq := getLegendX(data.Mode)
+	bins, freq := getLegendX(data.Mode)
 
 	params.normalize()
 
@@ -402,11 +395,11 @@ func DrawSNRGraphWithHistory(out io.Writer, data models.Bins, history models.Bin
 		ColorBackground:        params.ColorBackground,
 		ColorForeground:        params.ColorForeground,
 		LegendXMin:             0,
-		LegendXMax:             float64(bins),
+		LegendXMax:             freq,
 		LegendXLabelStart:      0,
-		LegendXLabelEnd:        bins,
-		LegendXLabelSteps:      []int{step},
-		LegendXLabelFormatFunc: formatFuncFreq,
+		LegendXLabelEnd:        int(freq),
+		LegendXLabelSteps:      []int{50, 100, 200, 500, 1000, 1250, 2500, 5000, 10000},
+		LegendXLabelFormatFunc: formatLegendXLabelBinsFreq,
 		LegendXLabelDigits:     4.0,
 		LegendYBottom:          0,
 		LegendYTop:             65,
@@ -427,7 +420,7 @@ func DrawSNRGraphWithHistory(out io.Writer, data models.Bins, history models.Bin
 	w := m.GraphWidth
 	h := m.GraphHeight
 
-	scaleX := w / spec.LegendXMax
+	scaleX := w / float64(bins)
 	scaleY := h / spec.LegendYTop
 
 	setBandsData(&m.baseModel, data, true)
@@ -462,7 +455,7 @@ func GetQLNGraphLegend() Legend {
 }
 
 func DrawQLNGraph(out io.Writer, data models.Bins, params GraphParams) error {
-	bins, step, formatFuncFreq := getLegendX(data.Mode)
+	bins, freq := getLegendX(data.Mode)
 
 	params.normalize()
 
@@ -474,11 +467,11 @@ func DrawQLNGraph(out io.Writer, data models.Bins, params GraphParams) error {
 		ColorBackground:        params.ColorBackground,
 		ColorForeground:        params.ColorForeground,
 		LegendXMin:             0,
-		LegendXMax:             float64(bins),
+		LegendXMax:             freq,
 		LegendXLabelStart:      0,
-		LegendXLabelEnd:        bins,
-		LegendXLabelSteps:      []int{step},
-		LegendXLabelFormatFunc: formatFuncFreq,
+		LegendXLabelEnd:        int(freq),
+		LegendXLabelSteps:      []int{50, 100, 200, 500, 1000, 1250, 2500, 5000, 10000},
+		LegendXLabelFormatFunc: formatLegendXLabelBinsFreq,
 		LegendXLabelDigits:     4.0,
 		LegendYBottom:          -160,
 		LegendYTop:             -69,
@@ -499,7 +492,7 @@ func DrawQLNGraph(out io.Writer, data models.Bins, params GraphParams) error {
 	w := m.GraphWidth
 	h := m.GraphHeight
 
-	scaleX := w / spec.LegendXMax
+	scaleX := w / float64(bins)
 	scaleY := h / (spec.LegendYTop - spec.LegendYBottom)
 
 	setBandsData(&m.baseModel, data, true)
@@ -570,7 +563,7 @@ func GetHlogGraphLegend() Legend {
 }
 
 func DrawHlogGraph(out io.Writer, data models.Bins, params GraphParams) error {
-	bins, step, formatFuncFreq := getLegendX(data.Mode)
+	bins, freq := getLegendX(data.Mode)
 
 	params.normalize()
 
@@ -582,11 +575,11 @@ func DrawHlogGraph(out io.Writer, data models.Bins, params GraphParams) error {
 		ColorBackground:        params.ColorBackground,
 		ColorForeground:        params.ColorForeground,
 		LegendXMin:             0,
-		LegendXMax:             float64(bins),
+		LegendXMax:             freq,
 		LegendXLabelStart:      0,
-		LegendXLabelEnd:        bins,
-		LegendXLabelSteps:      []int{step},
-		LegendXLabelFormatFunc: formatFuncFreq,
+		LegendXLabelEnd:        int(freq),
+		LegendXLabelSteps:      []int{50, 100, 200, 500, 1000, 1250, 2500, 5000, 10000},
+		LegendXLabelFormatFunc: formatLegendXLabelBinsFreq,
 		LegendXLabelDigits:     4.0,
 		LegendYBottom:          -100,
 		LegendYTop:             7,
@@ -607,7 +600,7 @@ func DrawHlogGraph(out io.Writer, data models.Bins, params GraphParams) error {
 	w := m.GraphWidth
 	h := m.GraphHeight
 
-	scaleX := w / spec.LegendXMax
+	scaleX := w / float64(bins)
 	scaleY := h / (spec.LegendYTop - spec.LegendYBottom)
 
 	setBandsData(&m.baseModel, data, true)
