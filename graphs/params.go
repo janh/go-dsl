@@ -5,13 +5,14 @@
 package graphs
 
 type GraphParams struct {
-	Width           int
-	Height          int
-	ScaleFactor     float64
-	FontSize        float64
-	ColorBackground Color
-	ColorForeground Color
-	Legend          bool
+	Width                   int
+	Height                  int
+	ScaleFactor             float64
+	FontSize                float64
+	ColorBackground         Color
+	ColorForeground         Color
+	Legend                  bool
+	PreferDynamicAxisLimits bool
 }
 
 func (p *GraphParams) normalize() {
@@ -33,22 +34,24 @@ var (
 	DefaultColorForeground = Color{0, 0, 0, 1.0}
 
 	DefaultGraphParams = GraphParams{
-		Width:           DefaultWidth,
-		Height:          DefaultHeight,
-		ScaleFactor:     DefaultScaleFactor,
-		FontSize:        DefaultFontSize,
-		ColorBackground: DefaultColorBackground,
-		ColorForeground: DefaultColorForeground,
-		Legend:          false,
+		Width:                   DefaultWidth,
+		Height:                  DefaultHeight,
+		ScaleFactor:             DefaultScaleFactor,
+		FontSize:                DefaultFontSize,
+		ColorBackground:         DefaultColorBackground,
+		ColorForeground:         DefaultColorForeground,
+		Legend:                  false,
+		PreferDynamicAxisLimits: false,
 	}
 
 	DefaultGraphParamsWithLegend = GraphParams{
-		Width:           DefaultWidth,
-		Height:          DefaultHeightWithLegend,
-		ScaleFactor:     DefaultScaleFactor,
-		FontSize:        DefaultFontSize,
-		ColorBackground: DefaultColorBackground,
-		ColorForeground: DefaultColorForeground,
-		Legend:          true,
+		Width:                   DefaultWidth,
+		Height:                  DefaultHeightWithLegend,
+		ScaleFactor:             DefaultScaleFactor,
+		FontSize:                DefaultFontSize,
+		ColorBackground:         DefaultColorBackground,
+		ColorForeground:         DefaultColorForeground,
+		Legend:                  true,
+		PreferDynamicAxisLimits: false,
 	}
 )

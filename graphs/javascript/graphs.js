@@ -106,6 +106,7 @@ var DSLGraphs = DSLGraphs || (function () {
 			this.colorBackground = new Color(255, 255, 255, 1.0);
 			this.colorForeground = new Color(0, 0, 0, 1.0);
 			this.legend = false;
+			this.preferDynamicAxisLimits = false;
 		}
 
 		static withLegend() {
@@ -126,6 +127,7 @@ var DSLGraphs = DSLGraphs || (function () {
 	Object.defineProperty(GraphParams.prototype, 'colorBackground', {writable: true});
 	Object.defineProperty(GraphParams.prototype, 'colorForeground', {writable: true});
 	Object.defineProperty(GraphParams.prototype, 'legend', {writable: true});
+	Object.defineProperty(GraphParams.prototype, 'preferDynamicAxisLimits', {writable: true});
 
 
 	class GraphSpec {}
@@ -366,6 +368,94 @@ var DSLGraphs = DSLGraphs || (function () {
 		} else {
 			res.bins = 8192;
 			res.freq = res.bins * 4.3125;
+		}
+
+		return res;
+	}
+
+
+	function determineBinsBitsAxisLimits(minRange, data) {
+		let res = {
+			max: 0,
+			valid: false
+		};
+
+		let dataMax = 0;
+
+		for (let dataItem of data) {
+			for (let val of dataItem) {
+				if (val <= 0) {
+					continue;
+				}
+
+				if (val > dataMax) {
+					dataMax = val;
+					res.valid = true;
+				}
+			}
+		}
+
+		if (!res.valid) {
+			return res;
+		}
+
+		res.max = Math.max(dataMax, minRange) + 0.75;
+
+		return res;
+	}
+
+
+	function determineBinsFloatAxisLimits(minValid, maxValid, minRange, ignoreZero, data) {
+		let res = {
+			min: 0,
+			max: 0,
+			valid: false
+		};
+
+		let dataMin, dataMax;
+
+		for (let dataItem of data) {
+			for (let val of dataItem) {
+				if (val < minValid || val > maxValid) {
+					continue;
+				}
+				if (ignoreZero && val == 0) {
+					continue;
+				}
+
+				if (!res.valid) {
+					dataMin = val;
+					dataMax = val;
+					res.valid = true;
+				}
+
+				if (val < dataMin) {
+					dataMin = val;
+				}
+				if (val > dataMax) {
+					dataMax = val;
+				}
+			}
+		}
+
+		if (!res.valid) {
+			return res;
+		}
+
+		let valueRange = dataMax - dataMin;
+		let margin = Math.max(valueRange, minRange) * 0.1;
+
+		res.min = dataMin - margin;
+		res.max = dataMax + margin;
+
+		let extraSpace = minRange - valueRange;
+		if (extraSpace > 0) {
+			let minRemaining = res.min - minValid;
+			let maxRemaining = maxValid - res.max;
+			let totalRemaining = minRemaining + maxRemaining;
+
+			res.min -= extraSpace * (minRemaining / totalRemaining);
+			res.max += extraSpace * (maxRemaining / totalRemaining);
 		}
 
 		return res;
@@ -932,9 +1022,7 @@ var DSLGraphs = DSLGraphs || (function () {
 			this._spec.legendXLabelFormatFunc = formatLegendXLabelBinsNum;
 			this._spec.legendXLabelDigits = 4.0;
 			this._spec.legendYBottom = 0;
-			this._spec.legendYTop = 15.166666667;
 			this._spec.legendYLabelStart = 0;
-			this._spec.legendYLabelEnd = 15;
 			this._spec.legendYLabelSteps = [1, 2];
 			this._spec.legendYLabelFormatFunc = formatLegendYLabelBins;
 			this._spec.legendYLabelDigits = 3.75;
@@ -1017,6 +1105,28 @@ var DSLGraphs = DSLGraphs || (function () {
 			ctx.resetTransform();
 		}
 
+		_updateAxisLimits(data) {
+			let top = 15.166666667;
+
+			if (data) {
+				let res = determineBinsBitsAxisLimits(4, [
+					data.Bits.Downstream.Data,
+					data.Bits.Upstream.Data
+				]);
+
+				if (res.valid && res.max < top) {
+					top = res.max;
+				}
+			}
+
+			if (this._spec.legendYTop !== top) {
+				this._spec.legendYTop = top;
+				this._spec.legendYLabelEnd = Math.floor(top);
+
+				this._specChanged = true;
+			}
+		}
+
 		_setParams(params) {
 			this._spec.width = params.width;
 			this._spec.height =  params.height;
@@ -1025,6 +1135,12 @@ var DSLGraphs = DSLGraphs || (function () {
 			this._spec.colorBackground = params.colorBackground;
 			this._spec.colorForeground = params.colorForeground;
 			this._spec.legendEnabled = params.legend;
+
+			if (this._dynamicAxisLimits !== params.preferDynamicAxisLimits) {
+				this._dynamicAxisLimits = params.preferDynamicAxisLimits;
+
+				this._updateAxisLimits(this._dynamicAxisLimits ? this._data : null);
+			}
 
 			this._specChanged = true;
 		}
@@ -1043,6 +1159,10 @@ var DSLGraphs = DSLGraphs || (function () {
 				this._spec.legendXLabelEnd = legendXData.bins;
 
 				this._specChanged = true;
+			}
+
+			if (this._dynamicAxisLimits) {
+				this._updateAxisLimits(data);
 			}
 
 			this._data = data;
@@ -1072,10 +1192,6 @@ var DSLGraphs = DSLGraphs || (function () {
 			this._spec.legendXLabelSteps = [50, 100, 200, 500, 1000, 1250, 2500, 5000, 10000],
 			this._spec.legendXLabelFormatFunc = formatLegendXLabelBinsFreq,
 			this._spec.legendXLabelDigits = 4.0;
-			this._spec.legendYBottom = 0;
-			this._spec.legendYTop = 65;
-			this._spec.legendYLabelStart = 0;
-			this._spec.legendYLabelEnd = 65;
 			this._spec.legendYLabelSteps = [1, 2, 5, 10];
 			this._spec.legendYLabelFormatFunc = formatLegendYLabelBins;
 			this._spec.legendYLabelDigits = 3.75;
@@ -1186,6 +1302,36 @@ var DSLGraphs = DSLGraphs || (function () {
 			ctx.drawImage(ctxMinMax.canvas, x, y);
 		}
 
+		_updateAxisLimits(data, history) {
+			let bottom = 0.0;
+			let top = 65.0;
+
+			if (data || history) {
+				let res = determineBinsFloatAxisLimits(-32, 95, 20, true, [
+					data ? data.SNR.Downstream.Data : [],
+					data ? data.SNR.Upstream.Data : [],
+					history ? history.SNR.Downstream.Min : [],
+					history ? history.SNR.Downstream.Max : [],
+					history ? history.SNR.Upstream.Min : [],
+					history ? history.SNR.Upstream.Max : []
+				]);
+
+				if (res.valid) {
+					bottom = res.min;
+					top = res.max;
+				}
+			}
+
+			if (this._spec.legendYBottom !== bottom || this._spec.legendYTop !== top) {
+				this._spec.legendYBottom = bottom;
+				this._spec.legendYTop = top;
+				this._spec.legendYLabelStart = Math.ceil(bottom);
+				this._spec.legendYLabelEnd = Math.floor(top);
+
+				this._specChanged = true;
+			}
+		}
+
 		_setParams(params) {
 			this._spec.width = params.width;
 			this._spec.height =  params.height;
@@ -1194,6 +1340,16 @@ var DSLGraphs = DSLGraphs || (function () {
 			this._spec.colorBackground = params.colorBackground;
 			this._spec.colorForeground = params.colorForeground;
 			this._spec.legendEnabled = params.legend;
+
+			if (this._dynamicAxisLimits !== params.preferDynamicAxisLimits) {
+				this._dynamicAxisLimits = params.preferDynamicAxisLimits;
+
+				if (this._dynamicAxisLimits) {
+					this._updateAxisLimits(this._data, this._history);
+				} else {
+					this._updateAxisLimits(null, null);
+				}
+			}
 
 			this._specChanged = true;
 		}
@@ -1228,6 +1384,10 @@ var DSLGraphs = DSLGraphs || (function () {
 				this._specChanged = true;
 			}
 
+			if (this._dynamicAxisLimits) {
+				this._updateAxisLimits(data, history);
+			}
+
 			this._data = data;
 			this._history = history;
 			this._bands.setData(data);
@@ -1255,10 +1415,6 @@ var DSLGraphs = DSLGraphs || (function () {
 			this._spec.legendXLabelSteps = [50, 100, 200, 500, 1000, 1250, 2500, 5000, 10000],
 			this._spec.legendXLabelFormatFunc = formatLegendXLabelBinsFreq,
 			this._spec.legendXLabelDigits = 4.0;
-			this._spec.legendYBottom = -160;
-			this._spec.legendYTop = -69;
-			this._spec.legendYLabelStart = -160;
-			this._spec.legendYLabelEnd = -70;
 			this._spec.legendYLabelSteps = [1, 2, 5, 10, 20];
 			this._spec.legendYLabelFormatFunc = formatLegendYLabelBins;
 			this._spec.legendYLabelDigits = 3.75;
@@ -1318,6 +1474,32 @@ var DSLGraphs = DSLGraphs || (function () {
 			ctx.resetTransform();
 		}
 
+		_updateAxisLimits(data) {
+			let bottom = -160.0;
+			let top = -69.0;
+
+			if (data) {
+				let res = determineBinsFloatAxisLimits(-150, -23, 20, false, [
+					data.QLN.Downstream.Data,
+					data.QLN.Upstream.Data
+				]);
+
+				if (res.valid) {
+					bottom = res.min;
+					top = res.max;
+				}
+			}
+
+			if (this._spec.legendYBottom !== bottom || this._spec.legendYTop !== top) {
+				this._spec.legendYBottom = bottom;
+				this._spec.legendYTop = top;
+				this._spec.legendYLabelStart = Math.ceil(bottom);
+				this._spec.legendYLabelEnd = Math.floor(top);
+
+				this._specChanged = true;
+			}
+		}
+
 		_setParams(params) {
 			this._spec.width = params.width;
 			this._spec.height =  params.height;
@@ -1326,6 +1508,12 @@ var DSLGraphs = DSLGraphs || (function () {
 			this._spec.colorBackground = params.colorBackground;
 			this._spec.colorForeground = params.colorForeground;
 			this._spec.legendEnabled = params.legend;
+
+			if (this._dynamicAxisLimits !== params.preferDynamicAxisLimits) {
+				this._dynamicAxisLimits = params.preferDynamicAxisLimits;
+
+				this._updateAxisLimits(this._dynamicAxisLimits ? this._data : null);
+			}
 
 			this._specChanged = true;
 		}
@@ -1345,6 +1533,10 @@ var DSLGraphs = DSLGraphs || (function () {
 				this._spec.legendXLabelEnd = Math.floor(legendXData.freq);
 
 				this._specChanged = true;
+			}
+
+			if (this._dynamicAxisLimits) {
+				this._updateAxisLimits(data);
 			}
 
 			this._data = data;
@@ -1373,10 +1565,6 @@ var DSLGraphs = DSLGraphs || (function () {
 			this._spec.legendXLabelSteps = [50, 100, 200, 500, 1000, 1250, 2500, 5000, 10000],
 			this._spec.legendXLabelFormatFunc = formatLegendXLabelBinsFreq,
 			this._spec.legendXLabelDigits = 4.0;
-			this._spec.legendYBottom = -100;
-			this._spec.legendYTop = 7;
-			this._spec.legendYLabelStart = -100;
-			this._spec.legendYLabelEnd = 0;
 			this._spec.legendYLabelSteps = [1, 2, 5, 10, 20];
 			this._spec.legendYLabelFormatFunc = formatLegendYLabelBins;
 			this._spec.legendYLabelDigits = 3.75;
@@ -1439,6 +1627,32 @@ var DSLGraphs = DSLGraphs || (function () {
 			ctx.resetTransform();
 		}
 
+		_updateAxisLimits(data) {
+			let bottom = -100.0;
+			let top = 7.0;
+
+			if (data) {
+				let res = determineBinsFloatAxisLimits(-96.2, 6, 20, false, [
+					data.Hlog.Downstream.Data,
+					data.Hlog.Upstream.Data
+				]);
+
+				if (res.valid) {
+					bottom = res.min;
+					top = res.max;
+				}
+			}
+
+			if (this._spec.legendYBottom !== bottom || this._spec.legendYTop !== top) {
+				this._spec.legendYBottom = bottom;
+				this._spec.legendYTop = top;
+				this._spec.legendYLabelStart = Math.ceil(bottom);
+				this._spec.legendYLabelEnd = Math.floor(top);
+
+				this._specChanged = true;
+			}
+		}
+
 		_setParams(params) {
 			this._spec.width = params.width;
 			this._spec.height =  params.height;
@@ -1447,6 +1661,12 @@ var DSLGraphs = DSLGraphs || (function () {
 			this._spec.colorBackground = params.colorBackground;
 			this._spec.colorForeground = params.colorForeground;
 			this._spec.legendEnabled = params.legend;
+
+			if (this._dynamicAxisLimits !== params.preferDynamicAxisLimits) {
+				this._dynamicAxisLimits = params.preferDynamicAxisLimits;
+
+				this._updateAxisLimits(this._dynamicAxisLimits ? this._data : null);
+			}
 
 			this._specChanged = true;
 		}
@@ -1466,6 +1686,10 @@ var DSLGraphs = DSLGraphs || (function () {
 				this._spec.legendXLabelEnd = Math.floor(legendXData.freq);
 
 				this._specChanged = true;
+			}
+
+			if (this._dynamicAxisLimits) {
+				this._updateAxisLimits(data);
 			}
 
 			this._data = data;

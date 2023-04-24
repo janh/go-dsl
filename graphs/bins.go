@@ -127,6 +127,81 @@ func getLegendX(mode models.Mode) (bins int, freq float64) {
 	return
 }
 
+func determineBinsBitsAxisLimits(minRange float64, data ...[]int8) (max float64, valid bool) {
+	var dataMax int8
+
+	for _, dataItem := range data {
+		for _, val := range dataItem {
+			if val <= 0 {
+				continue
+			}
+
+			if val > dataMax {
+				dataMax = val
+				valid = true
+			}
+		}
+	}
+
+	if !valid {
+		return
+	}
+
+	max = math.Max(float64(dataMax), minRange) + 0.75
+
+	return
+}
+
+func determineBinsFloatAxisLimits(minValid, maxValid, minRange float64, ignoreZero bool, data ...[]float64) (min, max float64, valid bool) {
+	var dataMin, dataMax float64
+
+	for _, dataItem := range data {
+		for _, val := range dataItem {
+			if val < minValid || val > maxValid {
+				continue
+			}
+			if ignoreZero && val == 0 {
+				continue
+			}
+
+			if !valid {
+				dataMin = val
+				dataMax = val
+				valid = true
+			}
+
+			if val < dataMin {
+				dataMin = val
+			}
+			if val > dataMax {
+				dataMax = val
+			}
+		}
+	}
+
+	if !valid {
+		return
+	}
+
+	valueRange := dataMax - dataMin
+	margin := math.Max(valueRange, minRange) * 0.1
+
+	min = dataMin - margin
+	max = dataMax + margin
+
+	extraSpace := minRange - valueRange
+	if extraSpace > 0 {
+		minRemaining := min - minValid
+		maxRemaining := maxValid - max
+		totalRemaining := minRemaining + maxRemaining
+
+		min -= extraSpace * (minRemaining / totalRemaining)
+		max += extraSpace * (maxRemaining / totalRemaining)
+	}
+
+	return
+}
+
 func buildPilotTonesPath(p *path, tones []int, height float64) {
 	for _, tone := range tones {
 		pos := float64(tone) + 0.5
@@ -191,6 +266,16 @@ func GetBitsGraphLegend() Legend {
 func DrawBitsGraph(out io.Writer, data models.Bins, params GraphParams) error {
 	bins, _ := getLegendX(data.Mode)
 
+	top := 15.166666667
+
+	if params.PreferDynamicAxisLimits {
+		max, valid := determineBinsBitsAxisLimits(4, data.Bits.Downstream.Data, data.Bits.Upstream.Data)
+
+		if valid && max < top {
+			top = max
+		}
+	}
+
 	params.normalize()
 
 	spec := graphSpec{
@@ -208,9 +293,9 @@ func DrawBitsGraph(out io.Writer, data models.Bins, params GraphParams) error {
 		LegendXLabelFormatFunc: formatLegendXLabelBinsNum,
 		LegendXLabelDigits:     4.0,
 		LegendYBottom:          0,
-		LegendYTop:             15.166666667,
+		LegendYTop:             top,
 		LegendYLabelStart:      0,
-		LegendYLabelEnd:        15,
+		LegendYLabelEnd:        int(top),
 		LegendYLabelSteps:      []int{1, 2},
 		LegendYLabelFormatFunc: formatLegendYLabelBins,
 		LegendYLabelDigits:     3.75,
@@ -380,6 +465,24 @@ func DrawSNRGraphWithHistory(out io.Writer, data models.Bins, history models.Bin
 
 	params.normalize()
 
+	bottom := 0.0
+	top := 65.0
+
+	if params.PreferDynamicAxisLimits {
+		min, max, valid := determineBinsFloatAxisLimits(-32, 95, 20, true,
+			data.SNR.Downstream.Data,
+			data.SNR.Upstream.Data,
+			history.SNR.Downstream.Min,
+			history.SNR.Downstream.Max,
+			history.SNR.Upstream.Min,
+			history.SNR.Upstream.Max)
+
+		if valid {
+			bottom = min
+			top = max
+		}
+	}
+
 	var legend Legend
 	if history.SNR.Downstream.GroupSize != 0 || history.SNR.Upstream.GroupSize != 0 {
 		legend = GetSNRGraphWithHistoryLegend()
@@ -401,10 +504,10 @@ func DrawSNRGraphWithHistory(out io.Writer, data models.Bins, history models.Bin
 		LegendXLabelSteps:      []int{50, 100, 200, 500, 1000, 1250, 2500, 5000, 10000},
 		LegendXLabelFormatFunc: formatLegendXLabelBinsFreq,
 		LegendXLabelDigits:     4.0,
-		LegendYBottom:          0,
-		LegendYTop:             65,
-		LegendYLabelStart:      0,
-		LegendYLabelEnd:        65,
+		LegendYBottom:          bottom,
+		LegendYTop:             top,
+		LegendYLabelStart:      int(math.Ceil(bottom)),
+		LegendYLabelEnd:        int(math.Floor(top)),
 		LegendYLabelSteps:      []int{1, 2, 5, 10},
 		LegendYLabelFormatFunc: formatLegendYLabelBins,
 		LegendYLabelDigits:     3.75,
@@ -461,6 +564,20 @@ func DrawQLNGraph(out io.Writer, data models.Bins, params GraphParams) error {
 
 	params.normalize()
 
+	bottom := -160.0
+	top := -69.0
+
+	if params.PreferDynamicAxisLimits {
+		min, max, valid := determineBinsFloatAxisLimits(-150, -23, 20, false,
+			data.QLN.Downstream.Data,
+			data.QLN.Upstream.Data)
+
+		if valid {
+			bottom = min
+			top = max
+		}
+	}
+
 	spec := graphSpec{
 		Width:                  params.Width,
 		Height:                 params.Height,
@@ -475,10 +592,10 @@ func DrawQLNGraph(out io.Writer, data models.Bins, params GraphParams) error {
 		LegendXLabelSteps:      []int{50, 100, 200, 500, 1000, 1250, 2500, 5000, 10000},
 		LegendXLabelFormatFunc: formatLegendXLabelBinsFreq,
 		LegendXLabelDigits:     4.0,
-		LegendYBottom:          -160,
-		LegendYTop:             -69,
-		LegendYLabelStart:      -160,
-		LegendYLabelEnd:        -70,
+		LegendYBottom:          bottom,
+		LegendYTop:             top,
+		LegendYLabelStart:      int(math.Ceil(bottom)),
+		LegendYLabelEnd:        int(math.Floor(top)),
 		LegendYLabelSteps:      []int{1, 2, 5, 10, 20},
 		LegendYLabelFormatFunc: formatLegendYLabelBins,
 		LegendYLabelDigits:     3.75,
@@ -569,6 +686,20 @@ func DrawHlogGraph(out io.Writer, data models.Bins, params GraphParams) error {
 
 	params.normalize()
 
+	bottom := -100.0
+	top := 7.0
+
+	if params.PreferDynamicAxisLimits {
+		min, max, valid := determineBinsFloatAxisLimits(-96.2, 6, 20, false,
+			data.Hlog.Downstream.Data,
+			data.Hlog.Upstream.Data)
+
+		if valid {
+			bottom = min
+			top = max
+		}
+	}
+
 	spec := graphSpec{
 		Width:                  params.Width,
 		Height:                 params.Height,
@@ -583,10 +714,10 @@ func DrawHlogGraph(out io.Writer, data models.Bins, params GraphParams) error {
 		LegendXLabelSteps:      []int{50, 100, 200, 500, 1000, 1250, 2500, 5000, 10000},
 		LegendXLabelFormatFunc: formatLegendXLabelBinsFreq,
 		LegendXLabelDigits:     4.0,
-		LegendYBottom:          -100,
-		LegendYTop:             7,
-		LegendYLabelStart:      -100,
-		LegendYLabelEnd:        0,
+		LegendYBottom:          bottom,
+		LegendYTop:             top,
+		LegendYLabelStart:      int(math.Ceil(bottom)),
+		LegendYLabelEnd:        int(math.Floor(top)),
 		LegendYLabelSteps:      []int{1, 2, 5, 10, 20},
 		LegendYLabelFormatFunc: formatLegendYLabelBins,
 		LegendYLabelDigits:     3.75,
