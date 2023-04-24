@@ -298,7 +298,7 @@ func buildSNRQLNPath(p *path, bins models.BinsFloat, scaleY, offsetY, maxY, minY
 	}
 }
 
-func buildSNRMinMaxPath(pMin *path, pMax *path, bins models.BinsFloatMinMax, scaleY, maxY, postScaleY float64) {
+func buildSNRMinMaxPath(pMin *path, pMax *path, bins models.BinsFloatMinMax, scaleY, offsetY, maxY, postScaleY float64) {
 	width := float64(bins.GroupSize)
 
 	var lastValidMin, lastValidMax, lastDrawnMin, lastDrawnMax bool
@@ -311,7 +311,7 @@ func buildSNRMinMaxPath(pMin *path, pMax *path, bins models.BinsFloatMinMax, sca
 		drawn := false
 
 		posX := (float64(i) + 0.5) * width
-		posY := math.Max(0, math.Min(maxY, val)*scaleY-0.5)
+		posY := math.Max(0, (math.Min(maxY, val)-offsetY)*scaleY-0.5)
 
 		if *lastValid && !valid {
 			p.LineTo(posX-0.5*width, *lastPosY*postScaleY)
@@ -421,20 +421,22 @@ func DrawSNRGraphWithHistory(out io.Writer, data models.Bins, history models.Bin
 	h := m.GraphHeight
 
 	scaleX := w / float64(bins)
-	scaleY := h / spec.LegendYTop
+	scaleY := h / (spec.LegendYTop - spec.LegendYBottom)
 
 	setBandsData(&m.baseModel, data, true)
 
 	m.Path.SetPrecision(1)
 
-	buildSNRQLNPath(&m.Path, data.SNR.Downstream, scaleY, 0, spec.LegendYTop, -32, 95)
-	buildSNRQLNPath(&m.Path, data.SNR.Upstream, scaleY, 0, spec.LegendYTop, -32, 95)
+	buildSNRQLNPath(&m.Path, data.SNR.Downstream, scaleY, spec.LegendYBottom, spec.LegendYTop, -32, 95)
+	buildSNRQLNPath(&m.Path, data.SNR.Upstream, scaleY, spec.LegendYBottom, spec.LegendYTop, -32, 95)
 
 	m.PathMin.SetPrecision(1)
 	m.PathMax.SetPrecision(1)
 
-	buildSNRMinMaxPath(&m.PathMin, &m.PathMax, history.SNR.Downstream, scaleY, spec.LegendYTop, 1/scaleX)
-	buildSNRMinMaxPath(&m.PathMin, &m.PathMax, history.SNR.Upstream, scaleY, spec.LegendYTop, 1/scaleX)
+	buildSNRMinMaxPath(&m.PathMin, &m.PathMax, history.SNR.Downstream,
+		scaleY, spec.LegendYBottom, spec.LegendYTop, 1/scaleX)
+	buildSNRMinMaxPath(&m.PathMin, &m.PathMax, history.SNR.Upstream,
+		scaleY, spec.LegendYBottom, spec.LegendYTop, 1/scaleX)
 
 	m.Transform.Translate(x, y+h)
 	m.Transform.Scale(scaleX, -1)

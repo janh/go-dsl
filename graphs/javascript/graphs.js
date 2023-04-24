@@ -803,7 +803,7 @@ var DSLGraphs = DSLGraphs || (function () {
 	}
 
 
-	function buildSNRMinMaxPath(pathMin, pathMax, bins, scaleY, maxY, postScaleY) {
+	function buildSNRMinMaxPath(pathMin, pathMax, bins, scaleY, offsetY, maxY, postScaleY) {
 		var width = bins.GroupSize;
 
 		var stateMin = {
@@ -824,7 +824,7 @@ var DSLGraphs = DSLGraphs || (function () {
 			var drawn = false;
 
 			var posX = (i + 0.5) * width;
-			var posY = Math.max(0, Math.min(maxY, val)*scaleY - 0.5);
+			var posY = Math.max(0, (Math.min(maxY, val)-offsetY)*scaleY-0.5);
 
 			if (state.lastValid && !valid) {
 				path.lineTo(posX-0.5*width, state.lastPosY*postScaleY);
@@ -1129,7 +1129,7 @@ var DSLGraphs = DSLGraphs || (function () {
 			var h = this._base.graphHeight;
 
 			var scaleX = w / this._bins;
-			var scaleY = h / this._spec.legendYTop;
+			var scaleY = h / (this._spec.legendYTop - this._spec.legendYBottom);
 
 			this._bands.draw(ctx, this._base, true);
 
@@ -1137,12 +1137,14 @@ var DSLGraphs = DSLGraphs || (function () {
 			var pathMin = new Path2D();
 			var pathMax = new Path2D();
 
-			buildSNRQLNPath(path, this._data.SNR.Downstream, scaleY, 0, this._spec.legendYTop, -32, 95);
-			buildSNRQLNPath(path, this._data.SNR.Upstream, scaleY, 0, this._spec.legendYTop, -32, 95);
+			buildSNRQLNPath(path, this._data.SNR.Downstream, scaleY, this._spec.legendYBottom, this._spec.legendYTop, -32, 95);
+			buildSNRQLNPath(path, this._data.SNR.Upstream, scaleY, this._spec.legendYBottom, this._spec.legendYTop, -32, 95);
 
 			if (this._history != null) {
-				buildSNRMinMaxPath(pathMin, pathMax, this._history.SNR.Downstream, scaleY, this._spec.legendYTop, 1/scaleX);
-				buildSNRMinMaxPath(pathMin, pathMax, this._history.SNR.Upstream, scaleY, this._spec.legendYTop, 1/scaleX);
+				buildSNRMinMaxPath(pathMin, pathMax, this._history.SNR.Downstream,
+					scaleY, this._spec.legendYBottom, this._spec.legendYTop, 1/scaleX);
+				buildSNRMinMaxPath(pathMin, pathMax, this._history.SNR.Upstream,
+					scaleY, this._spec.legendYBottom, this._spec.legendYTop, 1/scaleX);
 			}
 
 			ctx.translate(x, y+h);
