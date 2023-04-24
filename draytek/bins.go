@@ -67,6 +67,9 @@ func parseStatusBandinfo(bins *models.Bins, data string) {
 func parseShowbinsData(binsBits *models.BinsBits, binsSNR *models.BinsFloat, binCount int, data string) {
 	binsBits.Data = make([]int8, binCount)
 	snrData := make([]float64, binCount)
+	for i := 0; i < binCount; i++ {
+		snrData[i] = -32.5
+	}
 
 	scanner := bufio.NewScanner(strings.NewReader(data))
 
@@ -96,7 +99,7 @@ func readShowbinsBin(binsBits *models.BinsBits, snrData []float64, maxSNRIndex, 
 			binsBits.Data[num] = int8(bits)
 			*maxBitsIndex = num
 		}
-		if snr != 0 {
+		if snr != 0 && snr != -32 {
 			snrData[num] = snr
 			*maxSNRIndex = num
 		} else {
@@ -112,7 +115,7 @@ func handleShowbinsSNR(binsSNR *models.BinsFloat, snrData []float64, maxSNRIndex
 		binsSNR.Data = snrData
 	} else {
 		binsSNR.Data = make([]float64, len(snrData)/binsSNR.GroupSize)
-		for num := 0; num <= maxSNRIndex; num++ {
+		for num := 0; num < len(binsSNR.Data); num++ {
 			binsSNR.Data[num] = snrData[num]
 		}
 	}
