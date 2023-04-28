@@ -1140,12 +1140,10 @@ var DSLGraphs = DSLGraphs || (function () {
 			buildSNRQLNPath(path, this._data.SNR.Downstream, scaleY, 0, this._spec.legendYTop, -32, 95);
 			buildSNRQLNPath(path, this._data.SNR.Upstream, scaleY, 0, this._spec.legendYTop, -32, 95);
 
-			if (this._history == null) {
-				return;
+			if (this._history != null) {
+				buildSNRMinMaxPath(pathMin, pathMax, this._history.SNR.Downstream, scaleY, this._spec.legendYTop, 1/scaleX);
+				buildSNRMinMaxPath(pathMin, pathMax, this._history.SNR.Upstream, scaleY, this._spec.legendYTop, 1/scaleX);
 			}
-
-			buildSNRMinMaxPath(pathMin, pathMax, this._history.SNR.Downstream, scaleY, this._spec.legendYTop, 1/scaleX);
-			buildSNRMinMaxPath(pathMin, pathMax, this._history.SNR.Upstream, scaleY, this._spec.legendYTop, 1/scaleX);
 
 			ctx.translate(x, y+h);
 			ctx.scale(scaleX, -1);
@@ -1154,6 +1152,10 @@ var DSLGraphs = DSLGraphs || (function () {
 			ctx.fill(path);
 
 			ctx.resetTransform();
+
+			if (this._history == null) {
+				return;
+			}
 
 			if (ctxMinMax.canvas.width != w || ctxMinMax.canvas.height != h) {
 				ctxMinMax.canvas.width = w;
