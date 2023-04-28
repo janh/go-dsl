@@ -148,7 +148,7 @@ func buildBitsPath(p *path, bins models.BinsBits, scaleY float64) {
 		changed := lastBits != bits
 
 		posX := float64(i)
-		posY := math.Ceil(float64(bits) * scaleY)
+		posY := math.Round(float64(bits) * scaleY)
 
 		if lastValid && !valid {
 			p.LineTo(posX, lastPosY)

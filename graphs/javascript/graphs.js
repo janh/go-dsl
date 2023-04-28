@@ -722,7 +722,7 @@ var DSLGraphs = DSLGraphs || (function () {
 			var changed = lastBits != bits;
 
 			var posX = i;
-			var posY = Math.ceil(bits * scaleY);
+			var posY = Math.round(bits * scaleY);
 
 			if (lastValid && !valid) {
 				path.lineTo(posX, lastPosY);
