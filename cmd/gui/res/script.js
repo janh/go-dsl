@@ -24,12 +24,14 @@
 
 	var state;
 	var clientDescs;
+	var bins = null;
+	var binsHistory = null;
 
 	var eventSource;
 
 	var buttonSave, buttonDisconnect;
 	var summary, graphs, errors;
-	var checkboxAutoscale;
+	var checkboxAutoscale, checkboxMinMax;
 	var graphBitsCanvas, graphSNRCanvas, graphQLNCanvas, graphHlogCanvas,
 		graphRetransmissionDownCanvas, graphRetransmissionUpCanvas,
 		graphErrorsDownCanvas, graphErrorsUpCanvas,
@@ -236,12 +238,12 @@
 					break;
 
 				case STATE_READY:
-					var bins = DSLGraphs.decodeBins(data["bins"]);
-					var binsHistory = DSLGraphs.decodeBinsHistory(data["bins_history"]);
+					bins = DSLGraphs.decodeBins(data["bins"]);
+					binsHistory = DSLGraphs.decodeBinsHistory(data["bins_history"]);
 					var errorsHistory = DSLGraphs.decodeErrorsHistory(data["errors_history"]);
 					summary.innerHTML = data["summary"];
 					graphBits.setData(bins);
-					graphSNR.setData(bins, binsHistory);
+					updateSNRGraph();
 					graphQLN.setData(bins);
 					graphHlog.setData(bins);
 					graphRetransmissionDown.setData(errorsHistory);
@@ -267,6 +269,7 @@
 				state != STATE_READY && state != STATE_PASSWORD && state != STATE_PASSPHRASE && state != STATE_ENCRYPTION_PASSPHRASE && state != STATE_ERROR && state != STATE_LOADING);
 
 			checkboxAutoscale.disabled = state != STATE_READY;
+			checkboxMinMax.disabled = state != STATE_READY;
 
 			overlay.classList.toggle("visible", state != STATE_READY);
 			overlayPassword.classList.toggle("visible", state == STATE_PASSWORD);
@@ -326,6 +329,11 @@
 		for (let form of forms) {
 			form.addEventListener("submit", sendForm);
 		}
+	}
+
+	function updateSNRGraph() {
+		var minmax = checkboxMinMax.checked;
+		graphSNR.setData(bins, minmax ? binsHistory : null);
 	}
 
 	function getGraphParams(width, devicePixelRatio, autoscale) {
@@ -448,6 +456,7 @@
 		updateGraphs();
 		window.addEventListener("resize", updateGraphs);
 		checkboxAutoscale.addEventListener("change", updateGraphs);
+		checkboxMinMax.addEventListener("change", updateSNRGraph);
 	}
 
 	function initVisibilityChange() {
@@ -473,6 +482,7 @@
 		errors = document.getElementById("errors");
 
 		checkboxAutoscale = document.getElementById("checkbox-autoscale");
+		checkboxMinMax = document.getElementById("checkbox-minmax");
 
 		overlay = document.getElementById("overlay");
 		overlayPassword = document.getElementById("overlay-password");

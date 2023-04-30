@@ -8,11 +8,13 @@ const STATE_ERROR = "error";
 const STATE_LOADING = "loading";
 
 var state;
+var bins = null;
+var binsHistory = null;
 
 var eventSource;
 
 var summary, graphs, errors;
-var checkboxAutoscale;
+var checkboxAutoscale, checkboxMinMax;
 var graphBitsCanvas, graphSNRCanvas, graphQLNCanvas, graphHlogCanvas,
 	graphRetransmissionDownCanvas, graphRetransmissionUpCanvas,
 	graphErrorsDownCanvas, graphErrorsUpCanvas,
@@ -35,12 +37,12 @@ function updateState(newState, data) {
 				break;
 
 			case STATE_READY:
-				var bins = DSLGraphs.decodeBins(data["bins"]);
-				var binsHistory = DSLGraphs.decodeBinsHistory(data["bins_history"]);
+				bins = DSLGraphs.decodeBins(data["bins"]);
+				binsHistory = DSLGraphs.decodeBinsHistory(data["bins_history"]);
 				var errorsHistory = DSLGraphs.decodeErrorsHistory(data["errors_history"]);
 				summary.innerHTML = data["summary"];
 				graphBits.setData(bins);
-				graphSNR.setData(bins, binsHistory);
+				updateSNRGraph();
 				graphQLN.setData(bins);
 				graphHlog.setData(bins);
 				graphRetransmissionDown.setData(errorsHistory);
@@ -62,6 +64,7 @@ function updateState(newState, data) {
 		state = newState;
 
 		checkboxAutoscale.disabled = state != STATE_READY;
+		checkboxMinMax.disabled = state != STATE_READY;
 
 		overlay.classList.toggle("visible", state != STATE_READY);
 		overlayPassword.classList.toggle("visible", state == STATE_PASSWORD);
@@ -139,6 +142,11 @@ function initEvents() {
 			stopEvents();
 		}
 	});
+}
+
+function updateSNRGraph() {
+	var minmax = checkboxMinMax.checked;
+	graphSNR.setData(bins, minmax ? binsHistory : null);
 }
 
 function getGraphParams(width, devicePixelRatio, autoscale) {
@@ -261,6 +269,7 @@ function initGraphs() {
 	updateGraphs();
 	window.addEventListener("resize", updateGraphs);
 	checkboxAutoscale.addEventListener("change", updateGraphs);
+	checkboxMinMax.addEventListener("change", updateSNRGraph);
 }
 
 function loaded(event) {
@@ -269,6 +278,7 @@ function loaded(event) {
 	errors = document.getElementById("errors");
 
 	checkboxAutoscale = document.getElementById("checkbox-autoscale");
+	checkboxMinMax = document.getElementById("checkbox-minmax");
 
 	overlay = document.getElementById("overlay");
 	overlayPassword = document.getElementById("overlay-password");
