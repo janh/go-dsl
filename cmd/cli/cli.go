@@ -89,10 +89,17 @@ func LoadData(config dsl.Config) {
 	writeFile(filenameBase+"summary.txt", []byte(client.Status().Summary()))
 	writeFile(filenameBase+"raw.txt", client.RawData())
 
-	writeGraph(filenameBase+"bits.svg", client.Bins(), graphs.DrawBitsGraph)
-	writeGraph(filenameBase+"snr.svg", client.Bins(), graphs.DrawSNRGraph)
-	writeGraph(filenameBase+"qln.svg", client.Bins(), graphs.DrawQLNGraph)
-	writeGraph(filenameBase+"hlog.svg", client.Bins(), graphs.DrawHlogGraph)
+	graphParamsScaled := graphs.DefaultGraphParamsWithLegend
+	graphParamsScaled.PreferDynamicAxisLimits = true
+
+	writeGraph(filenameBase+"bits.svg", client.Bins(), graphs.DrawBitsGraph, graphs.DefaultGraphParamsWithLegend)
+	writeGraph(filenameBase+"bits_scaled.svg", client.Bins(), graphs.DrawBitsGraph, graphParamsScaled)
+	writeGraph(filenameBase+"snr.svg", client.Bins(), graphs.DrawSNRGraph, graphs.DefaultGraphParamsWithLegend)
+	writeGraph(filenameBase+"snr_scaled.svg", client.Bins(), graphs.DrawSNRGraph, graphParamsScaled)
+	writeGraph(filenameBase+"qln.svg", client.Bins(), graphs.DrawQLNGraph, graphs.DefaultGraphParamsWithLegend)
+	writeGraph(filenameBase+"qln_scaled.svg", client.Bins(), graphs.DrawQLNGraph, graphParamsScaled)
+	writeGraph(filenameBase+"hlog.svg", client.Bins(), graphs.DrawHlogGraph, graphs.DefaultGraphParamsWithLegend)
+	writeGraph(filenameBase+"hlog_scaled.svg", client.Bins(), graphs.DrawHlogGraph, graphParamsScaled)
 }
 
 func createFile(filename string) *os.File {
@@ -115,11 +122,14 @@ func writeFile(filename string, data []byte) {
 	}
 }
 
-func writeGraph(filename string, bins models.Bins, graphFunc func(out io.Writer, data models.Bins, params graphs.GraphParams) error) {
+func writeGraph(filename string, bins models.Bins,
+	graphFunc func(out io.Writer, data models.Bins, params graphs.GraphParams) error,
+	params graphs.GraphParams) {
+
 	f := createFile(filename)
 	defer f.Close()
 
-	err := graphFunc(f, bins, graphs.DefaultGraphParamsWithLegend)
+	err := graphFunc(f, bins, params)
 	if err != nil {
 		fmt.Println("failed to write graph:", err)
 		os.Exit(1)

@@ -41,11 +41,23 @@ func WriteArchive(w io.Writer, filenameBase string, state StateChange, rawData b
 		}
 	}
 
+	graphParamsScaled := graphs.DefaultGraphParamsWithLegend
+	graphParamsScaled.PreferDynamicAxisLimits = true
+
 	fileWriter, err = archive.Create(filenameBase + "_bits.svg")
 	if err != nil {
 		return
 	}
 	err = graphs.DrawBitsGraph(fileWriter, state.Bins, graphs.DefaultGraphParamsWithLegend)
+	if err != nil {
+		return
+	}
+
+	fileWriter, err = archive.Create(filenameBase + "_bits_scaled.svg")
+	if err != nil {
+		return
+	}
+	err = graphs.DrawBitsGraph(fileWriter, state.Bins, graphParamsScaled)
 	if err != nil {
 		return
 	}
@@ -59,11 +71,29 @@ func WriteArchive(w io.Writer, filenameBase string, state StateChange, rawData b
 		return
 	}
 
+	fileWriter, err = archive.Create(filenameBase + "_snr_scaled.svg")
+	if err != nil {
+		return
+	}
+	err = graphs.DrawSNRGraph(fileWriter, state.Bins, graphParamsScaled)
+	if err != nil {
+		return
+	}
+
 	fileWriter, err = archive.Create(filenameBase + "_snr_minmax.svg")
 	if err != nil {
 		return
 	}
 	err = graphs.DrawSNRGraphWithHistory(fileWriter, state.Bins, state.BinsHistory, graphs.DefaultGraphParamsWithLegend)
+	if err != nil {
+		return
+	}
+
+	fileWriter, err = archive.Create(filenameBase + "_snr_minmax_scaled.svg")
+	if err != nil {
+		return
+	}
+	err = graphs.DrawSNRGraphWithHistory(fileWriter, state.Bins, state.BinsHistory, graphParamsScaled)
 	if err != nil {
 		return
 	}
@@ -77,11 +107,29 @@ func WriteArchive(w io.Writer, filenameBase string, state StateChange, rawData b
 		return
 	}
 
+	fileWriter, err = archive.Create(filenameBase + "_qln_scaled.svg")
+	if err != nil {
+		return
+	}
+	err = graphs.DrawQLNGraph(fileWriter, state.Bins, graphParamsScaled)
+	if err != nil {
+		return
+	}
+
 	fileWriter, err = archive.Create(filenameBase + "_hlog.svg")
 	if err != nil {
 		return
 	}
 	err = graphs.DrawHlogGraph(fileWriter, state.Bins, graphs.DefaultGraphParamsWithLegend)
+	if err != nil {
+		return
+	}
+
+	fileWriter, err = archive.Create(filenameBase + "_hlog_scaled.svg")
+	if err != nil {
+		return
+	}
+	err = graphs.DrawHlogGraph(fileWriter, state.Bins, graphParamsScaled)
 	if err != nil {
 		return
 	}
