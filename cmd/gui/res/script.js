@@ -29,6 +29,7 @@
 
 	var buttonSave, buttonDisconnect;
 	var summary, graphs, errors;
+	var checkboxAutoscale;
 	var graphBitsCanvas, graphSNRCanvas, graphQLNCanvas, graphHlogCanvas,
 		graphRetransmissionDownCanvas, graphRetransmissionUpCanvas,
 		graphErrorsDownCanvas, graphErrorsUpCanvas,
@@ -265,6 +266,8 @@
 			setLinkDisabled(buttonDisconnect,
 				state != STATE_READY && state != STATE_PASSWORD && state != STATE_PASSPHRASE && state != STATE_ENCRYPTION_PASSPHRASE && state != STATE_ERROR && state != STATE_LOADING);
 
+			checkboxAutoscale.disabled = state != STATE_READY;
+
 			overlay.classList.toggle("visible", state != STATE_READY);
 			overlayPassword.classList.toggle("visible", state == STATE_PASSWORD);
 			overlayPassphrase.classList.toggle("visible", state == STATE_PASSPHRASE);
@@ -325,7 +328,7 @@
 		}
 	}
 
-	function getGraphParams(width, devicePixelRatio) {
+	function getGraphParams(width, devicePixelRatio, autoscale) {
 		var params = new DSLGraphs.GraphParams();
 
 		var width = width;
@@ -339,6 +342,8 @@
 		params.height = Math.floor(height * devicePixelRatio);
 
 		params.scaleFactor = devicePixelRatio;
+
+		params.preferDynamicAxisLimits = autoscale;
 
 		return params;
 	}
@@ -411,15 +416,18 @@
 		var lastDevicePixelRatio = 0;
 		var lastWidth = 0;
 		var lastWidthErrors = 0;
+		var lastAutoscale = false;
 
 		var updateGraphs = function() {
 			var devicePixelRatio = window.devicePixelRatio;
 
+			var autoscale = checkboxAutoscale.checked;
 			var width = graphs.offsetWidth;
-			if (devicePixelRatio != lastDevicePixelRatio || width != lastWidth) {
+			if (devicePixelRatio != lastDevicePixelRatio || width != lastWidth || autoscale != lastAutoscale) {
+				lastAutoscale = autoscale;
 				lastWidth = width;
 
-				var params = getGraphParams(width, devicePixelRatio);
+				var params = getGraphParams(width, devicePixelRatio, autoscale);
 				applyGraphParams(params);
 			}
 
@@ -430,7 +438,7 @@
 			if (devicePixelRatio != lastDevicePixelRatio || widthErrors != lastWidthErrors) {
 				lastWidthErrors = widthErrors;
 
-				var paramsErrors = getGraphParams(widthErrors, devicePixelRatio);
+				var paramsErrors = getGraphParams(widthErrors, devicePixelRatio, false);
 				applyErrorsGraphParams(paramsErrors);
 			}
 
@@ -439,6 +447,7 @@
 
 		updateGraphs();
 		window.addEventListener("resize", updateGraphs);
+		checkboxAutoscale.addEventListener("change", updateGraphs);
 	}
 
 	function initVisibilityChange() {
@@ -462,6 +471,8 @@
 		summary = document.getElementById("summary");
 		graphs = document.getElementById("graphs");
 		errors = document.getElementById("errors");
+
+		checkboxAutoscale = document.getElementById("checkbox-autoscale");
 
 		overlay = document.getElementById("overlay");
 		overlayPassword = document.getElementById("overlay-password");

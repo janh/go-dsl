@@ -97,6 +97,15 @@ dt::after {
 	flex-wrap: wrap;
 	justify-content: space-between;
 }
+#graphs p.graph-options {
+	padding: 0 .4em;
+	justify-content: end;
+}
+#graphs p.graph-options label {
+	margin: .2em .4em;
+	user-select: none;
+	-webkit-user-select: none;
+}
 ul.legend {
 	margin: 0 0 1em 0;
 	padding: .2em 0 .1em 0;
@@ -191,6 +200,11 @@ input[type="text"], input[type="password"], input[type="submit"], select {
 	}
 	dd {
 		max-width: 10.5em;
+	}
+
+	#graphs p.graph-options label {
+		width: 100%;
+		text-align: right;
 	}
 }
 
