@@ -86,6 +86,10 @@ If unspecified, a few common variants are tried.
 
 Requires access to the Linux command line via SSH or Telnet.
 
+Some of the data can only be read in a hacky way from the kernel log.
+If any other messages are written to the kernel log at the same time, the data may not be parsed correctly.
+This also means that connecting multiple clients to the same device won't work.
+
 	./dsl -d mediatek_ssh -u admin 192.168.1.1
 	./dsl -d mediatek_telnet -u admin 192.168.1.1
 
