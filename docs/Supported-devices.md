@@ -71,7 +71,7 @@ If no value is specified, both "/Status/VDSL" and "/Status/ADSL" will be tried.
 Requires command line access via SSH or Telnet.
 
 Some FRITZ!Box devices are also supported, if a modified firmware with command line access is installed.
-However, it is necessary to run `dsl_pipe ccadbgmls 13 ff` before connecting, as command output will be hidden otherwise.
+However, it is necessary to run `dsl_pipe ccadbgmls 13 ff` (the index 13 may be different) before connecting, as command output will be hidden otherwise.
 
 On some devices, you may need to specify the actual name of the `dsl_cpe_pipe` command using the `Command` option.
 If unspecified, a few common variants are tried.
