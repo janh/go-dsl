@@ -156,6 +156,10 @@ func (h *Bins) Update(status models.Status, bins models.Bins, now time.Time) {
 		return
 	}
 
+	if bins.Mode.Type == models.ModeTypeUnknown {
+		return
+	}
+
 	if h.needsReset(bins) || h.periodStart.After(currentPeriodStart) {
 		h.mode = bins.Mode
 
