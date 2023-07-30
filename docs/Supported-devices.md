@@ -9,6 +9,14 @@ For some devices, there are additional configuration options.
 Check the respective device section for details, as these options may be required to connect successfully.
 Each device section also includes an example for command line usage.
 
+## Bintec Elmeg (manufacturer)
+
+*Device types: `bintecelmeg_telnet`*
+
+Requires access to the command line interface via Telnet.
+
+	./dsl -d bintecelmeg_telnet -u admin 192.168.0.251
+
 ## Broadcom (chipset vendor)
 
 *Device types: `broadcom_ssh`, `broadcom_telnet`*
