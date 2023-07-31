@@ -11,10 +11,11 @@ Each device section also includes an example for command line usage.
 
 ## Bintec Elmeg (manufacturer)
 
-*Device types: `bintecelmeg_telnet`*
+*Device types: `bintecelmeg_ssh`, `bintecelmeg_telnet`*
 
-Requires access to the command line interface via Telnet.
+Requires access to the command line interface via SSH or Telnet.
 
+	./dsl -d bintecelmeg_ssh -u admin 192.168.0.251
 	./dsl -d bintecelmeg_telnet -u admin 192.168.0.251
 
 ## Broadcom (chipset vendor)

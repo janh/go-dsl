@@ -23,4 +23,22 @@ func init() {
 		SupportedAuthTypes: dsl.AuthTypePassword,
 	}
 	dsl.RegisterClient("bintecelmeg_telnet", newTelnet, clientDescTelnet)
+
+	newSSH := func(config dsl.Config) (dsl.Client, error) {
+		sshConfig := SSHConfig{
+			Host:        config.Host,
+			User:        config.User,
+			Password:    config.AuthPassword,
+			PrivateKeys: config.AuthPrivateKeys,
+			KnownHosts:  config.KnownHosts,
+		}
+		return NewSSHClient(sshConfig)
+	}
+	clientDescSSH := dsl.ClientDesc{
+		Title:              "Bintec Elmeg (SSH)",
+		RequiresUser:       dsl.TristateYes,
+		SupportedAuthTypes: dsl.AuthTypePassword | dsl.AuthTypePrivateKeys,
+		RequiresKnownHosts: true,
+	}
+	dsl.RegisterClient("bintecelmeg_ssh", newSSH, clientDescSSH)
 }
