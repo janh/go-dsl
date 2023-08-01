@@ -13,7 +13,7 @@ Each device section also includes an example for command line usage.
 
 *Device types: `bintecelmeg_telnet`*
 
-Requires access to the command line interface via Telnet.
+Requires access to the command line interface via Telnet. Connecting via SSH is not supported due to compatibility issues.
 
 	./dsl -d bintecelmeg_telnet -u admin 192.168.0.251
 
