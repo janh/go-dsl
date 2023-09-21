@@ -1,4 +1,9 @@
 {{ define "content" }}
+<g transform="{{ .TransformState }}">
+{{ range $i, $p := .PathsState }}
+	<path {{ template "color_fill" $p.Color }} d="{{ $p.Path }}"/>
+{{ end }}
+</g>
 <g transform="{{ .Transform }}" fill="none" stroke-width="{{ $.StrokeWidth }}" stroke-linecap="butt" stroke-linejoin="round" style="isolation:isolate">
 {{ range $i, $p := .Paths }}
 	<path {{ template "color_stroke" $p.Color }}{{ if ne $i 0 }} style="mix-blend-mode:multiply"{{ end }} d="{{ $p.Path }}"/>

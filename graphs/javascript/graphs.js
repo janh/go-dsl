@@ -1843,6 +1843,46 @@ var DSLGraphs = DSLGraphs || (function () {
 	}
 
 
+	function buildErrorsStatePath(path, items) {
+		var lastValid = true;
+
+		var count = -1;
+		for (var item of items) {
+			if (count < 0 || item.data.length < count) {
+				count = item.data.length;
+			}
+		}
+
+		for (var i = 0; i < count; i++) {
+			var valid = false;
+			for (var item of items) {
+				if (item.data[i] != null) {
+					valid = true;
+				}
+			}
+
+			var posX = i;
+
+			if (lastValid && !valid) {
+				path.moveTo(posX, 0);
+				path.lineTo(posX, 1);
+			} else if (!lastValid && valid) {
+				path.lineTo(posX, 1);
+				path.lineTo(posX, 0);
+				path.closePath();
+			}
+
+			lastValid = valid;
+		}
+
+		if (!lastValid) {
+			path.lineTo(count, 1);
+			path.lineTo(count, 0);
+			path.closePath();
+		}
+	}
+
+
 	class ErrorsGraph {
 
 		constructor(canvas, params, data) {
@@ -1889,16 +1929,20 @@ var DSLGraphs = DSLGraphs || (function () {
 				return;
 			}
 
+			var items = this._getItems(this._data);
+
 			var x = this._base.graphX;
 			var y = this._base.graphY;
 			var w = this._base.graphWidth;
 			var h = this._base.graphHeight;
 
+			var s = this._base.strokeWidthBase;
+
 			var scaleX = w / this._data.PeriodCount;
 			var scaleY = h / this._spec.legendYTop;
 
 			var paths = [];
-			for (var item of this._getItems(this._data)) {
+			for (var item of items) {
 				var p = {};
 
 				p.color = item.color;
@@ -1908,6 +1952,25 @@ var DSLGraphs = DSLGraphs || (function () {
 
 				paths.push(p);
 			}
+
+			var pathStateInvalid = {};
+			pathStateInvalid.color = this._base.colorNeutralFill.copy();
+			pathStateInvalid.color.a = 0.15;
+			pathStateInvalid.path = new Path2D();
+
+			buildErrorsStatePath(pathStateInvalid.path, items);
+
+			var pathsState = [pathStateInvalid];
+
+			ctx.translate(x, y+h+s);
+			ctx.scale(scaleX, -h-s);
+
+			for (var i = 0; i < pathsState.length; i++) {
+				ctx.fillStyle = pathsState[i].color.toString();
+				ctx.fill(pathsState[i].path);
+			}
+
+			ctx.resetTransform();
 
 			if (ctxPaths.canvas.width != w || ctxPaths.canvas.height != h + 1) {
 				ctxPaths.canvas.width = w;

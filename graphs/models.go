@@ -96,7 +96,9 @@ type coloredPath struct {
 
 type errorsModel struct {
 	baseModel
-	StrokeWidth float64
-	Transform   transform
-	Paths       []coloredPath
+	StrokeWidth    float64
+	Transform      transform
+	TransformState transform
+	Paths          []coloredPath
+	PathsState     []coloredPath
 }

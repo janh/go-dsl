@@ -149,6 +149,45 @@ func buildErrorsPath(p *path, data []models.IntValue, scaleY, maxY, postScaleY f
 	}
 }
 
+func buildErrorsStatePath(p *path, items []errorsGraphItem) {
+	var lastValid bool = true
+
+	count := -1
+	for _, item := range items {
+		if count < 0 || len(item.data) < count {
+			count = len(item.data)
+		}
+	}
+
+	for i := 0; i < count; i++ {
+		valid := false
+		for _, item := range items {
+			if item.data[i].Valid {
+				valid = true
+			}
+		}
+
+		posX := float64(i)
+
+		if lastValid && !valid {
+			p.MoveTo(posX, 0)
+			p.LineTo(posX, 1)
+		} else if !lastValid && valid {
+			p.LineTo(posX, 1)
+			p.LineTo(posX, 0)
+			p.Close()
+		}
+
+		lastValid = valid
+	}
+
+	if !lastValid {
+		p.LineTo(float64(count), 1)
+		p.LineTo(float64(count), 0)
+		p.Close()
+	}
+}
+
 func drawErrorsGraph(out io.Writer, data models.ErrorsHistory, params GraphParams, legend Legend, items []errorsGraphItem) error {
 
 	maxX, stepsX := getErrorsHistoryLegendX(data)
@@ -189,6 +228,8 @@ func drawErrorsGraph(out io.Writer, data models.ErrorsHistory, params GraphParam
 	w := m.GraphWidth
 	h := m.GraphHeight
 
+	s := m.StrokeWidthBase
+
 	scaleX := w / float64(data.PeriodCount)
 	scaleY := h / spec.LegendYTop
 
@@ -203,11 +244,22 @@ func drawErrorsGraph(out io.Writer, data models.ErrorsHistory, params GraphParam
 		m.Paths = append(m.Paths, p)
 	}
 
+	pathStateInvalid := coloredPath{}
+	pathStateInvalid.Color = m.ColorNeutralFill
+	pathStateInvalid.Color.A = 0.15
+
+	buildErrorsStatePath(&pathStateInvalid.Path, items)
+
+	m.PathsState = []coloredPath{pathStateInvalid}
+
 	// scaling of y by scaleX in order to simulate vector-effect="non-scaling-stroke" for non-supporting renderers
 	m.Transform.Translate(x, y+h)
 	m.Transform.Scale(scaleX, -scaleX)
 
 	m.StrokeWidth = spec.ScaleFactor / scaleX
+
+	m.TransformState.Translate(x, y+h+s)
+	m.TransformState.Scale(scaleX, -h-s)
 
 	return writeTemplate(out, m, templateBase, templateErrors)
 }
