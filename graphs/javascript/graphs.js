@@ -1230,7 +1230,7 @@ var DSLGraphs = DSLGraphs || (function () {
 				this._specChanged = false;
 			}
 
-			var ctx = this._canvas.getContext("2d", {alpha: false});
+			var ctx = this._canvas.getContext("2d");
 			var ctxMinMax = this._canvasMinMax.getContext("2d");
 
 			this._base.draw(ctx);
@@ -1880,7 +1880,7 @@ var DSLGraphs = DSLGraphs || (function () {
 				this._specChanged = false;
 			}
 
-			var ctx = this._canvas.getContext("2d", {alpha: false});
+			var ctx = this._canvas.getContext("2d");
 			var ctxPaths = this._canvasPaths.getContext("2d");
 
 			this._base.draw(ctx);
