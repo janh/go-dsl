@@ -22,6 +22,8 @@ var DefaultErrorsConfig = ErrorsConfig{
 }
 
 type errorsHistoryItem struct {
+	Showtime models.BoolValue
+
 	DownstreamRTXTXCount models.IntValue
 	UpstreamRTXTXCount   models.IntValue
 
@@ -51,6 +53,22 @@ type Errors struct {
 	periodStart time.Time
 	periodIndex int
 	data        []errorsHistoryItem
+}
+
+func updateErrorValueShowtime(out *models.BoolValue, val models.State) {
+	if val == models.StateUnknown {
+		return
+	}
+
+	if !out.Valid {
+		out.Valid = true
+		out.Bool = val == models.StateShowtime
+		return
+	}
+
+	if val != models.StateShowtime {
+		out.Bool = false
+	}
 }
 
 func updateErrorValue(out *models.IntValue, lastVal, val models.IntValue) {
@@ -114,11 +132,15 @@ func (h *Errors) updatePeriod(now time.Time) {
 	h.periodStart = currentPeriodStart
 }
 
-func (h *Errors) shouldRejectUpdate(status models.Status, now time.Time) bool {
+func (h *Errors) shouldRejectUpdate(now time.Time) bool {
 	if now.Sub(h.lastTime) > h.config.PeriodLength {
 		return true
 	}
 
+	return false
+}
+
+func (h *Errors) shouldRejectValues(status models.Status) bool {
 	if h.lastStatus.State != models.StateShowtime || status.State != models.StateShowtime {
 		return true
 	}
@@ -145,11 +167,17 @@ func (h *Errors) Update(status models.Status, now time.Time) {
 
 	h.updatePeriod(now)
 
-	if h.shouldRejectUpdate(status, now) {
+	if h.shouldRejectUpdate(now) {
 		return
 	}
 
 	currentItem := &h.data[h.periodIndex]
+
+	updateErrorValueShowtime(&currentItem.Showtime, status.State)
+
+	if h.shouldRejectValues(status) {
+		return
+	}
 
 	updateErrorValue(&currentItem.DownstreamRTXTXCount, h.lastStatus.DownstreamRTXTXCount, status.DownstreamRTXTXCount)
 	updateErrorValue(&currentItem.UpstreamRTXTXCount, h.lastStatus.UpstreamRTXTXCount, status.UpstreamRTXTXCount)
@@ -178,6 +206,8 @@ func (h *Errors) Data() (out models.ErrorsHistory) {
 	out.PeriodLength = h.config.PeriodLength
 	out.PeriodCount = h.config.PeriodCount
 
+	out.Showtime = make([]models.BoolValue, h.config.PeriodCount, h.config.PeriodCount)
+
 	out.DownstreamRTXTXCount = make([]models.IntValue, h.config.PeriodCount, h.config.PeriodCount)
 	out.UpstreamRTXTXCount = make([]models.IntValue, h.config.PeriodCount, h.config.PeriodCount)
 
@@ -205,6 +235,8 @@ func (h *Errors) Data() (out models.ErrorsHistory) {
 
 	for i := 0; i < h.config.PeriodCount; i++ {
 		index := (h.periodIndex + 1 + i) % h.config.PeriodCount
+
+		out.Showtime[i] = h.data[index].Showtime
 
 		out.DownstreamRTXTXCount[i] = h.data[index].DownstreamRTXTXCount
 		out.UpstreamRTXTXCount[i] = h.data[index].UpstreamRTXTXCount

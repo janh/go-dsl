@@ -32,6 +32,8 @@ type ErrorsHistory struct {
 	PeriodLength time.Duration
 	PeriodCount  int
 
+	Showtime []BoolValue
+
 	DownstreamRTXTXCount []IntValue
 	UpstreamRTXTXCount   []IntValue
 
@@ -62,6 +64,8 @@ func (h ErrorsHistory) String() string {
 	fmt.Fprintf(&b, "Period count: %d\n", h.PeriodCount)
 	fmt.Fprintln(&b)
 
+	printErrorsHistoryListBool(&b, "Showtime", h.Showtime)
+
 	printErrorsHistoryList(&b, "Downstream rtx-tx", h.DownstreamRTXTXCount)
 	printErrorsHistoryList(&b, "Upstream rtx-tx", h.UpstreamRTXTXCount)
 
@@ -90,6 +94,22 @@ func printErrorsHistoryList(w io.Writer, label string, data []IntValue) {
 	fmt.Fprintf(w, "%s:", label)
 	for _, val := range data {
 		fmt.Fprintf(w, " %s", val)
+	}
+	fmt.Fprintf(w, "\n\n")
+}
+
+func printErrorsHistoryListBool(w io.Writer, label string, data []BoolValue) {
+	fmt.Fprintf(w, "%s:", label)
+	for _, val := range data {
+		if val.Valid {
+			if val.Bool {
+				fmt.Fprint(w, " 1")
+			} else {
+				fmt.Fprint(w, " 0")
+			}
+		} else {
+			fmt.Fprint(w, " -")
+		}
 	}
 	fmt.Fprintf(w, "\n\n")
 }
