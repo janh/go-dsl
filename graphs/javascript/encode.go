@@ -102,6 +102,7 @@ func EncodeErrorsHistory(errorsHistory models.ErrorsHistory) json.RawMessage {
 	historyMap := map[string]interface{}{
 		"PeriodLength":         errorsHistory.PeriodLength.Seconds(),
 		"PeriodCount":          errorsHistory.PeriodCount,
+		"Showtime":             encodeListBoolValue(errorsHistory.Showtime),
 		"DownstreamRTXTXCount": encodeListIntValue(errorsHistory.DownstreamRTXTXCount),
 		"UpstreamRTXTXCount":   encodeListIntValue(errorsHistory.UpstreamRTXTXCount),
 		"DownstreamRTXCCount":  encodeListIntValue(errorsHistory.DownstreamRTXCCount),

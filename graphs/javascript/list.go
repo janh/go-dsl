@@ -25,6 +25,8 @@ import (
 // n: relative value, negative
 // o: relative value, negative, only fractional part
 // e: invalid value (null)
+// t: boolean true
+// f: boolean false
 
 func formatListValFloat64(prefixPositive, prefixNegative byte, val int64) (valStr string) {
 	var prefix byte
@@ -199,6 +201,51 @@ func encodeListIntValue(list []models.IntValue) json.RawMessage {
 				fmt.Fprint(&buf, abs)
 			} else {
 				fmt.Fprint(&buf, rel)
+			}
+		}
+
+		lastVal = val
+	}
+
+	if count > 0 {
+		buf.WriteByte('r')
+		fmt.Fprintf(&buf, "%d", count)
+	}
+
+	buf.WriteByte('"')
+
+	return json.RawMessage(buf.Bytes())
+}
+
+func encodeListBoolValue(list []models.BoolValue) json.RawMessage {
+	var buf bytes.Buffer
+
+	buf.WriteByte('"')
+
+	var lastVal = models.BoolValue{Valid: true, Bool: false}
+	var count int
+
+	for i, val := range list {
+		if !val.Valid {
+			val.Bool = false
+		}
+		if i != 0 && val == lastVal {
+			count++
+			continue
+		}
+		if count > 0 {
+			buf.WriteByte('r')
+			fmt.Fprintf(&buf, "%d", count)
+			count = 0
+		}
+
+		if !val.Valid {
+			buf.WriteByte('e')
+		} else {
+			if val.Bool {
+				buf.WriteByte('t')
+			} else {
+				buf.WriteByte('f')
 			}
 		}
 

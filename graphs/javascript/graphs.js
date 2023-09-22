@@ -168,6 +168,14 @@ var DSLGraphs = DSLGraphs || (function () {
 	function decodeList(list) {
 		var out = [];
 
+		function push(val) {
+			if (val === null || val === true || val === false) {
+				out.push(val);
+			} else {
+				out.push(val/10);
+			}
+		}
+
 		var lastVal = 0;
 		var index = 0;
 
@@ -192,7 +200,7 @@ var DSLGraphs = DSLGraphs || (function () {
 
 			if (cmd == 'r') {
 				for (var i = 0; i < num; i++) {
-					out.push(lastVal != null ? lastVal/10 : null);
+					push(lastVal);
 				}
 				continue;
 			}
@@ -209,9 +217,11 @@ var DSLGraphs = DSLGraphs || (function () {
 				case 'n': val = lastVal - num * 10 - frac; break;
 				case 'o': val = lastVal - num; break;
 				case 'e': val = null; break;
+				case 't': val = true; break;
+				case 'f': val = false; break;
 			}
 
-			out.push(val != null ? val/10 : null);
+			push(val);
 			lastVal = val;
 		}
 
@@ -242,6 +252,7 @@ var DSLGraphs = DSLGraphs || (function () {
 
 
 	function decodeErrorsHistory(data) {
+		data.Showtime = decodeList(data.Showtime);
 		data.DownstreamRTXTXCount = decodeList(data.DownstreamRTXTXCount);
 		data.UpstreamRTXTXCount = decodeList(data.UpstreamRTXTXCount);
 		data.DownstreamRTXCCount = decodeList(data.DownstreamRTXCCount);
