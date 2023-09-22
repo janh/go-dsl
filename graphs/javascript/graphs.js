@@ -1854,42 +1854,60 @@ var DSLGraphs = DSLGraphs || (function () {
 	}
 
 
-	function buildErrorsStatePath(path, items) {
+	function buildErrorsStatePath(pathInvalid, pathNoShowtime, showtimeData, items) {
 		var lastValid = true;
+		var lastNoShowtime = false;
 
-		var count = -1;
+		var count = showtimeData.length;
 		for (var item of items) {
-			if (count < 0 || item.data.length < count) {
+			if (item.data.length < count) {
 				count = item.data.length;
 			}
 		}
 
 		for (var i = 0; i < count; i++) {
+			var noShowtime = (showtimeData[i] === false);
+
 			var valid = false;
 			for (var item of items) {
 				if (item.data[i] != null) {
 					valid = true;
 				}
 			}
+			valid = valid || noShowtime;
 
 			var posX = i;
 
+			if (!lastNoShowtime && noShowtime) {
+				pathNoShowtime.moveTo(posX, 0);
+				pathNoShowtime.lineTo(posX, 1);
+			} else if (lastNoShowtime && !noShowtime) {
+				pathNoShowtime.lineTo(posX, 1);
+				pathNoShowtime.lineTo(posX, 0);
+				pathNoShowtime.closePath();
+			}
+
 			if (lastValid && !valid) {
-				path.moveTo(posX, 0);
-				path.lineTo(posX, 1);
+				pathInvalid.moveTo(posX, 0);
+				pathInvalid.lineTo(posX, 1);
 			} else if (!lastValid && valid) {
-				path.lineTo(posX, 1);
-				path.lineTo(posX, 0);
-				path.closePath();
+				pathInvalid.lineTo(posX, 1);
+				pathInvalid.lineTo(posX, 0);
+				pathInvalid.closePath();
 			}
 
 			lastValid = valid;
+			lastNoShowtime = noShowtime;
 		}
 
-		if (!lastValid) {
-			path.lineTo(count, 1);
-			path.lineTo(count, 0);
-			path.closePath();
+		if (lastNoShowtime) {
+			pathNoShowtime.lineTo(count, 1);
+			pathNoShowtime.lineTo(count, 0);
+			pathNoShowtime.closePath();
+		} else if (!lastValid) {
+			pathInvalid.lineTo(count, 1);
+			pathInvalid.lineTo(count, 0);
+			pathInvalid.closePath();
 		}
 	}
 
@@ -1969,9 +1987,14 @@ var DSLGraphs = DSLGraphs || (function () {
 			pathStateInvalid.color.a = 0.15;
 			pathStateInvalid.path = new Path2D();
 
-			buildErrorsStatePath(pathStateInvalid.path, items);
+			var pathStateNoShowtime = {};
+			pathStateNoShowtime.color = COLOR_RED.copy();
+			pathStateNoShowtime.color.a = 0.3
+			pathStateNoShowtime.path = new Path2D();
 
-			var pathsState = [pathStateInvalid];
+			buildErrorsStatePath(pathStateInvalid.path, pathStateNoShowtime.path, this._data.Showtime, items);
+
+			var pathsState = [pathStateInvalid, pathStateNoShowtime];
 
 			ctx.translate(x, y+h+s);
 			ctx.scale(scaleX, -h-s);

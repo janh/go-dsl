@@ -149,42 +149,60 @@ func buildErrorsPath(p *path, data []models.IntValue, scaleY, maxY, postScaleY f
 	}
 }
 
-func buildErrorsStatePath(p *path, items []errorsGraphItem) {
+func buildErrorsStatePath(pathInvalid, pathNoShowtime *path, showtimeData []models.BoolValue, items []errorsGraphItem) {
 	var lastValid bool = true
+	var lastNoShowtime bool = false
 
-	count := -1
+	count := len(showtimeData)
 	for _, item := range items {
-		if count < 0 || len(item.data) < count {
+		if len(item.data) < count {
 			count = len(item.data)
 		}
 	}
 
 	for i := 0; i < count; i++ {
+		noShowtime := showtimeData[i].Valid && !showtimeData[i].Bool
+
 		valid := false
 		for _, item := range items {
 			if item.data[i].Valid {
 				valid = true
 			}
 		}
+		valid = valid || noShowtime
 
 		posX := float64(i)
 
+		if !lastNoShowtime && noShowtime {
+			pathNoShowtime.MoveTo(posX, 0)
+			pathNoShowtime.LineTo(posX, 1)
+		} else if lastNoShowtime && !noShowtime {
+			pathNoShowtime.LineTo(posX, 1)
+			pathNoShowtime.LineTo(posX, 0)
+			pathNoShowtime.Close()
+		}
+
 		if lastValid && !valid {
-			p.MoveTo(posX, 0)
-			p.LineTo(posX, 1)
+			pathInvalid.MoveTo(posX, 0)
+			pathInvalid.LineTo(posX, 1)
 		} else if !lastValid && valid {
-			p.LineTo(posX, 1)
-			p.LineTo(posX, 0)
-			p.Close()
+			pathInvalid.LineTo(posX, 1)
+			pathInvalid.LineTo(posX, 0)
+			pathInvalid.Close()
 		}
 
 		lastValid = valid
+		lastNoShowtime = noShowtime
 	}
 
-	if !lastValid {
-		p.LineTo(float64(count), 1)
-		p.LineTo(float64(count), 0)
-		p.Close()
+	if lastNoShowtime {
+		pathNoShowtime.LineTo(float64(count), 1)
+		pathNoShowtime.LineTo(float64(count), 0)
+		pathNoShowtime.Close()
+	} else if !lastValid {
+		pathInvalid.LineTo(float64(count), 1)
+		pathInvalid.LineTo(float64(count), 0)
+		pathInvalid.Close()
 	}
 }
 
@@ -248,9 +266,13 @@ func drawErrorsGraph(out io.Writer, data models.ErrorsHistory, params GraphParam
 	pathStateInvalid.Color = m.ColorNeutralFill
 	pathStateInvalid.Color.A = 0.15
 
-	buildErrorsStatePath(&pathStateInvalid.Path, items)
+	pathStateNoShowtime := coloredPath{}
+	pathStateNoShowtime.Color = colorRed
+	pathStateNoShowtime.Color.A = 0.3
 
-	m.PathsState = []coloredPath{pathStateInvalid}
+	buildErrorsStatePath(&pathStateInvalid.Path, &pathStateNoShowtime.Path, data.Showtime, items)
+
+	m.PathsState = []coloredPath{pathStateInvalid, pathStateNoShowtime}
 
 	// scaling of y by scaleX in order to simulate vector-effect="non-scaling-stroke" for non-supporting renderers
 	m.Transform.Translate(x, y+h)
