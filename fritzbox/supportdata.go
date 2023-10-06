@@ -66,6 +66,13 @@ func parseSupportData(status *models.Status, bins *models.Bins, d *rawDataSuppor
 
 	bins.QLN.Downstream = parseSupportDataBins(bins.Bands.Downstream, values, "QLN DS Array", "QLN Array")
 	bins.QLN.Upstream = parseSupportDataBins(bins.Bands.Upstream, values, "QLN US Array")
+
+	if bins.Mode.Type == models.ModeTypeVDSL2 && bins.Mode.Subtype == models.ModeSubtypeProfile35b {
+		// It seems like the AVM firmware applies some scaling to the upstream data for VDSL2 Profile 35b,
+		// so adjust the guessed group size to take this into account.
+		bins.Hlog.Upstream.GroupSize *= 2
+		bins.QLN.Upstream.GroupSize *= 2
+	}
 }
 
 func parseSupportDataValues(supportData string) map[string]string {
