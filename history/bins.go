@@ -60,7 +60,7 @@ func (m *snrMinMax) Reset(snr models.BinsFloat, maxBinCount, periodCount int) {
 	minmaxCount := m.OriginalCount
 	for minmaxCount > maxBinCount {
 		factor *= 2
-		minmaxCount = m.OriginalCount / factor
+		minmaxCount = (m.OriginalCount + factor - 1) / factor
 	}
 
 	minmaxGroupSize := snr.GroupSize * factor
