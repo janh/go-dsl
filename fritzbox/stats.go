@@ -223,8 +223,10 @@ func interpretStatsFloatValues(values map[string][2]string, key string) (downstr
 func interpetStatsInterleavingDelay(val string) (out models.ValueMilliseconds) {
 	if val == "fast" || val == "< 1" {
 		out.FloatValue.Valid = true
-	} else if strings.HasSuffix(val, "ms") {
-		val = strings.TrimSpace(val[0 : len(val)-2])
+	} else {
+		if strings.HasSuffix(val, "ms") {
+			val = strings.TrimSpace(val[0 : len(val)-2])
+		}
 		if valFloat, err := strconv.ParseFloat(val, 64); err == nil {
 			out.FloatValue.Float = valFloat
 			out.FloatValue.Valid = true
