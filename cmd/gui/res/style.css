@@ -111,6 +111,7 @@ header a.disabled {
 #overlay-connect fieldset legend {
 	display: block;
 	width: 100%;
+	white-space: nowrap;
 	box-sizing: border-box;
 	padding: 0 0 0 1em;
 	margin: 0 0 .75em 0;
