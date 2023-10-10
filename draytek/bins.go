@@ -95,15 +95,20 @@ func readShowbinsBin(binsBits *models.BinsBits, snrData []float64, maxSNRIndex, 
 		snr, _ := strconv.ParseFloat(data[1], 64)
 		bits, _ := strconv.ParseInt(data[3], 10, 64)
 
-		if bits != 0 {
-			binsBits.Data[num] = int8(bits)
-			*maxBitsIndex = num
+		if num < len(binsBits.Data) {
+			if bits != 0 {
+				binsBits.Data[num] = int8(bits)
+				*maxBitsIndex = num
+			}
 		}
-		if snr != 0 && snr != -32 {
-			snrData[num] = snr
-			*maxSNRIndex = num
-		} else {
-			snrData[num] = -32.5
+
+		if num < len(snrData) {
+			if snr != 0 && snr != -32 {
+				snrData[num] = snr
+				*maxSNRIndex = num
+			} else {
+				snrData[num] = -32.5
+			}
 		}
 	}
 }
