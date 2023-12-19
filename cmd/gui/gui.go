@@ -23,7 +23,7 @@ import (
 	"time"
 
 	"github.com/adrg/xdg"
-	"github.com/webview/webview"
+	webview "github.com/webview/webview_go"
 
 	"3e8.eu/go/dsl"
 	jsgraphs "3e8.eu/go/dsl/graphs/javascript"

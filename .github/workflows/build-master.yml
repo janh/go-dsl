@@ -157,19 +157,6 @@ jobs:
         run: |
           go build -o .\build\arm64\dsl.exe .\cmd
 
-      - name: Download WebView2 SDK
-        run: |
-          $WebView2Version = "1.0.1462.37"
-          $WebView2SHA256 = "8e310bb63a6770a0765d37fb5da98141dca2f79442a3913d6216753f5db3f1e1"
-          New-Item -ItemType Directory .\libs\webview2
-          Invoke-WebRequest "https://www.nuget.org/api/v2/package/Microsoft.Web.WebView2/$WebView2Version" -OutFile .\libs\webview2.zip
-          $actualSHA256 = Get-FileHash -Algorithm SHA256 .\libs\webview2.zip
-          if ($actualSHA256.Hash -ne $WebView2SHA256) {
-            Write-Output "WebView2 checksum does not match!"
-            exit 1
-          }
-          Expand-Archive .\libs\webview2.zip .\libs\webview2
-
       - name: Build GUI (x86-64)
         env:
           CC: x86_64-w64-mingw32-clang
@@ -178,7 +165,6 @@ jobs:
           GOARCH: amd64
         run: |
           $Env:Path = "$PWD\toolchain\llvm-mingw\bin;$Env:Path"
-          $Env:CGO_CXXFLAGS = "-I$PWD\libs\webview2\build\native\include"
           go build -tags gui -ldflags="-H windowsgui" -o .\build\x86-64\dsl-gui.exe .\cmd
 
       - name: Build GUI (x86)
@@ -189,7 +175,6 @@ jobs:
           GOARCH: 386
         run: |
           $Env:Path = "$PWD\toolchain\llvm-mingw\bin;$Env:Path"
-          $Env:CGO_CXXFLAGS = "-I$PWD\libs\webview2\build\native\include"
           go build -tags gui -ldflags="-H windowsgui" -o .\build\x86\dsl-gui.exe .\cmd
 
       - name: Build GUI (arm64)
@@ -200,7 +185,6 @@ jobs:
           GOARCH: arm64
         run: |
           $Env:Path = "$PWD\toolchain\llvm-mingw\bin;$Env:Path"
-          $Env:CGO_CXXFLAGS = "-I$PWD\libs\webview2\build\native\include"
           go build -tags gui -ldflags="-H windowsgui" -o .\build\arm64\dsl-gui.exe .\cmd
 
       - name: Zip

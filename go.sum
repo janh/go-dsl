@@ -20,8 +20,8 @@ github.com/stretchr/testify v1.7.1/go.mod h1:6Fq8oRcR53rry900zMqJjRRixrwX3KX962/
 github.com/stretchr/testify v1.8.0/go.mod h1:yNjHg4UonilssWZ8iaSj1OCr/vHnekPRkoO+kdMU+MU=
 github.com/stretchr/testify v1.8.1 h1:w7B6lhMri9wdJUVmEZPGGhZzrYTPvgJArz7wNPgYKsk=
 github.com/stretchr/testify v1.8.1/go.mod h1:w2LPCIKwWwSfY2zedu0+kehJoqGctiVI29o6fzry7u4=
-github.com/webview/webview v0.0.0-20230119222730-14f8e24a873c h1:DFy1YH6Sfml8rMrTHEDi6qubMNtzws9uwJEvsivEqLo=
-github.com/webview/webview v0.0.0-20230119222730-14f8e24a873c/go.mod h1:rpXAuuHgyEJb6kXcXldlkOjU6y4x+YcASKKXJNUhh0Y=
+github.com/webview/webview_go v0.0.0-20230901181450-5a14030a9070 h1:imZLWyo1ondeQjqfb/eHuYgFiOAYg6ugSMCnGfPTPmg=
+github.com/webview/webview_go v0.0.0-20230901181450-5a14030a9070/go.mod h1:yE65LFCeWf4kyWD5re+h4XNvOHJEXOCOuJZ4v8l5sgk=
 github.com/yuin/goldmark v1.3.5/go.mod h1:mwnBkeHKe2W/ZEtQ+71ViKU8L12m81fl3OWwC1Zlc8k=
 github.com/yuin/goldmark v1.4.13/go.mod h1:6yULJ656Px+3vBD8DxQVa3kxgyrAnzto9xy5taEt/CY=
 github.com/ziutek/telnet v0.0.0-20180329124119-c3b780dc415b h1:VfPXB/wCGGt590QhD1bOpv2J/AmC/RJNTg/Q59HKSB0=
