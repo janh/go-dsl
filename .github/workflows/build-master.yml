@@ -123,8 +123,8 @@ jobs:
 
       - name: Download toolchain
         run: |
-          $ToolchainVersion = "20220906"
-          $ToolchainSHA256 = "06c8523447a369303f7a67dda1d2b66a6b2e460640126458f69f1d98afd3fdf1"
+          $ToolchainVersion = "20231128"
+          $ToolchainSHA256 = "7a344dafa6942de2c1f4643b3eb5c5ce5317fbab671a887e4d39f326b331798f"
           New-Item -ItemType Directory .\toolchain
           $ProgressPreference = "SilentlyContinue"
           Invoke-WebRequest "https://github.com/mstorsjo/llvm-mingw/releases/download/$ToolchainVersion/llvm-mingw-$ToolchainVersion-ucrt-x86_64.zip" -OutFile .\toolchain\llvm-mingw.zip
