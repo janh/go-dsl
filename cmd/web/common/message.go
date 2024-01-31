@@ -26,20 +26,21 @@ func GetStateMessage(change StateChange) Message {
 
 	switch change.State {
 
-	case StateReady:
+	case StatePassphraseRequired:
+		msg.Info = change.Fingerprint
+
+	case StateError:
+		msg.Info = "failed to load data from device: " + change.Err.Error()
+
+	}
+
+	if change.HasData {
 		msg.Data = MessageData{
 			Summary:       getSummaryString(change.Status),
 			Bins:          jsgraphs.EncodeBins(change.Bins),
 			BinsHistory:   jsgraphs.EncodeBinsHistory(change.BinsHistory),
 			ErrorsHistory: jsgraphs.EncodeErrorsHistory(change.ErrorsHistory),
 		}
-
-	case StatePassphraseRequired:
-		msg.Data = change.Fingerprint
-
-	case StateError:
-		msg.Data = "failed to load data from device: " + change.Err.Error()
-
 	}
 
 	return msg

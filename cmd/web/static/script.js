@@ -42,44 +42,44 @@ function setLinkDisabled(element, disabled) {
 	}
 }
 
-function updateState(newState, data) {
+function updateState(newState, info, data) {
 	let oldState = state;
 
-	if (data !== undefined) {
+	if (info !== undefined) {
 		switch (newState) {
 
 			case STATE_PASSPHRASE:
-				fingerprint.innerText = data;
-				break;
-
-			case STATE_READY:
-				bins = DSLGraphs.decodeBins(data["bins"]);
-				binsHistory = DSLGraphs.decodeBinsHistory(data["bins_history"]);
-				var errorsHistory = DSLGraphs.decodeErrorsHistory(data["errors_history"]);
-				summary.innerHTML = data["summary"];
-				graphBits.setData(bins);
-				updateSNRGraph();
-				graphQLN.setData(bins);
-				graphHlog.setData(bins);
-				graphRetransmissionDown.setData(errorsHistory);
-				graphRetransmissionUp.setData(errorsHistory);
-				graphErrorsDown.setData(errorsHistory);
-				graphErrorsUp.setData(errorsHistory);
-				graphErrorSecondsDown.setData(errorsHistory);
-				graphErrorSecondsUp.setData(errorsHistory);
+				fingerprint.innerText = info;
 				break;
 
 			case STATE_ERROR:
-				overlayError.innerText = data;
+				overlayError.innerText = info;
 				break;
 
 		}
 	}
 
+	if (data !== undefined) {
+		bins = DSLGraphs.decodeBins(data["bins"]);
+		binsHistory = DSLGraphs.decodeBinsHistory(data["bins_history"]);
+		var errorsHistory = DSLGraphs.decodeErrorsHistory(data["errors_history"]);
+		summary.innerHTML = data["summary"];
+		graphBits.setData(bins);
+		updateSNRGraph();
+		graphQLN.setData(bins);
+		graphHlog.setData(bins);
+		graphRetransmissionDown.setData(errorsHistory);
+		graphRetransmissionUp.setData(errorsHistory);
+		graphErrorsDown.setData(errorsHistory);
+		graphErrorsUp.setData(errorsHistory);
+		graphErrorSecondsDown.setData(errorsHistory);
+		graphErrorSecondsUp.setData(errorsHistory);
+	}
+
 	if (newState != oldState) {
 		state = newState;
 
-		setLinkDisabled(linkSave, state != STATE_READY);
+		setLinkDisabled(linkSave, data === undefined);
 
 		checkboxAutoscale.disabled = state != STATE_READY;
 		checkboxMinMax.disabled = state != STATE_READY;
@@ -138,7 +138,7 @@ function startEvents() {
 
 	eventSource.onmessage = function(event) {
 		let message = JSON.parse(event.data);
-		updateState(message.state, message.data);
+		updateState(message.state, message.info, message.data);
 	}
 
 	eventSource.onerror = function(event) {

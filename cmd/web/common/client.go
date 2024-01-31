@@ -32,6 +32,7 @@ const (
 type StateChange struct {
 	State State
 
+	HasData       bool
 	Time          time.Time
 	RawData       []byte
 	Status        models.Status
@@ -56,7 +57,8 @@ type Client struct {
 	receivers       map[chan StateChange]bool
 	lastStateChange StateChange
 
-	client dsl.Client
+	client   dsl.Client
+	lastData StateChange
 
 	interval        time.Duration
 	intervalChanged chan bool
@@ -189,6 +191,22 @@ func (c *Client) distribute() {
 	}
 }
 
+func (c *Client) stateChangeWithLastData(change StateChange) StateChange {
+	if !c.lastData.HasData {
+		return change
+	}
+
+	change.HasData = c.lastData.HasData
+	change.Time = c.lastData.Time
+	change.RawData = c.lastData.RawData
+	change.Status = c.lastData.Status
+	change.Bins = c.lastData.Bins
+	change.BinsHistory = c.lastData.BinsHistory
+	change.ErrorsHistory = c.lastData.ErrorsHistory
+
+	return change
+}
+
 func (c *Client) connect() {
 	var err error
 	var interval = 2 * time.Second
@@ -214,7 +232,8 @@ func (c *Client) connect() {
 			}
 		}
 
-		c.changeState <- StateChange{State: StateError, Err: err}
+		c.changeState <- c.stateChangeWithLastData(
+			StateChange{State: StateError, Err: err})
 
 		select {
 		case <-c.cancel:
@@ -236,7 +255,8 @@ func (c *Client) update() {
 	if clientDesc.SupportedAuthTypes&dsl.AuthTypePassword != 0 && c.config.AuthPassword == nil {
 		c.config.AuthPassword = func() (string, error) {
 			if c.password == "" {
-				c.changeState <- StateChange{State: StatePasswordRequired}
+				c.changeState <- c.stateChangeWithLastData(
+					StateChange{State: StatePasswordRequired})
 
 				select {
 				case <-c.cancel:
@@ -246,7 +266,8 @@ func (c *Client) update() {
 					c.password = password
 				}
 
-				c.changeState <- StateChange{State: StateLoading}
+				c.changeState <- c.stateChangeWithLastData(
+					StateChange{State: StateLoading})
 			}
 
 			return c.password, nil
@@ -256,7 +277,8 @@ func (c *Client) update() {
 	if clientDesc.SupportedAuthTypes&dsl.AuthTypePrivateKeys != 0 && c.config.AuthPrivateKeys.Passphrase == nil {
 		c.config.AuthPrivateKeys.Passphrase = func(fingerprint string) (string, error) {
 			if c.passphrase[fingerprint] == "" {
-				c.changeState <- StateChange{State: StatePassphraseRequired, Fingerprint: fingerprint}
+				c.changeState <- c.stateChangeWithLastData(
+					StateChange{State: StatePassphraseRequired, Fingerprint: fingerprint})
 
 				select {
 				case <-c.cancel:
@@ -266,7 +288,8 @@ func (c *Client) update() {
 					c.passphrase[fingerprint] = passphrase
 				}
 
-				c.changeState <- StateChange{State: StateLoading}
+				c.changeState <- c.stateChangeWithLastData(
+					StateChange{State: StateLoading})
 			}
 
 			return c.passphrase[fingerprint], nil
@@ -276,7 +299,8 @@ func (c *Client) update() {
 	if clientDesc.SupportsEncryptionPassphrase && c.config.EncryptionPassphrase == nil {
 		c.config.EncryptionPassphrase = func() (string, error) {
 			if c.encryptionPassphrase == "" {
-				c.changeState <- StateChange{State: StateEncryptionPassphraseRequired}
+				c.changeState <- c.stateChangeWithLastData(
+					StateChange{State: StateEncryptionPassphraseRequired})
 
 				select {
 				case <-c.cancel:
@@ -286,7 +310,8 @@ func (c *Client) update() {
 					c.encryptionPassphrase = encryptionPassphrase
 				}
 
-				c.changeState <- StateChange{State: StateLoading}
+				c.changeState <- c.stateChangeWithLastData(
+					StateChange{State: StateLoading})
 			}
 
 			return c.encryptionPassphrase, nil
@@ -322,8 +347,8 @@ mainloop:
 				binsHistory.Update(c.client.Status(), c.client.Bins(), now)
 				errorsHistory.Update(c.client.Status(), now)
 
-				c.changeState <- StateChange{
-					State:         StateReady,
+				c.lastData = StateChange{
+					HasData:       true,
 					Time:          now,
 					RawData:       c.client.RawData(),
 					Status:        c.client.Status(),
@@ -332,13 +357,17 @@ mainloop:
 					ErrorsHistory: errorsHistory.Data(),
 				}
 
+				c.changeState <- c.stateChangeWithLastData(
+					StateChange{State: StateReady})
+
 				c.errCount = 0
 
 				break
 
 			} else {
 
-				c.changeState <- StateChange{State: StateError, Err: err}
+				c.changeState <- c.stateChangeWithLastData(
+					StateChange{State: StateError, Err: err})
 
 				c.errCount++
 

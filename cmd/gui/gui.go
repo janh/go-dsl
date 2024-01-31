@@ -279,12 +279,18 @@ func save() {
 	mutex.Lock()
 	defer mutex.Unlock()
 
-	if lastMessage.State != string(common.StateReady) {
+	if lastMessage.State != string(common.StateReady) &&
+		lastMessage.State != string(common.StatePasswordRequired) &&
+		lastMessage.State != string(common.StatePassphraseRequired) &&
+		lastMessage.State != string(common.StateEncryptionPassphraseRequired) &&
+		lastMessage.State != string(common.StateError) &&
+		lastMessage.State != string(common.StateLoading) {
+
 		return
 	}
 
 	change := c.State()
-	if change.State != common.StateReady {
+	if !change.HasData {
 		return
 	}
 

@@ -10,13 +10,14 @@ import (
 
 type Message struct {
 	State string      `json:"state"`
+	Info  interface{} `json:"info,omitempty"`
 	Data  interface{} `json:"data,omitempty"`
 }
 
 func (m Message) JSON() []byte {
 	dataBytes, err := json.Marshal(m)
 	if err != nil {
-		dataBytes = []byte(`{"state":"error","data":"encoding error"}`)
+		dataBytes = []byte(`{"state":"error","info":"encoding error"}`)
 	}
 
 	return dataBytes

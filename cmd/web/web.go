@@ -179,16 +179,17 @@ func getStateMessage(change common.StateChange) (msg common.Message) {
 	case config.HideErrorMessages && change.State == common.StateError:
 		log.Println(change.Err)
 
-		msg.State = string(change.State)
-		msg.Data = "failed to load data from device: see log message for details"
+		msg = common.GetStateMessage(change)
+		msg.Info = "failed to load data from device: see log message for details"
 
 	case config.DisableInteractiveAuth &&
 		(change.State == common.StatePasswordRequired ||
 			change.State == common.StatePassphraseRequired ||
 			change.State == common.StateEncryptionPassphraseRequired):
 
+		msg = common.GetStateMessage(change)
 		msg.State = string(common.StateError)
-		msg.Data = "failed to load data from device: interactive authentication required but not allowed"
+		msg.Info = "failed to load data from device: interactive authentication required but not allowed"
 
 	default:
 		msg = common.GetStateMessage(change)
@@ -251,7 +252,7 @@ func handleDownload(w http.ResponseWriter, req *http.Request) {
 	}
 
 	state := c.State()
-	if state.State != common.StateReady {
+	if !state.HasData {
 		http.Error(w, "404 not found", http.StatusNotFound)
 		return
 	}
