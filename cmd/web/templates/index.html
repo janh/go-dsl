@@ -12,7 +12,7 @@
 
 		<header>
 			<h1>xDSL stats</h1>
-			<a href="download" target="download">Save</a>
+			<a href="download" target="download" id="link-save">Save</a>
 		</header>
 
 		<div id="content">
@@ -27,34 +27,34 @@
 				{{ template "graphs_errors" .GraphData }}
 			</div>
 
-		</div>
+			<div id="overlay">
+				<div id="overlaycontent">
 
-		<div id="overlay">
-			<div id="overlaycontent">
+					<form id="overlay-password" action="password" method="POST">
+						<label for="password">The device requests a password:</label>
+						<input type="password" id="password" name="data" />
+					</form>
 
-				<form id="overlay-password" action="password" method="POST">
-					<label for="password">The device requests a password:</label>
-					<input type="password" id="password" name="data" />
-				</form>
+					<form id="overlay-passphrase" action="passphrase" method="POST">
+						<label for="passphrase">
+							A passphrase is needed to unlock the private key
+							<span id="fingerprint"></span>:
+						</label>
+						<input type="password" id="passphrase" name="data" />
+					</form>
 
-				<form id="overlay-passphrase" action="passphrase" method="POST">
-					<label for="passphrase">
-						A passphrase is needed to unlock the private key
-						<span id="fingerprint"></span>:
-					</label>
-					<input type="password" id="passphrase" name="data" />
-				</form>
+					<form id="overlay-encryption-passphrase" action="encryption-passphrase" method="POST">
+						<label for="encryption-passphrase">An encryption passphrase is needed:</label>
+						<input type="password" id="encryption-passphrase" name="data" />
+					</form>
 
-				<form id="overlay-encryption-passphrase" action="encryption-passphrase" method="POST">
-					<label for="encryption-passphrase">An encryption passphrase is needed:</label>
-					<input type="password" id="encryption-passphrase" name="data" />
-				</form>
+					<div id="overlay-error"></div>
 
-				<div id="overlay-error"></div>
+					<div id="overlay-loading">Loading…</div>
 
-				<div id="overlay-loading">Loading…</div>
-
+				</div>
 			</div>
+
 		</div>
 
 		<iframe name="download"></iframe>

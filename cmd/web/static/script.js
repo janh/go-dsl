@@ -13,6 +13,7 @@ var binsHistory = null;
 
 var eventSource;
 
+var linkSave;
 var summary, graphs, errors;
 var checkboxAutoscale, checkboxMinMax;
 var graphBitsCanvas, graphSNRCanvas, graphQLNCanvas, graphHlogCanvas,
@@ -25,6 +26,21 @@ var graphBits, graphSNR, graphQLN, graphHlog,
 	graphErrorSecondsDown, graphErrorSecondsUp;
 var overlay, overlayPassword, overlayPassphrase, overlayEncryptionPassphrase, overlayError, overlayLoading;
 var fingerprint, inputPassword, inputPassphrase, inputEncryptionPassphrase;
+
+function setLinkDisabled(element, disabled) {
+	element.classList.toggle("disabled", disabled);
+	element.tabIndex = disabled ? -1 : 0;
+
+	if (!element.dataset.href) {
+		element.dataset.href = element.href;
+	}
+
+	if (disabled) {
+		element.removeAttribute("href");
+	} else {
+		element.href = element.dataset.href;
+	}
+}
 
 function updateState(newState, data) {
 	let oldState = state;
@@ -63,9 +79,12 @@ function updateState(newState, data) {
 	if (newState != oldState) {
 		state = newState;
 
+		setLinkDisabled(linkSave, state != STATE_READY);
+
 		checkboxAutoscale.disabled = state != STATE_READY;
 		checkboxMinMax.disabled = state != STATE_READY;
 
+		document.body.classList.toggle("hasoverlay", state != STATE_READY);
 		overlay.classList.toggle("visible", state != STATE_READY);
 		overlayPassword.classList.toggle("visible", state == STATE_PASSWORD);
 		overlayPassphrase.classList.toggle("visible", state == STATE_PASSPHRASE);
@@ -273,6 +292,8 @@ function initGraphs() {
 }
 
 function loaded(event) {
+	linkSave = document.getElementById("link-save");
+
 	summary = document.getElementById("summary");
 	graphs = document.getElementById("graphs");
 	errors = document.getElementById("errors");

@@ -133,12 +133,6 @@ ul.legend span {
 
 #overlay {
 	display: none;
-	background: rgba(200,200,200,.9);
-}
-#overlay.visible {
-	display: grid;
-	align-items: center;
-	justify-content: center;
 }
 #overlaycontent {
 	background: #fff;

@@ -1,13 +1,13 @@
-html, body {
+body {
 	font: 11pt "Arial", "Helvetica", sans-serif;
 	line-height: 1.25;
 	background: #fff;
 	color: #000;
 	min-height: 100%;
-	margin: 0;
-}
-body {
 	margin: 0 1em;
+}
+body.hasoverlay {
+	background: rgb(242,242,242);
 }
 
 header {
@@ -36,6 +36,10 @@ header a:hover {
 header a:active {
 	color: #06c;
 }
+header a.disabled {
+	color: #aaa;
+	cursor: default;
+}
 h2 {
 	font-size: 112%;
 	font-weight: normal;
@@ -45,14 +49,25 @@ h2 {
 #content {
 	margin-top: 1.5em;
 	margin-bottom: 2em;
+	background: #fff;
+	position: relative;
+	overflow: clip;
+	min-height: 20em;
 }
 
 #overlay {
-	position: fixed;
+	position: absolute;
 	top: 0;
 	left: 0;
 	right: 0;
 	bottom: 0;
+}
+#overlay.visible {
+	display: grid;
+	align-items: start;
+	justify-content: center;
+	padding-top: 20vh;
+	background: rgba(240,240,240,.9);
 }
 
 iframe {
