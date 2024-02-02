@@ -61,6 +61,23 @@ There are no equivalent command line options for these settings.
   Make raw data inaccessible.
   Depending on the device type, this may be useful to prevent access to sensitive information.
 
+### Example
+
+```toml
+DeviceType = "lantiq_ssh"
+Host = "openwrt.lan"
+User = "root"
+
+[Options]
+Command = "dsl_cpe_pipe.sh"
+
+[Web]
+ListenAddress = "[::]:42424"
+HideErrorMessages = true
+DisableInteractiveAuth = true
+HideRawData = false
+```
+
 ## Secrets configuration
 
 A separate file can be used for secrets such as passwords or passphrases.
@@ -75,3 +92,9 @@ Any non-empty value means that the application won't ask for that type of secret
 
 - **EncryptionPassphrase**:  
   Passphrase to use for encryption (e.g. SNMPv3 privacy password), if required.
+
+### Example
+
+```toml
+Password = "mysupersecretpassword"
+```
