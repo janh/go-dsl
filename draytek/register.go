@@ -23,4 +23,26 @@ func init() {
 		SupportedAuthTypes: dsl.AuthTypePassword,
 	}
 	dsl.RegisterClient("draytek_telnet", newTelnet, clientDescTelnet)
+
+	newWeb := func(config dsl.Config) (dsl.Client, error) {
+		webConfig := WebConfig{
+			Host:          config.Host,
+			User:          config.User,
+			Password:      config.AuthPassword,
+			TLSSkipVerify: config.Options["TLSSkipVerify"] == "1",
+		}
+		return NewWebClient(webConfig)
+	}
+	clientDescWeb := dsl.ClientDesc{
+		Title:              "DrayTek (Web)",
+		RequiresUser:       dsl.TristateMaybe,
+		SupportedAuthTypes: dsl.AuthTypePassword,
+		Options: map[string]dsl.Option{
+			"TLSSkipVerify": dsl.Option{
+				Description: "skip verification of TLS certificates",
+				Type:        dsl.OptionTypeBool,
+			},
+		},
+	}
+	dsl.RegisterClient("draytek_web", newWeb, clientDescWeb)
 }

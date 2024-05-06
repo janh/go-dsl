@@ -13,3 +13,10 @@ type TelnetConfig struct {
 	User     string
 	Password dsl.PasswordCallback
 }
+
+type WebConfig struct {
+	Host          string
+	User          string
+	Password      dsl.PasswordCallback
+	TLSSkipVerify bool
+}
