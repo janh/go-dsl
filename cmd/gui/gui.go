@@ -363,7 +363,7 @@ func connect(cfg json.RawMessage, remember bool) {
 	if err != nil {
 		msg := common.Message{
 			State: string(common.StateError),
-			Data:  "parsing error: " + err.Error(),
+			Info:  "parsing error: " + err.Error(),
 		}
 		updateState(msg)
 		return
@@ -373,7 +373,7 @@ func connect(cfg json.RawMessage, remember bool) {
 	if err != nil {
 		msg := common.Message{
 			State: string(common.StateError),
-			Data:  "configuration error: " + err.Error(),
+			Info:  "configuration error: " + err.Error(),
 		}
 		updateState(msg)
 		return
@@ -383,7 +383,7 @@ func connect(cfg json.RawMessage, remember bool) {
 	if err != nil {
 		msg := common.Message{
 			State: string(common.StateError),
-			Data:  "client error: " + err.Error(),
+			Info:  "client error: " + err.Error(),
 		}
 		updateState(msg)
 		return
