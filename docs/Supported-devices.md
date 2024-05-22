@@ -48,6 +48,9 @@ It is possible to access additional information that is not available from the w
 To do so, set the option `LoadSupportData` to `1`.
 However, note that this will significantly increase loading times.
 
+Note: Some firmware versions (at least 07.57 for FRITZ!Box 7530) might be affected by a memory leak which can make the device inaccessible after some use.
+This issue is accelerated by loading support data.
+
 	./dsl -d fritzbox -o LoadSupportData=0 fritz.box
 
 ## LANCOM (manufacturer)
