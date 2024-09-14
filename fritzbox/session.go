@@ -399,7 +399,7 @@ func (s *session) loadTR064(path, serviceType, action string) (string, error) {
 	}
 
 	if resp.StatusCode != 200 {
-		err = fmt.Errorf("request for %s failed with status %d", soapAction, resp.StatusCode)
+		err = fmt.Errorf("request for %s failed with status %d - make sure that TR-064 (access for apps) is enabled", soapAction, resp.StatusCode)
 
 		if resp.StatusCode == 401 {
 			return "", &dsl.ConnectionError{Err: err}
