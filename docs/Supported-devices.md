@@ -40,16 +40,17 @@ Only Telnet is supported for connection to the device, as the SSH server suffers
 
 *Device type: `fritzbox`*
 
-Should work with any DSL FRITZ!Box running a somewhat recent firmware (but for now requires the web interface language being set to German).
+Should work with any DSL FRITZ!Box running a somewhat recent firmware (at least 06.50).
+However, for now the web interface language needs to be set to German.
 
-For some error counters and transmit power information, TR-064 needs to be enabled on the device.
+TR-064 (access for apps) needs to be enabled on the device, because it provides some error counters and transmit power information.
 
-It is possible to access additional information that is not available from the web interface, such as QLN and Hlog data.
+It is possible to access additional information that is not available from the web interface and TR-064, such as QLN and Hlog data.
 To do so, set the option `LoadSupportData` to `1`.
-However, note that this will significantly increase loading times.
+However, note that this will significantly increase loading times, and cause additional load on the device.
 
-Note: Some firmware versions (at least 07.57 for FRITZ!Box 7530) might be affected by a memory leak which can make the device inaccessible after some use.
-This issue is accelerated by loading support data.
+Note: Some firmware versions (at least 07.57 for FRITZ!Box 7530) are affected by a memory leak which can make the device inaccessible after some use.
+This issue is fixed in firmware version 07.90.
 
 	./dsl -d fritzbox -o LoadSupportData=0 fritz.box
 
