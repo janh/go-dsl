@@ -171,10 +171,9 @@ jobs:
           </dict>
           </plist>
           EOF
-          sudo xcode-select -s /Applications/Xcode_13.1.app
-          GOARCH=amd64 SDKROOT="$(xcrun --sdk macosx12.0 --show-sdk-path)" \
+          GOARCH=amd64 MACOSX_DEPLOYMENT_TARGET=10.15 \
             go build -tags gui -o ./build/universal/dsl-gui-x86-64 ./cmd
-          GOARCH=arm64 SDKROOT="$(xcrun --sdk macosx12.0 --show-sdk-path)" \
+          GOARCH=arm64 MACOSX_DEPLOYMENT_TARGET=11.0 \
             go build -tags gui -o ./build/universal/dsl-gui-arm64 ./cmd
           lipo -create -output ./build/universal/dsl-gui.app/Contents/MacOS/dsl-gui \
             ./build/universal/dsl-gui-x86-64 ./build/universal/dsl-gui-arm64
