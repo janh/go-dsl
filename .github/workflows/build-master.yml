@@ -159,7 +159,7 @@ jobs:
           CGO_ENABLED: 1
         run: |
           mkdir -p ./build/universal/dsl-gui.app/Contents/MacOS
-          echo << EOF > ./build/universal/dsl-gui.app/Contents/Info.plist
+          cat << EOF > ./build/universal/dsl-gui.app/Contents/Info.plist
           <?xml version="1.0" encoding="UTF-8"?>
           <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
           <plist version="1.0">
