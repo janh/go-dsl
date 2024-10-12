@@ -13,6 +13,33 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      - name: Determine image hash
+        id: docker-image-hash
+        shell: bash
+        run: |
+          cd ./.github/workflows/docker-linux/
+          hash="$(find . -type f | sort | xargs -i sha1sum {} | sha1sum | head -c 40)"
+          echo "hash=${hash}" >> $GITHUB_OUTPUT
+
+      - name: Set up cache
+        id: cache-docker-image
+        uses: actions/cache@v4
+        with:
+          path: docker/build-linux.tar
+          key: docker-image-build-linux-${{ steps.docker-image-hash.outputs.hash }}
+
+      - name: Update container image
+        if: steps.cache-docker-image.outputs.cache-hit != 'true'
+        run: |
+          mkdir -p ./docker
+          docker build -t build-linux:latest ./.github/workflows/docker-linux/
+          docker image save build-linux:latest --output ./docker/build-linux.tar
+
+      - name: Load container image
+        if: steps.cache-docker-image.outputs.cache-hit == 'true'
+        run: |
+          docker image load --input ./docker/build-linux.tar
+
       - name: Create build directory
         run: |
           mkdir ./build
@@ -20,11 +47,10 @@ jobs:
       - name: Build in container
         uses: addnab/docker-run-action@4f65fabd2431ebc8d299f8e5a018d79a769ae185 # v3.0.0
         with:
-          image: ubuntu:18.04
+          image: build-linux:latest
           options: -v ${{ github.workspace }}:/workspace
           run: |
-            cd /workspace
-            bash ./.github/workflows/build-master-linux.sh
+            bash ./workspace/.github/workflows/build-master-linux.sh
 
       - name: Zip
         run: |
