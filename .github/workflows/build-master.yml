@@ -297,7 +297,17 @@ jobs:
             These binaries are automatically built from the master branch.\
             Current version: ${{ github.sha }} (${{ steps.vars.outputs.time }})
             
-            Select the build for your platform from the assets below.
+            Choose the build for your platform and processor architecture from the assets below:
+            
+            - **Linux:**
+              For recent Linux distribution releases, try the GTK4 variant first. Older distribution releases require the GTK3 variant.
+              If unsure, pick the x86-64 architecture version.
+            - **Windows:**
+              Computers running Windows 10 and Windows 11 are supported.
+              The x86-64 architecture is probably the right choice, unless you are using a recent device with an ARM64 processor.
+            - **macOS:**
+              All devices running Mac OS X 10.15 or newer should work.
+              Both Intel (x86-64) and Apple silicon (ARM64) are supported by a universal build.
             
             *Note: If you want to get the corresponding source code please use Git.\
             The source archives linked below don't contain the actual source.*
