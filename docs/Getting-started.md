@@ -36,6 +36,11 @@ Additional options may also be specified using a [configuration file](Configurat
 
 In some cases additional steps may be required to get the application to run on your system:
 
-- Linux: The GTK3 and WebKit2GTK libraries need to be installed for the graphical user interface.
-- Windows: Make sure that [Microsoft Edge WebView2](https://go.microsoft.com/fwlink/p/?LinkId=2124703) is installed to run the graphical user interface. If SmartScreen blocks the application, you may need to click on "More info" and choose "Run anyway".
-- macOS: You may need to right-click the application and select "Open" to start it for the first time.
+- **Linux:**
+  The GTK3 and WebKit2GTK 4.0 libraries need to be installed for the graphical user interface.
+  On recent Linux distribution releases, the GTK4 variant using WebKitGTK 6.0 is more suitable.
+- **Windows:**
+  If SmartScreen blocks the application, you may need to click on "More info" and choose "Run anyway".
+  Make sure that [Microsoft Edge WebView2](https://go.microsoft.com/fwlink/p/?LinkId=2124703) is installed if you want to run the graphical user interface.
+- **macOS:**
+  You may need to right-click the application and select "Open" to start it for the first time.
