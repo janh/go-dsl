@@ -6,8 +6,13 @@ on:
 
 jobs:
   build-linux:
-    name: Build (Linux)
+    name: Build (Linux ${{ matrix.variant }})
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        variant:
+          - gtk3
+          - gtk4
 
     steps:
       - name: Checkout
@@ -17,7 +22,7 @@ jobs:
         id: docker-image-hash
         shell: bash
         run: |
-          cd ./.github/workflows/docker-linux/
+          cd ./.github/workflows/docker-linux-${{ matrix.variant }}/
           hash="$(find . -type f | sort | xargs -i sha1sum {} | sha1sum | head -c 40)"
           echo "hash=${hash}" >> $GITHUB_OUTPUT
 
@@ -25,20 +30,20 @@ jobs:
         id: cache-docker-image
         uses: actions/cache@v4
         with:
-          path: docker/build-linux.tar
-          key: docker-image-build-linux-${{ steps.docker-image-hash.outputs.hash }}
+          path: docker/build-linux-${{ matrix.variant }}.tar
+          key: docker-image-build-linux-${{ matrix.variant }}-${{ steps.docker-image-hash.outputs.hash }}
 
       - name: Update container image
         if: steps.cache-docker-image.outputs.cache-hit != 'true'
         run: |
           mkdir -p ./docker
-          docker build -t build-linux:latest ./.github/workflows/docker-linux/
-          docker image save build-linux:latest --output ./docker/build-linux.tar
+          docker build -t build-linux-${{ matrix.variant }}:latest ./.github/workflows/docker-linux-${{ matrix.variant }}/
+          docker image save build-linux-${{ matrix.variant }}:latest --output ./docker/build-linux-${{ matrix.variant }}.tar
 
       - name: Load container image
         if: steps.cache-docker-image.outputs.cache-hit == 'true'
         run: |
-          docker image load --input ./docker/build-linux.tar
+          docker image load --input ./docker/build-linux-${{ matrix.variant }}.tar
 
       - name: Create build directory
         run: |
@@ -47,10 +52,10 @@ jobs:
       - name: Build in container
         uses: addnab/docker-run-action@4f65fabd2431ebc8d299f8e5a018d79a769ae185 # v3.0.0
         with:
-          image: build-linux:latest
+          image: build-linux-${{ matrix.variant }}:latest
           options: -v ${{ github.workspace }}:/workspace
           run: |
-            bash ./workspace/.github/workflows/build-master-linux.sh
+            bash ./workspace/.github/workflows/build-master-linux-${{ matrix.variant }}.sh
 
       - name: Zip
         run: |
@@ -63,7 +68,7 @@ jobs:
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
-          name: linux
+          name: linux-${{ matrix.variant }}
           path: ./build/*.zip
 
   build-windows:
