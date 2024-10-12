@@ -11,21 +11,21 @@ echo "- Enter workspace"
 cd /workspace
 
 echo "- Build CLI"
-CGO_ENABLED=0 GOARCH=amd64 go build -o ./build/x86-64/dsl ./cmd
-CGO_ENABLED=0 GOARCH=386 go build -o ./build/x86/dsl ./cmd
-CGO_ENABLED=0 GOARCH=arm GOARM=6 go build -o ./build/arm/dsl ./cmd
-CGO_ENABLED=0 GOARCH=arm64 go build -o ./build/arm64/dsl ./cmd
+CGO_ENABLED=0 GOARCH=amd64 go build -ldflags "-s -w" -o ./build/x86-64/dsl ./cmd
+CGO_ENABLED=0 GOARCH=386 go build -ldflags "-s -w" -o ./build/x86/dsl ./cmd
+CGO_ENABLED=0 GOARCH=arm GOARM=6 go build -ldflags "-s -w" -o ./build/arm/dsl ./cmd
+CGO_ENABLED=0 GOARCH=arm64 go build -ldflags "-s -w" -o ./build/arm64/dsl ./cmd
 
 echo "- Build GUI (x86-64)"
 CGO_ENABLED=1 \
 GOARCH=amd64 \
-  go build -tags gui -o ./build/x86-64/dsl-gui ./cmd
+  go build -tags gui -ldflags "-s -w" -o ./build/x86-64/dsl-gui ./cmd
 
 echo "- Build GUI (x86)"
 PKG_CONFIG_PATH=/usr/lib/i386-linux-gnu/pkgconfig \
 CGO_ENABLED=1 \
 GOARCH=386 \
-  go build -tags gui -o ./build/x86/dsl-gui ./cmd
+  go build -tags gui -ldflags "-s -w" -o ./build/x86/dsl-gui ./cmd
 
 echo "- Build GUI (arm)"
 CC=arm-linux-gnueabihf-gcc \
@@ -34,7 +34,7 @@ PKG_CONFIG_PATH=/usr/lib/arm-linux-gnueabihf/pkgconfig \
 CGO_ENABLED=1 \
 GOARCH=arm \
 GOARM=6 \
-  go build -tags gui -o ./build/arm/dsl-gui ./cmd
+  go build -tags gui -ldflags "-s -w" -o ./build/arm/dsl-gui ./cmd
 
 echo "- Build GUI (arm64)"
 CC=aarch64-linux-gnu-gcc \
@@ -42,4 +42,4 @@ CXX=aarch64-linux-gnu-g++ \
 PKG_CONFIG_PATH=/usr/lib/aarch64-linux-gnu/pkgconfig \
 CGO_ENABLED=1 \
 GOARCH=arm64 \
-  go build -tags gui -o ./build/arm64/dsl-gui ./cmd
+  go build -tags gui -ldflags "-s -w" -o ./build/arm64/dsl-gui ./cmd

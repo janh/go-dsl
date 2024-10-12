@@ -104,21 +104,21 @@ jobs:
           CGO_ENABLED: 0
           GOARCH: amd64
         run: |
-          go build -o .\build\x86-64\dsl.exe .\cmd
+          go build -ldflags "-s -w" -o .\build\x86-64\dsl.exe .\cmd
 
       - name: Build CLI (x86)
         env:
           CGO_ENABLED: 0
           GOARCH: 386
         run: |
-          go build -o .\build\x86\dsl.exe .\cmd
+          go build -ldflags "-s -w" -o .\build\x86\dsl.exe .\cmd
 
       - name: Build CLI (arm64)
         env:
           CGO_ENABLED: 0
           GOARCH: arm64
         run: |
-          go build -o .\build\arm64\dsl.exe .\cmd
+          go build -ldflags "-s -w" -o .\build\arm64\dsl.exe .\cmd
 
       - name: Build GUI (x86-64)
         env:
@@ -128,7 +128,7 @@ jobs:
           GOARCH: amd64
         run: |
           $Env:Path = "$PWD\toolchain\llvm-mingw\bin;$Env:Path"
-          go build -tags gui -ldflags="-H windowsgui" -o .\build\x86-64\dsl-gui.exe .\cmd
+          go build -tags gui -ldflags="-s -w -H windowsgui" -o .\build\x86-64\dsl-gui.exe .\cmd
 
       - name: Build GUI (x86)
         env:
@@ -138,7 +138,7 @@ jobs:
           GOARCH: 386
         run: |
           $Env:Path = "$PWD\toolchain\llvm-mingw\bin;$Env:Path"
-          go build -tags gui -ldflags="-H windowsgui" -o .\build\x86\dsl-gui.exe .\cmd
+          go build -tags gui -ldflags="-s -w -H windowsgui" -o .\build\x86\dsl-gui.exe .\cmd
 
       - name: Build GUI (arm64)
         env:
@@ -148,7 +148,7 @@ jobs:
           GOARCH: arm64
         run: |
           $Env:Path = "$PWD\toolchain\llvm-mingw\bin;$Env:Path"
-          go build -tags gui -ldflags="-H windowsgui" -o .\build\arm64\dsl-gui.exe .\cmd
+          go build -tags gui -ldflags="-s -w -H windowsgui" -o .\build\arm64\dsl-gui.exe .\cmd
 
       - name: Zip
         run: |
@@ -180,8 +180,8 @@ jobs:
         env:
           CGO_ENABLED: 0
         run: |
-          GOARCH=amd64 go build -o ./build/universal/dsl-x86-64 ./cmd
-          GOARCH=arm64 go build -o ./build/universal/dsl-arm64 ./cmd
+          GOARCH=amd64 go build -ldflags "-s -w" -o ./build/universal/dsl-x86-64 ./cmd
+          GOARCH=arm64 go build -ldflags "-s -w" -o ./build/universal/dsl-arm64 ./cmd
           lipo -create -output ./build/universal/dsl ./build/universal/dsl-x86-64 ./build/universal/dsl-arm64
           rm ./build/universal/dsl-x86-64 ./build/universal/dsl-arm64
 
@@ -203,9 +203,9 @@ jobs:
           </plist>
           EOF
           GOARCH=amd64 MACOSX_DEPLOYMENT_TARGET=10.15 \
-            go build -tags gui -o ./build/universal/dsl-gui-x86-64 ./cmd
+            go build -tags gui -ldflags "-s -w" -o ./build/universal/dsl-gui-x86-64 ./cmd
           GOARCH=arm64 MACOSX_DEPLOYMENT_TARGET=11.0 \
-            go build -tags gui -o ./build/universal/dsl-gui-arm64 ./cmd
+            go build -tags gui -ldflags "-s -w" -o ./build/universal/dsl-gui-arm64 ./cmd
           lipo -create -output ./build/universal/dsl-gui.app/Contents/MacOS/dsl-gui \
             ./build/universal/dsl-gui-x86-64 ./build/universal/dsl-gui-arm64
           rm ./build/universal/dsl-gui-x86-64 ./build/universal/dsl-gui-arm64
