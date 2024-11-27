@@ -52,9 +52,9 @@ func (m *snrMinMax) resetBinsFloatMinMax(data *models.BinsFloatMinMax, groupSize
 	}
 }
 
-func (m *snrMinMax) Reset(snr models.BinsFloat, maxBinCount, periodCount int) {
-	m.OriginalGroupSize = snr.GroupSize
-	m.OriginalCount = len(snr.Data)
+func (m *snrMinMax) Reset(groupSize, count, maxBinCount, periodCount int) {
+	m.OriginalGroupSize = groupSize
+	m.OriginalCount = count
 
 	factor := 1
 	minmaxCount := m.OriginalCount
@@ -63,7 +63,7 @@ func (m *snrMinMax) Reset(snr models.BinsFloat, maxBinCount, periodCount int) {
 		minmaxCount = (m.OriginalCount + factor - 1) / factor
 	}
 
-	minmaxGroupSize := snr.GroupSize * factor
+	minmaxGroupSize := groupSize * factor
 
 	m.resetBinsFloatMinMax(&m.Total, minmaxGroupSize, minmaxCount)
 
@@ -167,8 +167,10 @@ func (h *Bins) Update(status models.Status, bins models.Bins, now time.Time) {
 			h.periodStart = currentPeriodStart
 		}
 
-		h.snr.Downstream.Reset(bins.SNR.Downstream, h.config.MaxBinCount, h.config.PeriodCount)
-		h.snr.Upstream.Reset(bins.SNR.Upstream, h.config.MaxBinCount, h.config.PeriodCount)
+		h.snr.Downstream.Reset(bins.SNR.Downstream.GroupSize, len(bins.SNR.Downstream.Data),
+			h.config.MaxBinCount, h.config.PeriodCount)
+		h.snr.Upstream.Reset(bins.SNR.Upstream.GroupSize, len(bins.SNR.Upstream.Data),
+			h.config.MaxBinCount, h.config.PeriodCount)
 	}
 
 	if h.config.PeriodCount != 0 {
