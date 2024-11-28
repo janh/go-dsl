@@ -75,6 +75,9 @@ func main() {
 	var configPath string
 	flagSet.StringVar(&configPath, "config", config.DefaultConfigPath, "path to configuration file")
 
+	var stateDir string
+	flagSet.StringVar(&stateDir, "state-dir", config.DefaultStateDir, "path to state directory, set to empty string to disable persistent history")
+
 	var secretsPath string
 	flagSet.StringVar(&secretsPath, "secrets", "", "path to secrets file")
 
@@ -173,7 +176,7 @@ func main() {
 	}
 
 	if gui.Enabled && (startGUI || len(os.Args) == 1) {
-		gui.Run()
+		gui.Run(stateDir)
 	} else {
 		err = config.Validate()
 		if err != nil {
@@ -187,7 +190,7 @@ func main() {
 		}
 
 		if startWebServer {
-			web.Run(clientConfig, config.Config.Web)
+			web.Run(clientConfig, config.Config.Web, stateDir)
 		} else {
 			cli.LoadData(clientConfig)
 		}

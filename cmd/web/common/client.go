@@ -27,6 +27,7 @@ const (
 const (
 	intervalDefault time.Duration = 30 * time.Second
 	intervalShort   time.Duration = 10 * time.Second
+	intervalSave    time.Duration = 10 * time.Minute
 )
 
 type StateChange struct {
@@ -73,9 +74,11 @@ type Client struct {
 	password             string
 	passphrase           map[string]string
 	encryptionPassphrase string
+
+	stateDir string
 }
 
-func NewClient(config dsl.Config) *Client {
+func NewClient(config dsl.Config, stateDir string) *Client {
 	c := &Client{
 		setPassword:             make(chan string),
 		setPassphrase:           make(chan string),
@@ -92,6 +95,7 @@ func NewClient(config dsl.Config) *Client {
 		done:                    make(chan bool),
 		config:                  config,
 		passphrase:              make(map[string]string),
+		stateDir:                stateDir,
 	}
 
 	go c.distribute()
@@ -328,6 +332,9 @@ func (c *Client) update() {
 		panic(err)
 	}
 
+	c.loadHistory(binsHistory, errorsHistory)
+	nextSave := time.Now().Truncate(intervalSave).Add(intervalSave)
+
 mainloop:
 	for {
 		for i := 0; i < 2; i++ {
@@ -361,6 +368,11 @@ mainloop:
 					StateChange{State: StateReady})
 
 				c.errCount = 0
+
+				if now.After(nextSave) {
+					c.saveHistory(binsHistory, errorsHistory)
+					nextSave = time.Now().Truncate(intervalSave).Add(intervalSave)
+				}
 
 				break
 
@@ -396,6 +408,10 @@ mainloop:
 				continue
 			}
 		}
+	}
+
+	if c.lastData.HasData {
+		c.saveHistory(binsHistory, errorsHistory)
 	}
 
 	if c.client != nil {

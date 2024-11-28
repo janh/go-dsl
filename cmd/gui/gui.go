@@ -55,10 +55,13 @@ var (
 	lastMessage    common.Message
 	mutex          sync.Mutex
 	mutexClient    sync.Mutex
+	stateDir       string
 )
 
-func Run() {
+func Run(newStateDir string) {
 	updateState(common.Message{State: stateConnect})
+
+	stateDir = newStateDir
 
 	sigs := make(chan os.Signal, 1)
 	signal.Notify(sigs, syscall.SIGINT, syscall.SIGTERM)
@@ -90,7 +93,7 @@ func clientConnect(clientConfig dsl.Config) {
 	mutexClient.Lock()
 	defer mutexClient.Unlock()
 
-	c = common.NewClient(clientConfig)
+	c = common.NewClient(clientConfig, stateDir)
 
 	startReceive <- true
 	<-startDone

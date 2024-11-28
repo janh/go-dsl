@@ -8,4 +8,4 @@ package gui
 
 const Enabled = false
 
-func Run() {}
+func Run(stateDir string) {}

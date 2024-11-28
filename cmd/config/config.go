@@ -19,6 +19,7 @@ import (
 
 var (
 	DefaultConfigPath     string
+	DefaultStateDir       string
 	DefaultKnownHostsPath string
 	DefaultPrivateKeyPath string
 )
@@ -153,4 +154,5 @@ func init() {
 	DefaultKnownHostsPath = filepath.Join(xdg.Home, ".ssh", "known_hosts")
 
 	DefaultConfigPath = filepath.Join(xdg.ConfigHome, "3e8.eu-go-dsl", "config.toml")
+	DefaultStateDir = filepath.Join(xdg.ConfigHome, "3e8.eu-go-dsl", "state")
 }

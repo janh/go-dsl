@@ -35,14 +35,14 @@ var (
 	config            Config
 )
 
-func Run(clientConfig dsl.Config, webConfig Config) {
+func Run(clientConfig dsl.Config, webConfig Config, stateDir string) {
 	config = webConfig
 
 	if config.ListenAddress == "" {
 		config.ListenAddress = "[::1]:0"
 	}
 
-	addr, err := start(clientConfig)
+	addr, err := start(clientConfig, stateDir)
 	if err != nil {
 		fmt.Println("failed to start web server:", err)
 		os.Exit(1)
@@ -75,7 +75,7 @@ func Run(clientConfig dsl.Config, webConfig Config) {
 	}
 }
 
-func start(clientConfig dsl.Config) (addr string, err error) {
+func start(clientConfig dsl.Config, stateDir string) (addr string, err error) {
 	http.HandleFunc("/", handleRoot)
 
 	static := &staticHandler{}
@@ -101,7 +101,7 @@ func start(clientConfig dsl.Config) (addr string, err error) {
 
 	addr = "http://" + listener.Addr().String()
 
-	c = common.NewClient(clientConfig)
+	c = common.NewClient(clientConfig, stateDir)
 
 	shutdownReceivers = make(map[chan bool]bool)
 	server.RegisterOnShutdown(handleOnShutdown)
