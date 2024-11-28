@@ -23,11 +23,6 @@ import (
 	_ "3e8.eu/go/dsl/all"
 )
 
-var (
-	defaultPrivateKey string
-	defaultKnownHosts string
-)
-
 type optionsFlag map[string]string
 
 func (o *optionsFlag) String() string {
