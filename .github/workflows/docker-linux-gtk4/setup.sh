@@ -53,16 +53,17 @@ git config --system --add safe.directory '*'
 
 echo "- Install libraries"
 apt install --no-install-recommends -y \
-  libgtk-4-dev libwebkitgtk-6.0-dev \
-  libgtk-4-dev:i386 libwebkitgtk-6.0-dev:i386 \
-  libgtk-4-dev:armhf libwebkitgtk-6.0-dev:armhf \
-  libgtk-4-dev:arm64 libwebkitgtk-6.0-dev:arm64
+  libgtk-4-dev libwebkitgtk-6.0-4 libjavascriptcoregtk-6.0-dev libsoup-3.0-dev \
+  libgtk-4-dev:i386 libwebkitgtk-6.0-4:i386 libjavascriptcoregtk-6.0-dev:i386 libsoup-3.0-dev:i386 \
+  libgtk-4-dev:armhf libwebkitgtk-6.0-4:armhf libjavascriptcoregtk-6.0-dev:armhf libsoup-3.0-dev:armhf \
+  libgtk-4-dev:arm64 libwebkitgtk-6.0-4:arm64 libjavascriptcoregtk-6.0-dev:arm64 libsoup-3.0-dev:arm64
 
 echo "- Manually install conflicting packages"
 apt download \
   libgraphene-1.0-dev libgraphene-1.0-dev:i386 libgraphene-1.0-dev:armhf libgraphene-1.0-dev:arm64 \
   libnghttp2-dev libnghttp2-dev:i386 libnghttp2-dev:armhf libnghttp2-dev:arm64 \
-  libpolkit-gobject-1-dev libpolkit-gobject-1-dev:i386 libpolkit-gobject-1-dev:armhf libpolkit-gobject-1-dev:arm64
+  libpolkit-gobject-1-dev libpolkit-gobject-1-dev:i386 libpolkit-gobject-1-dev:armhf libpolkit-gobject-1-dev:arm64 \
+  libwebkitgtk-6.0-dev libwebkitgtk-6.0-dev:i386 libwebkitgtk-6.0-dev:armhf libwebkitgtk-6.0-dev:arm64
 find . -name "*.deb" -print | xargs -i dpkg -x {} /
 
 echo "- Cleaning up"
