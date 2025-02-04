@@ -32,7 +32,19 @@ If the command on the device is not named `xdslctl`, you need to specify the cor
 
 *Device type: `draytek_telnet`*
 
+Supports most DSL devices made by DrayTek.
+If your device runs firmware version 5, see below.
+
 Only Telnet is supported for connection to the device, as the SSH server suffers from various issues depending on the device (such as outdated cipher suites or crashes).
+
+	./dsl -d draytek_telnet 192.168.1.1
+
+## DrayTek v5 (manufacturer)
+
+*Device type: `draytek_v5_telnet`*
+
+Supports devices by DrayTek running firmware version 5 (e.g. Vigor 167).
+Only Telnet is supported.
 
 	./dsl -d draytek_telnet 192.168.1.1
 
