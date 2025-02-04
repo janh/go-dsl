@@ -173,14 +173,16 @@ func (h *Bins) readBinsSNRMinMax(r io.Reader, data *snrMinMax) error {
 		return err
 	}
 
+	// Ensure that data structures are initialized
+
+	data.Reset(int(header.OriginalGroupSize), int(header.OriginalCount),
+		h.config.MaxBinCount, h.config.PeriodCount)
+
 	// Read data if available
 
 	if header.OriginalGroupSize == 0 || header.OriginalCount == 0 {
 		return nil
 	}
-
-	data.Reset(int(header.OriginalGroupSize), int(header.OriginalCount),
-		h.config.MaxBinCount, h.config.PeriodCount)
 
 	if h.config.PeriodCount > 0 {
 		for i := 0; i < h.config.PeriodCount; i++ {
