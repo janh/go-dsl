@@ -86,9 +86,10 @@ func (c *Client) readUntilPrompt(prompts ...string) (data string, promptType pro
 
 	// Sometimes the entire prompt may be resent by the server instead of just echoing the input
 	hasRepeatedPromptCR := strings.HasPrefix(data, "\r"+c.lastPromptLine)
+	hasRepeatedPromptCRNUL := strings.HasPrefix(data, "\r\x00"+c.lastPromptLine)
 	hasRepeatedPromptCRLF := c.config.ExpectRepeatedPromptCRLF && strings.HasPrefix(data, "\r\n"+c.lastPromptLine)
 
-	if c.lastPromptLine != "" && (hasRepeatedPromptCR || hasRepeatedPromptCRLF) {
+	if c.lastPromptLine != "" && (hasRepeatedPromptCR || hasRepeatedPromptCRNUL || hasRepeatedPromptCRLF) {
 		if hasRepeatedPromptCRLF {
 			data = data[len(c.lastPromptLine)+2:]
 		} else {
@@ -109,8 +110,12 @@ func (c *Client) readUntilPrompt(prompts ...string) (data string, promptType pro
 		}
 	}
 
-	// Remove echo of previously written line
-	data = strings.TrimPrefix(data, c.lastWrittenLine+"\r\n")
+	// Remove echo of previously written line. While it would normally be expected
+	// to be followed by a regular line break (CRLF), accept any combination of CR,
+	// LF, and NUL to support Telnet servers doing weird stuff (e.g. some Draytek
+	// devices use CRCRLF).
+	data = strings.TrimPrefix(data, c.lastWrittenLine)
+	data = strings.TrimLeft(data, "\r\n\x00")
 
 	// The last received line is assumed to be the prompt
 	index := strings.LastIndexAny(data, "\r\n")
@@ -118,10 +123,8 @@ func (c *Client) readUntilPrompt(prompts ...string) (data string, promptType pro
 
 	// Remove prompt (last received line)
 	if index != -1 {
-		for index >= 1 && (data[index-1] == '\r' || data[index-1] == '\n') {
-			index -= 1
-		}
 		data = data[0:index]
+		data = strings.TrimRight(data, "\r\n\x00")
 	} else {
 		data = ""
 	}
