@@ -25,6 +25,9 @@ Requires access to the system command line via SSH or Telnet.
 
 If the command on the device is not named `xdslctl`, you need to specify the correct name using the `Commmand` option.
 
+On Zyxel VMG4005, you need to use the "root" user (contact Zyxel or use [zyxel-vmg8825-keygen](https://github.com/boginw/zyxel-vmg8825-keygen) to obtain the password).
+Alternatively, you can use a regular user with "Administrator" permissions, if the shell is changed to `/bin/sh` in `/etc/passwd`.
+
 	./dsl -d broadcom_ssh -u root 192.168.1.1
 	./dsl -d broadcom_telnet -u root 192.168.1.1
 
