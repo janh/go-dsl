@@ -36,6 +36,11 @@ func NewTelnetClient(config TelnetConfig) (dsl.Client, error) {
 				Password: "Password: ",
 				Command:  "# ",
 			},
+			telnet.Prompts{
+				Account:  "login: ",
+				Password: "Password: ",
+				Command:  "$ ",
+			},
 			// Billion
 			telnet.Prompts{
 				Account:  "Login: ",
