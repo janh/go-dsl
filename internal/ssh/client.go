@@ -64,7 +64,12 @@ func (c *Client) connect(host, username string,
 				signer, err := ssh.ParsePrivateKey([]byte(key))
 
 				if errPassphrase, ok := err.(*ssh.PassphraseMissingError); ok && privateKeysCallback.Passphrase != nil {
-					fingerprint := ssh.FingerprintSHA256(errPassphrase.PublicKey)
+					var fingerprint string
+					if errPassphrase.PublicKey != nil {
+						fingerprint = ssh.FingerprintSHA256(errPassphrase.PublicKey)
+					} else {
+						fingerprint = "unknown"
+					}
 					passphrase, err := privateKeysCallback.Passphrase(fingerprint)
 					if err != nil {
 						return nil, &dsl.AuthenticationError{Err: err}
