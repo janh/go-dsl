@@ -13,16 +13,19 @@ type rawDataOverview struct {
 	Data       string
 	UpdateData string
 	Legacy     bool
+	Ancient    bool
 }
 
 type rawDataStats struct {
-	Data   string
-	Legacy bool
+	Data    string
+	Legacy  bool
+	Ancient bool
 }
 
 type rawDataSpectrum struct {
-	Data   string
-	Legacy bool
+	Data    string
+	Legacy  bool
+	Ancient bool
 }
 
 type rawDataTR064 struct {

@@ -6,6 +6,7 @@ package fritzbox
 
 import (
 	"encoding/xml"
+	"strings"
 
 	"3e8.eu/go/dsl/models"
 )
@@ -44,6 +45,12 @@ func parseTR064Data(status *models.Status, d *rawDataTR064) {
 			status.DownstreamPower.FloatValue.Float = float64(info.Data.NewDownstreamPower) - 500
 		}
 		status.DownstreamPower.FloatValue.Valid = true
+
+		// This applies for the UR8-based 7270v3, but maybe other devices need it as well
+		if strings.HasPrefix(status.NearEndInventory.Version, "1.52.") {
+			status.UpstreamPower.FloatValue.Float *= 0.1
+			status.DownstreamPower.FloatValue.Float *= 0.1
+		}
 
 		// downstream and upstream power seem to be typically swapped for VDSL2 on Lantiq modems
 		if status.DownstreamPower.FloatValue.Float < status.UpstreamPower.FloatValue.Float {

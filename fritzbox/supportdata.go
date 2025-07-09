@@ -54,12 +54,13 @@ func parseSupportData(status *models.Status, bins *models.Bins, d *rawDataSuppor
 	parseSupportDataIntValue(&status.DownstreamSESCount, values, "DS SES")
 	parseSupportDataIntValue(&status.UpstreamSESCount, values, "US SES")
 
-	batGroupSize, _ := strconv.Atoi(values["BAT Bins per Group"])
+	batGroupSizeStr, _ := getSupportDataItem(values, "BAT Bins per Group", "BAT Bins P/Group")
+	batGroupSize, _ := strconv.Atoi(batGroupSizeStr)
 
 	parseSupportDataPilotTones(&bins.PilotTones, batGroupSize, values, "Pilot Array")
 
-	parseSupportDataBands(&bins.Bands.Downstream, batGroupSize, values, "DS Bands")
-	parseSupportDataBands(&bins.Bands.Upstream, batGroupSize, values, "US Bands")
+	parseSupportDataBands(&bins.Bands.Downstream, bins.Mode, batGroupSize, values, "DS Bands")
+	parseSupportDataBands(&bins.Bands.Upstream, bins.Mode, batGroupSize, values, "US Bands")
 
 	bins.Hlog.Downstream = parseSupportDataBins(bins.Bands.Downstream, values, "HLOG DS Array", "HLOG Array")
 	bins.Hlog.Upstream = parseSupportDataBins(bins.Bands.Upstream, values, "HLOG US Array")
@@ -87,7 +88,7 @@ func parseSupportDataValues(supportData string) map[string]string {
 			continue
 		}
 
-		key := lineSplit[0]
+		key := strings.TrimSpace(lineSplit[0])
 		val := strings.TrimSpace(lineSplit[1])
 
 		values[key] = val
@@ -96,8 +97,17 @@ func parseSupportDataValues(supportData string) map[string]string {
 	return values
 }
 
-func parseSupportDataIntValue(out *models.IntValue, values map[string]string, key string) {
-	if val, ok := values[key]; ok {
+func getSupportDataItem(values map[string]string, keys ...string) (val string, ok bool) {
+	for _, key := range keys {
+		if val, ok = values[key]; ok {
+			break
+		}
+	}
+	return
+}
+
+func parseSupportDataIntValue(out *models.IntValue, values map[string]string, keys ...string) {
+	if val, ok := getSupportDataItem(values, keys...); ok {
 		if valInt, err := strconv.ParseInt(val, 10, 64); err == nil {
 			out.Int = valInt
 			out.Valid = true
@@ -106,8 +116,8 @@ func parseSupportDataIntValue(out *models.IntValue, values map[string]string, ke
 	return
 }
 
-func parseSupportDataBoolValue(out *models.BoolValue, values map[string]string, key string) {
-	if val, ok := values[key]; ok {
+func parseSupportDataBoolValue(out *models.BoolValue, values map[string]string, keys ...string) {
+	if val, ok := getSupportDataItem(values, keys...); ok {
 		if valInt, err := strconv.Atoi(val); err == nil && (valInt == 0 || valInt == 1) {
 			out.Bool = valInt == 1
 			out.Valid = true
@@ -121,8 +131,8 @@ func parseSupportDataOLRValue(out *models.OLRValue, values map[string]string, ke
 	parseSupportDataIntValue(&out.Executed, values, key+" Cnt")
 }
 
-func parseSupportDataPilotTones(pilotTones *[]int, groupSize int, values map[string]string, key string) {
-	val, ok := values[key]
+func parseSupportDataPilotTones(pilotTones *[]int, groupSize int, values map[string]string, keys ...string) {
+	val, ok := getSupportDataItem(values, keys...)
 	if !ok {
 		return
 	}
@@ -140,8 +150,8 @@ func parseSupportDataPilotTones(pilotTones *[]int, groupSize int, values map[str
 	}
 }
 
-func parseSupportDataBands(bands *[]models.Band, groupSize int, values map[string]string, key string) {
-	val, ok := values[key]
+func parseSupportDataBands(bands *[]models.Band, mode models.Mode, groupSize int, values map[string]string, keys ...string) {
+	val, ok := getSupportDataItem(values, keys...)
 	if !ok {
 		return
 	}
@@ -157,6 +167,14 @@ func parseSupportDataBands(bands *[]models.Band, groupSize int, values map[strin
 		start, _ := strconv.Atoi(strings.TrimSpace(data[i]))
 		end, _ := strconv.Atoi(strings.TrimSpace(data[i+1]))
 
+		// In some cases, the upper value is incorrectly reported too high. The index needs to be lower
+		// than the number of carriers, so try to correct that if possible. This issue has been seen on
+		// Fritzbox 7270v3 with firmware 06.06 (with ADSL2+ Annex J, it reports 0-63 for upstream, and
+		// 64-512 for downstream, which is impossible).
+		if end == mode.BinCount() {
+			end -= 1
+		}
+
 		band := models.Band{Start: start * groupSize, End: end*groupSize + groupSize - 1}
 		*bands = append(*bands, band)
 	}
@@ -171,13 +189,7 @@ func calculateSupportDataGroupSize(lastBandsIndex int) int {
 }
 
 func parseSupportDataBins(bands []models.Band, values map[string]string, keys ...string) (out models.BinsFloat) {
-	var data string
-	var ok bool
-	for _, key := range keys {
-		if data, ok = values[key]; ok {
-			break
-		}
-	}
+	data, ok := getSupportDataItem(values, keys...)
 	if !ok {
 		return
 	}

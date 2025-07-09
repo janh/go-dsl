@@ -6,6 +6,8 @@ package fritzbox
 
 import (
 	"encoding/json"
+	"strconv"
+	"strings"
 
 	"3e8.eu/go/dsl/internal/helpers"
 	"3e8.eu/go/dsl/models"
@@ -13,83 +15,121 @@ import (
 
 type spectrumDataWrapper struct {
 	Data struct {
-		Ports spectrumData `json:"ports"`
+		Ports []json.RawMessage `json:"ports"`
 	} `json:"data"`
 }
 
 type spectrumDataWrapperLegacy struct {
-	Ports spectrumData `json:"port"`
+	Ports []json.RawMessage `json:"port"`
 }
 
-type spectrumData []map[string]struct {
-	BitBandconfig []spectrumDataBandItem `json:"BIT_BANDCONFIG"`
+type number int
 
-	PilotValues []int `json:"PILOT_VALUES"`
-	Pilot       int   `json:"PILOT"`
+func (n *number) UnmarshalJSON(data []byte) (err error) {
+	if len(data) > 0 && data[0] == '"' {
+		var s string
+		err = json.Unmarshal(data, &s)
+		if err != nil {
+			return err
+		}
+		var i int
+		i, err = strconv.Atoi(strings.TrimSpace(s))
+		*n = number(i)
+		return err
+	}
 
-	TonesPerBATValue int   `json:"TONES_PER_BAT_VALUE"`
-	MaxBATTone       int   `json:"MAX_BAT_TONE"`
-	ActualBITValues  []int `json:"ACT_BIT_VALUES"`
+	var i int
+	err = json.Unmarshal(data, &i)
+	*n = number(i)
+	return
+}
 
-	TonesPerSNRValue int   `json:"TONES_PER_SNR_VALUE"`
-	MaxSNRTone       int   `json:"MAX_SNR_TONE"`
-	ActualSNRValues  []int `json:"ACT_SNR_VALUES"`
+type spectrumData struct {
+	BitBandconfig         []spectrumDataBandItem `json:"BIT_BANDCONFIG"`
+	BitUpstreamBandconfig []spectrumDataBandItem `json:"BIT_US_BANDCONFIG"`
+
+	PilotValues []number `json:"PILOT_VALUES"`
+	Pilot       number   `json:"PILOT"`
+
+	TonesPerBATValue number   `json:"TONES_PER_BAT_VALUE"`
+	MaxBATTone       number   `json:"MAX_BAT_TONE"`
+	ActualBITValues  []number `json:"ACT_BIT_VALUES"`
+
+	TonesPerSNRValue number   `json:"TONES_PER_SNR_VALUE"`
+	MaxSNRTone       number   `json:"MAX_SNR_TONE"`
+	ActualSNRValues  []number `json:"ACT_SNR_VALUES"`
 }
 
 type spectrumDataBandItem struct {
-	First int `json:"first"`
-	Last  int `json:"last"`
+	First number `json:"FIRST"`
+	Last  number `json:"LAST"`
 }
 
 func parseSpectrum(bins *models.Bins, status *models.Status, d *rawDataSpectrum) {
 	bins.Mode = status.Mode
 
-	var data spectrumData
+	var portList []json.RawMessage
 	if !d.Legacy {
 		var dataWrapper spectrumDataWrapper
 		json.Unmarshal([]byte(d.Data), &dataWrapper)
-		data = dataWrapper.Data.Ports
+		portList = dataWrapper.Data.Ports
 	} else {
 		var dataWrapper spectrumDataWrapperLegacy
 		json.Unmarshal([]byte(d.Data), &dataWrapper)
-		data = dataWrapper.Ports
+		portList = dataWrapper.Ports
 	}
 
-	if len(data) < 1 {
+	if len(portList) < 1 {
 		return
 	}
 
-	if portData, ok := data[0]["us"]; ok {
-		processPilotTones(&bins.PilotTones, portData.TonesPerBATValue, portData.PilotValues, portData.Pilot)
-		processSpectrumBits(&bins.Bits, portData.BitBandconfig, portData.TonesPerBATValue, portData.MaxBATTone, portData.ActualBITValues)
-		processSpectrumSNR(&bins.SNR, portData.BitBandconfig, portData.TonesPerSNRValue, portData.MaxSNRTone, portData.ActualSNRValues)
+	data := portList[0]
+
+	var directions map[string]json.RawMessage
+	json.Unmarshal(data, &directions)
+	if dataUpstream, ok := directions["us"]; ok {
+		data = dataUpstream
 	}
+
+	var portData spectrumData
+	err := json.Unmarshal(data, &portData)
+	if err != nil {
+		return
+	}
+
+	if len(portData.BitBandconfig) == 0 && len(portData.BitUpstreamBandconfig) > 0 {
+		portData.BitBandconfig = portData.BitUpstreamBandconfig
+	}
+
+	processPilotTones(&bins.PilotTones, int(portData.TonesPerBATValue), portData.PilotValues, portData.Pilot)
+	processSpectrumBits(&bins.Bits, portData.BitBandconfig, int(portData.TonesPerBATValue), int(portData.MaxBATTone), portData.ActualBITValues)
+	processSpectrumSNR(&bins.SNR, portData.BitBandconfig, int(portData.TonesPerSNRValue), int(portData.MaxSNRTone), portData.ActualSNRValues)
 
 	helpers.GenerateBandsData(bins)
 }
 
 func isBinUpstream(usBands []spectrumDataBandItem, bin int) bool {
 	for _, band := range usBands {
-		if bin >= band.First && bin <= band.Last {
+		if bin >= int(band.First) && bin <= int(band.Last) {
 			return true
 		}
 	}
 	return false
 }
 
-func processPilotTones(tones *[]int, groupSize int, values []int, val int) {
+func processPilotTones(tones *[]int, groupSize int, values []number, val number) {
 	*tones = make([]int, len(values))
 
 	for i, val := range values {
-		(*tones)[i] = val*groupSize + groupSize/2
+		(*tones)[i] = int(val)*groupSize + groupSize/2
 	}
 
 	if len(*tones) == 0 && val != 0 {
-		*tones = append(*tones, val*groupSize+groupSize/2)
+		*tones = append(*tones, int(val)*groupSize+groupSize/2)
 	}
 }
 
-func processSpectrumBits(bits *models.BinsBitsDownUp, usBands []spectrumDataBandItem, groupSize, binCount int, values []int) {
+func processSpectrumBits(bits *models.BinsBitsDownUp, usBands []spectrumDataBandItem, groupSize, binCount int, values []number) {
 	if groupSize == 0 {
 		return
 	}
@@ -127,7 +167,7 @@ func initSNRData(data *models.BinsFloat, binCount, groupSize int) {
 	data.GroupSize = groupSize
 }
 
-func processSpectrumSNR(snr *models.BinsFloatDownUp, usBands []spectrumDataBandItem, groupSize, binCount int, values []int) {
+func processSpectrumSNR(snr *models.BinsFloatDownUp, usBands []spectrumDataBandItem, groupSize, binCount int, values []number) {
 	if groupSize == 0 {
 		return
 	}

@@ -31,6 +31,19 @@ import (
 	"3e8.eu/go/dsl/internal/httpdigest"
 )
 
+type httpError struct {
+	Err        error
+	StatusCode int
+}
+
+func (e *httpError) Error() string {
+	return e.Err.Error()
+}
+
+func (e *httpError) Unwrap() error {
+	return e.Err
+}
+
 type session struct {
 	host          string
 	username      string
@@ -227,7 +240,10 @@ func (s *session) get(path string) ([]byte, error) {
 	defer resp.Body.Close()
 
 	if resp.StatusCode != 200 {
-		err = fmt.Errorf("request for %s failed with status %d", path, resp.StatusCode)
+		err = &httpError{
+			Err:        fmt.Errorf("request for %s failed with status %d", path, resp.StatusCode),
+			StatusCode: resp.StatusCode,
+		}
 
 		if resp.StatusCode == 303 {
 			return nil, &dsl.ConnectionError{Err: err}
@@ -247,7 +263,10 @@ func (s *session) postForm(path string, data url.Values) ([]byte, error) {
 	defer resp.Body.Close()
 
 	if resp.StatusCode != 200 {
-		err = fmt.Errorf("request for %s failed with status %d", path, resp.StatusCode)
+		err = &httpError{
+			Err:        fmt.Errorf("request for %s failed with status %d", path, resp.StatusCode),
+			StatusCode: resp.StatusCode,
+		}
 
 		if resp.StatusCode == 303 {
 			return nil, &dsl.ConnectionError{Err: err}
@@ -272,12 +291,16 @@ func (s *session) loadPost(path string, data url.Values) (string, error) {
 	return string(body), err
 }
 
-func (s *session) loadSupportData() (string, error) {
+func (s *session) loadSupportDataInternal(tryDiagnosisData bool) (string, error) {
 	// this needs to use multipart/form-data and the order of the fields is important
 	var body bytes.Buffer
 	mpart := multipart.NewWriter(&body)
 	mpart.WriteField("sid", s.sid)
-	mpart.WriteField("DiagnosisData", "")
+	if tryDiagnosisData {
+		mpart.WriteField("DiagnosisData", "")
+	} else {
+		mpart.WriteField("SupportData", "")
+	}
 
 	req, err := http.NewRequest(http.MethodPost, s.host+"/cgi-bin/firmwarecfg", &body)
 	if err != nil {
@@ -293,7 +316,10 @@ func (s *session) loadSupportData() (string, error) {
 	defer resp.Body.Close()
 
 	if resp.StatusCode != 200 {
-		err = fmt.Errorf("request for support data failed with status %d", resp.StatusCode)
+		err = &httpError{
+			Err:        fmt.Errorf("request for support data failed with status %d", resp.StatusCode),
+			StatusCode: resp.StatusCode,
+		}
 
 		if resp.StatusCode == 303 {
 			return "", &dsl.ConnectionError{Err: err}
@@ -309,21 +335,44 @@ func (s *session) loadSupportData() (string, error) {
 	for scanner.Scan() {
 		line := scanner.Text()
 
-		if !foundBeginSection && strings.HasPrefix(line, "#### BEGIN SECTION DSLManager_port") {
-			foundBeginSection = true
+		if strings.HasPrefix(line, "<!DOCTYPE") {
+			resp.Body.Close()
+
+			if tryDiagnosisData {
+				return s.loadSupportDataInternal(false)
+			} else {
+				return "", fmt.Errorf("got HTML response instead of support data")
+			}
+		}
+
+		if !foundBeginSection {
+			if (strings.HasPrefix(line, "#### BEGIN SECTION DSLManager_port") &&
+				!strings.HasPrefix(line, "#### BEGIN SECTION DSLManager_port_undependent")) ||
+				strings.HasPrefix(line, "DSL Overview") {
+				foundBeginSection = true
+			}
 		}
 
 		if foundBeginSection {
-			fmt.Fprintln(&b, line)
-		}
+			if strings.HasPrefix(line, "DSL Configs") {
+				resp.Body.Close()
+				break
+			}
 
-		if foundBeginSection && strings.HasPrefix(line, "#### END SECTION DSLManager_port") {
-			resp.Body.Close()
-			break
+			fmt.Fprintln(&b, line)
+
+			if strings.HasPrefix(line, "#### END SECTION DSLManager_port") {
+				resp.Body.Close()
+				break
+			}
 		}
 	}
 
 	return b.String(), scanner.Err()
+}
+
+func (s *session) loadSupportData() (string, error) {
+	return s.loadSupportDataInternal(true)
 }
 
 func (s *session) getHostWithoutPort() string {
@@ -399,7 +448,10 @@ func (s *session) loadTR064(path, serviceType, action string) (string, error) {
 	}
 
 	if resp.StatusCode != 200 {
-		err = fmt.Errorf("request for %s failed with status %d - make sure that TR-064 (access for apps) is enabled", soapAction, resp.StatusCode)
+		err = &httpError{
+			Err:        fmt.Errorf("request for %s failed with status %d - make sure that TR-064 (access for apps) is enabled", soapAction, resp.StatusCode),
+			StatusCode: resp.StatusCode,
+		}
 
 		if resp.StatusCode == 401 {
 			return "", &dsl.ConnectionError{Err: err}

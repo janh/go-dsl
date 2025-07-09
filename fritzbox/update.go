@@ -6,6 +6,7 @@ package fritzbox
 
 import (
 	"encoding/json"
+	"errors"
 	"net/url"
 )
 
@@ -30,7 +31,18 @@ func (c *client) updateOverview(d *rawDataOverview) (err error) {
 	data.Add("xhr", "1")
 	d.Data, err = c.session.loadPost("/data.lua", data)
 	if err != nil {
-		return
+		var httpErr *httpError
+		if errors.As(err, &httpErr) && httpErr.StatusCode == 404 {
+			// only versions < 6.50 (?)
+			d.Ancient = true
+			data = url.Values{}
+			d.Data, err = c.session.loadGet("/internet/dsl_overview.lua", data)
+			if err != nil {
+				return
+			}
+		} else {
+			return
+		}
 	}
 
 	if len(d.Data) == 0 || d.Data[0] != '{' {
@@ -59,7 +71,13 @@ func (c *client) updateStats(d *rawDataStats) (err error) {
 	data.Add("xhr", "1")
 	d.Data, err = c.session.loadPost("/data.lua", data)
 	if err != nil {
-		return
+		var httpErr *httpError
+		if errors.As(err, &httpErr) && httpErr.StatusCode == 404 {
+			// only versions < 6.50 (?)
+			d.Ancient = true
+		} else {
+			return
+		}
 	}
 
 	if !checkPageID(d.Data, "dslStat") {
@@ -87,7 +105,13 @@ func (c *client) updateSpectrum(d *rawDataSpectrum) (err error) {
 	data.Add("xhr", "1")
 	d.Data, err = c.session.loadPost("/data.lua", data)
 	if err != nil {
-		return
+		var httpErr *httpError
+		if errors.As(err, &httpErr) && httpErr.StatusCode == 404 {
+			// only versions < 6.50 (?)
+			d.Ancient = true
+		} else {
+			return
+		}
 	}
 
 	if !checkPageID(d.Data, "dslSpectrum") {

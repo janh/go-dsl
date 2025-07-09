@@ -36,9 +36,10 @@ type overviewDataJSON struct {
 type overviewDataLegacy struct {
 	DSLAM string `json:"dslam"`
 	Lines []struct {
-		State string `json:"state"`
-		Mode  string `json:"mode"`
-		Time  string `json:"time"`
+		State      string `json:"state"`
+		TrainState string `json:"train_state"`
+		Mode       string `json:"mode"`
+		Time       string `json:"time"`
 	} `json:"line"`
 }
 
@@ -46,7 +47,11 @@ func parseOverview(status *models.Status, d *rawDataOverview) {
 	if !d.Legacy {
 		parseOverviewJSON(status, d.Data)
 	} else {
-		parseOverviewLegacy(status, d.Data)
+		if d.Ancient {
+			parseOverviewLegacyAncient(status, d.Data)
+		} else {
+			parseOverviewLegacy(status, d.Data)
+		}
 		parseOverviewDataLegacy(status, d.UpdateData)
 	}
 }
@@ -61,6 +66,19 @@ func interpretOverviewState(state string) models.State {
 		return models.StateDown
 	case state == "error":
 		return models.StateError
+	}
+	return models.StateUnknown
+}
+
+func interpretOverviewStateAncient(trainState string) models.State {
+	trainState = strings.ToLower(trainState)
+	switch {
+	case strings.HasPrefix(trainState, "dsl aktiv"):
+		return models.StateShowtime
+	case strings.HasPrefix(trainState, "training"):
+		return models.StateInit
+	case strings.HasPrefix(trainState, "nicht verbunden"):
+		return models.StateDown
 	}
 	return models.StateUnknown
 }
@@ -120,6 +138,42 @@ func parseOverviewJSON(status *models.Status, dslOverview string) {
 	status.FarEndInventory.Version = strings.TrimPrefix(data.ExternApValue, "Version ")
 }
 
+func parseOverviewLegacyAncient(status *models.Status, dslOverview string) {
+	doc, err := html.Parse(strings.NewReader(dslOverview))
+	if err != nil {
+		return
+	}
+
+	dslVersionNode := htmlutil.FindFirstNode(doc, htmlutil.MatcherTagNameAndClass("td", "dsl_txt_info"))
+	if dslVersionNode != nil {
+		nearEndVersionNode := htmlutil.FindLastNode(dslVersionNode, func(n *html.Node) bool {
+			return n.Type == html.TextNode && strings.TrimSpace(n.Data) != ""
+		})
+		if nearEndVersionNode != nil {
+			status.NearEndInventory.Vendor = "AVM"
+			status.NearEndInventory.Version = strings.TrimSpace(nearEndVersionNode.Data)
+		}
+	}
+
+	dslamVersionNode := htmlutil.FindFirstNode(doc, htmlutil.MatcherTagNameAndClass("td", "dsl_txt_info_dslam"))
+	if dslamVersionNode != nil {
+		farEndInventoryNodes := htmlutil.FindAllNodes(dslamVersionNode, func(n *html.Node) bool {
+			return n.Type == html.TextNode && strings.TrimSpace(n.Data) != ""
+		})
+		if len(farEndInventoryNodes) >= 2 {
+			vendor := farEndInventoryNodes[0].Data
+			vendorStr := strings.TrimSpace(vendor)
+			version := farEndInventoryNodes[1].Data
+			versionStr := strings.TrimSpace(version)
+
+			if !strings.Contains(vendorStr, "---") && versionStr != "0" {
+				status.FarEndInventory.Vendor = vendorStr
+				status.FarEndInventory.Version = versionStr
+			}
+		}
+	}
+}
+
 func parseOverviewLegacy(status *models.Status, dslOverview string) {
 	doc, err := html.Parse(strings.NewReader(dslOverview))
 	if err != nil {
@@ -147,10 +201,10 @@ func parseOverviewLegacy(status *models.Status, dslOverview string) {
 	farEndInventoryNodes := htmlutil.FindAllNodes(columns[2], func(n *html.Node) bool {
 		return n.Type == html.TextNode && strings.TrimSpace(n.Data) != ""
 	})
-	if len(farEndInventoryNodes) >= 2 {
-		vendor := farEndInventoryNodes[len(farEndInventoryNodes)-2].Data
+	if len(farEndInventoryNodes) >= 3 {
+		vendor := farEndInventoryNodes[1].Data
 		vendorStr := strings.TrimSuffix(strings.TrimSpace(vendor), ":")
-		version := farEndInventoryNodes[len(farEndInventoryNodes)-1].Data
+		version := farEndInventoryNodes[2].Data
 		versionStr := strings.TrimSpace(version)
 
 		if !strings.Contains(vendorStr, "---") && !strings.Contains(versionStr, "---") {
@@ -169,6 +223,10 @@ func parseOverviewDataLegacy(status *models.Status, dslOverviewData string) {
 
 	if len(data.Lines) > 0 {
 		status.State = interpretOverviewState(data.Lines[0].State)
+		if status.State == models.StateUnknown {
+			status.State = interpretOverviewStateAncient(data.Lines[0].TrainState)
+		}
+
 		status.Mode = helpers.ParseMode(data.Lines[0].Mode)
 
 		if status.State == models.StateShowtime {
