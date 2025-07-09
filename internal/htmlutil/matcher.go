@@ -20,7 +20,7 @@ func MatcherTagName(tagName string) Matcher {
 
 func MatcherTagNameAndClass(tagName string, class string) Matcher {
 	return func(n *html.Node) bool {
-		if n.Type != html.ElementNode || n.Data != "tr" {
+		if n.Type != html.ElementNode || n.Data != tagName {
 			return false
 		}
 		for _, attr := range n.Attr {
